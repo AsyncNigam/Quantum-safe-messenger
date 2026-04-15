@@ -67,4 +67,14 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+
+    // Google Tink - handles AES-GCM and ChaCha20 safely
+    implementation(libs.tink.android)
+
+// Kotlin Coroutines - for running crypto off the main thread
+    implementation(libs.kotlinx.coroutines.android)
+
+// ViewModel + Lifecycle (needed later for MVI architecture)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 }
