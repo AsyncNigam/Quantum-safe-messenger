@@ -5,14 +5,11 @@ import cors from 'cors';
 import { Server as SocketIOServer } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 
-import { appConfig }            from './config/env';
-import { pubClient, subClient, storeClient } from './config/redis';
-import { errorHandler }         from './api/middlewares/errorHandler';
-import healthRoutes             from './api/routes/healthRoutes';
-import keyRoutes                from './api/routes/keyRoutes';
-
-import { MessageService }       from './services/MessageService';
-import { SocketController }     from './api/controllers/SocketController';
+import { appConfig }              from './config/env';
+import { pubClient, subClient }   from './config/redis';
+import { errorHandler }           from './api/middlewares/errorHandler';
+import { socketController }       from './api/controllers';
+import { keyRoutes, healthRoutes } from './api/routes';
 
 // ─── Express ──────────────────────────────────────────────────────────────────
 
@@ -24,7 +21,7 @@ app.use(express.json());
 
 const httpServer = http.createServer(app);
 
-// ─── Socket.io & Controllers ──────────────────────────────────────────────────
+// ─── Socket.io ────────────────────────────────────────────────────────────────
 
 const io = new SocketIOServer(httpServer, {
   cors: {
@@ -35,10 +32,6 @@ const io = new SocketIOServer(httpServer, {
 
 // Redis adapter enables pub/sub across multiple server instances
 io.adapter(createAdapter(pubClient, subClient));
-
-// Instantiate Socket Controller and inject Message Service
-const messageService = new MessageService(storeClient);
-const socketController = new SocketController(messageService);
 
 io.on('connection', (socket) => socketController.handleConnection(io, socket));
 

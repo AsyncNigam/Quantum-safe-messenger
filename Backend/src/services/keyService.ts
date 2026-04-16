@@ -1,8 +1,5 @@
-import { KeyRepository } from '../repositories/KeyRepository';
-import { supabase } from '../config/supabase';
-import { IKeyBundle } from '../models/KeyBundle';
-
-const keyRepository = new KeyRepository(supabase);
+import { keyRepository } from '../repositories';
+import { IKeyBundle }    from '../models/KeyBundle';
 import { PublicKey, PaginatedResult } from '../models/publicKey';
 
 export interface KeySyncOptions {
