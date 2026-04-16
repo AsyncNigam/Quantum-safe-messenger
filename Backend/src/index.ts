@@ -6,11 +6,13 @@ import { Server as SocketIOServer } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 
 import { appConfig }            from './config/env';
-import { pubClient, subClient } from './config/redis';
+import { pubClient, subClient, storeClient } from './config/redis';
 import { errorHandler }         from './api/middlewares/errorHandler';
-import { registerSocketHandlers } from './services/socketService';
 import healthRoutes             from './api/routes/healthRoutes';
 import keyRoutes                from './api/routes/keyRoutes';
+
+import { MessageService }       from './services/MessageService';
+import { SocketController }     from './api/controllers/SocketController';
 
 // ─── Express ──────────────────────────────────────────────────────────────────
 
@@ -22,7 +24,7 @@ app.use(express.json());
 
 const httpServer = http.createServer(app);
 
-// ─── Socket.io ────────────────────────────────────────────────────────────────
+// ─── Socket.io & Controllers ──────────────────────────────────────────────────
 
 const io = new SocketIOServer(httpServer, {
   cors: {
@@ -34,6 +36,12 @@ const io = new SocketIOServer(httpServer, {
 // Redis adapter enables pub/sub across multiple server instances
 io.adapter(createAdapter(pubClient, subClient));
 
+// Instantiate Socket Controller and inject Message Service
+const messageService = new MessageService(storeClient);
+const socketController = new SocketController(messageService);
+
+io.on('connection', (socket) => socketController.handleConnection(io, socket));
+
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 app.use('/health', healthRoutes);
@@ -42,10 +50,6 @@ app.use('/keys',   keyRoutes);
 // ─── Error Handler ────────────────────────────────────────────────────────────
 
 app.use(errorHandler);
-
-// ─── Socket Handlers ──────────────────────────────────────────────────────────
-
-registerSocketHandlers(io);
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 

@@ -1,24 +1,52 @@
 import { Request, Response, NextFunction } from 'express';
-import { keyService } from '../../services/keyService';
+import { KeyRepository } from '../../repositories/KeyRepository';
+import { IKeyBundle } from '../../models/KeyBundle';
 
-export const keyController = {
+export class KeyController {
+  constructor(private readonly keyRepo: KeyRepository) {}
+
   /**
-   * GET /keys/sync
-   * Returns a paginated list of public keys from Supabase.
-   *
-   * Query params:
-   *   page  — 1-indexed page number (default: 1)
-   *   limit — records per page, max 100 (default: 20)
+   * POST /upload
+   * Authenticated route. Uploads the user's hybrid key bundle.
    */
-  async sync(req: Request, res: Response, next: NextFunction): Promise<void> {
+  public upload = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const page  = Math.max(1, parseInt((req.query.page  as string) ?? '1',  10));
-      const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) ?? '20', 10)));
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ error: 'User context missing' });
+        return;
+      }
 
-      const result = await keyService.syncKeys({ page, limit });
+      // Explicitly extract fields to ignore malicious injection
+      const bundle: IKeyBundle = {
+        userId,
+        x25519PublicKey: req.body.x25519PublicKey,
+        mlKemPublicKey: req.body.mlKemPublicKey,
+        ed25519Signature: req.body.ed25519Signature,
+        mlDsaSignature: req.body.mlDsaSignature,
+      };
+
+      await this.keyRepo.uploadKeys(bundle);
+      
+      res.status(201).json({ success: true, message: 'Keys uploaded successfully' });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  /**
+   * GET /
+   * Returns a paginated list of all users' public keys for peer discovery.
+   */
+  public getPaginatedKeys = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const page = Math.max(1, parseInt((req.query.page as string) || '1', 10));
+      const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '20', 10)));
+
+      const result = await this.keyRepo.findKeysPaginated(page, limit);
       res.json(result);
     } catch (err) {
       next(err);
     }
-  },
-};
+  };
+}
