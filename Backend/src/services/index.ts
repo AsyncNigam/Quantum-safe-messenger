@@ -12,3 +12,7 @@ export const messageService = new MessageService(storeClient);
  * Re-export keyService (already a singleton object literal).
  */
 export { keyService };
+
+// Export classes for type safety in other files
+export * from './MessageService';
+export * from './keyService';
