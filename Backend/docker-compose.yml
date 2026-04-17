@@ -1,0 +1,55 @@
+services:
+  # ─── Redis (Message Queue & Pub/Sub) ───────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: quantum-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - quantum-network
+
+  # ─── Quantum Messenger Backend ─────────────────────────────────────────────
+  backend:
+    image: quantum-messenger:latest
+    container_name: quantum-backend
+    ports:
+      - "3000:3000"
+    environment:
+      # Server
+      PORT: 3000
+      NODE_ENV: production
+      
+      # Supabase (REPLACE WITH YOUR VALUES)
+      SUPABASE_URL: ${SUPABASE_URL:-https://your-project.supabase.co}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-your-anon-key}
+      
+      # Redis (connects to redis service)
+      REDIS_URL: redis://redis:6379
+      
+      # CORS - allow local development
+      CLIENT_ORIGIN: "*"
+    
+    depends_on:
+      redis:
+        condition: service_healthy
+    
+    networks:
+      - quantum-network
+    
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  quantum-network:
+    driver: bridge
