@@ -1,0 +1,64 @@
+# Git files and directories
+.git
+.gitignore
+.gitattributes
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+*.code-workspace
+
+# Build artifacts
+dist
+build
+
+# Dependencies (will be reinstalled in Docker)
+node_modules
+
+# Environment files (will be injected at runtime)
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage
+.nyc_output
+.jest
+
+# Development dependencies (but keep src and tsconfig for build)
+ts-node
+ts-node-dev
+.ts-node
+
+# Package manager locks (optional, but helps with consistency)
+# Uncomment if you want to rebuild lock files in Docker
+# package-lock.json
+# yarn.lock
+
+# Docker files (not needed in the build context)
+Dockerfile
+.dockerignore
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Documentation
+README.md
+docs
+
+# Miscellaneous
+*.md
+.npmignore
