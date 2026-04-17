@@ -4,75 +4,62 @@ import { MessageService } from '../../services/MessageService';
 export class SocketController {
   constructor(private readonly messageService: MessageService) {}
 
-  /**
-   * Helper to check if a specific user has active sockets.
-   */
   private async isUserConnected(io: SocketIOServer, userId: string): Promise<boolean> {
     const sockets = await io.in(userId).fetchSockets();
     return sockets.length > 0;
   }
 
   /**
-   * Binds all socket event listeners for an authenticated/identified connection.
+   * Binds all socket event listeners.
+   *
+   * NOTE: By the time this runs, `socketAuthMiddleware` has already verified
+   * the Supabase JWT and attached `socket.data.user`. We trust that value
+   * completely — no need to re-validate the userId here.
    */
   public handleConnection = (io: SocketIOServer, socket: Socket): void => {
-    // Expecting the client to provide userId in handshake query
-    const userId = socket.handshake.query.userId as string | undefined;
+    // userId is guaranteed by socketAuthMiddleware — no query param fallback needed
+    const userId: string = socket.data.user.id;
 
-    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
-      console.warn(`[Socket] Connection rejected — missing userId. socket=${socket.id}`);
-      socket.disconnect(true);
-      return;
-    }
-
-    // Join a room exclusively for this userId
     socket.join(userId);
-    console.log(`[Socket] Connected | socket=${socket.id} | room=${userId}`);
+    console.log(`[Socket] Connected    | socket=${socket.id} | userId=${userId}`);
 
-    // DRAIN OFFLINE MESSAGES ON CONNECT
+    // ── Drain offline queue on connect ──────────────────────────────────────
     this.messageService.retrieveAndClearOfflineMessages(userId)
       .then((buffers: Buffer[]) => {
         if (buffers.length > 0) {
-          console.log(`[Socket] Emitting ${buffers.length} offline message(s) to ${userId}`);
-          buffers.forEach(buf => {
-            // Emitting exactly as requested — raw binary Buffer
-            socket.emit('receive_message', buf);
-          });
+          console.log(`[Socket] Draining ${buffers.length} offline message(s) → ${userId}`);
+          buffers.forEach((buf) => socket.emit('receive_message', buf));
         }
       })
-      .catch((err: Error) => {
-        console.error(`[Socket] Failed to drain queue for ${userId}:`, err.message);
-      });
+      .catch((err: Error) =>
+        console.error(`[Socket] Drain error | userId=${userId} |`, err.message),
+      );
 
-    // ── send_message ──────────────────────────────────────────────────────
-    /**
-     * Payload MUST be a Buffer containing the post-quantum encrypted content.
-     */
+    // ── send_message ────────────────────────────────────────────────────────
     socket.on('send_message', async ({ to, payload }: { to: string; payload: Buffer }) => {
       try {
-        if (!to || !payload || !Buffer.isBuffer(payload)) {
-          console.warn(`[Socket] Invalid send_message payload dropped. socket=${socket.id}`);
+        if (!to || typeof to !== 'string' || !payload || !Buffer.isBuffer(payload)) {
+          console.warn(`[Socket] Invalid send_message dropped | socket=${socket.id}`);
           return;
         }
 
         const recipientOnline = await this.isUserConnected(io, to);
 
         if (recipientOnline) {
-          // Emit the buffer directly via socket.io
           io.to(to).emit('receive_message', payload);
-          console.log(`[Socket] Delivered (online) | from=${userId} | to=${to}`);
+          console.log(`[Socket] Delivered (online)  | from=${userId} | to=${to}`);
         } else {
-          // Queue inside Redis as an unbroken Buffer
           await this.messageService.queueOfflineMessage(to, payload);
-          console.log(`[Socket] Queued (offline) | from=${userId} | to=${to}`);
+          console.log(`[Socket] Queued   (offline)  | from=${userId} | to=${to}`);
         }
-      } catch (err: any) {
-        console.error(`[Socket] send_message error:`, err.message);
+      } catch (err: unknown) {
+        console.error(`[Socket] send_message error:`, (err as Error).message);
       }
     });
 
+    // ── disconnect ──────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
-      console.log(`[Socket] Disconnected | socket=${socket.id} | room=${userId}`);
+      console.log(`[Socket] Disconnected | socket=${socket.id} | userId=${userId}`);
     });
   };
 }
