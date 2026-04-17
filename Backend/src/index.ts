@@ -6,13 +6,11 @@ import helmet from 'helmet';
 import { Server as SocketIOServer } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 
-import { appConfig }               from './config/env';
-import { pubClient, subClient }    from './config/redis';
-import { errorHandler }            from './api/middlewares/errorHandler';
-import { generalLimiter }          from './api/middlewares/rateLimiter';
-import { socketAuthMiddleware }    from './api/middlewares/socketAuthMiddleware';
-import { socketController }        from './api/controllers';
-import { keyRoutes, healthRoutes } from './api/routes';
+import { appConfig }                                        from './config/env';
+import { pubClient, subClient }                              from './config/redis';
+import { errorHandler, generalLimiter, socketAuthMiddleware } from './api/middlewares';
+import { socketController }                                  from './api/controllers';
+import { keyRoutes, healthRoutes }                           from './api/routes';
 
 // ─── Express ──────────────────────────────────────────────────────────────────
 
