@@ -1,0 +1,84 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Quantum Messenger Backend — Git Ignore
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ─── Environment & Secrets (NEVER COMMIT) ─────────────────────────────────────
+
+.env
+.env.local
+.env.*.local
+.env.production
+
+# ─── Node.js & Dependencies ──────────────────────────────────────────────────
+
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ─── Build Output ────────────────────────────────────────────────────────────
+
+dist/
+build/
+out/
+
+# ─── IDE & Editor Files ─────────────────────────────────────────────────────
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.code-workspace
+.project
+.classpath
+.c9/
+
+# ─── TypeScript & Compilation ────────────────────────────────────────────────
+
+*.tsbuildinfo
+tsconfig*.tsbuildinfo
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+
+logs/
+*.log
+npm-debug.log*
+npm-error.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ─── Testing & Coverage ─────────────────────────────────────────────────────
+
+coverage/
+.nyc_output/
+.jest/
+.mocha/
+
+# ─── OS Files ────────────────────────────────────────────────────────────
+
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ─── Docker ──────────────────────────────────────────────────────────
+
+.docker/
+docker-compose.override.yml
+
+# ─── Runtime/Temporary ───────────────────────────────────────────────
+
+tmp/
+temp/
+.cache/
+
+# ─── Development Tools ───────────────────────────────────────────────
+
+.env.test
+.env.development
+
+# ═══════════════════════════════════════════════════════════════════════════════
