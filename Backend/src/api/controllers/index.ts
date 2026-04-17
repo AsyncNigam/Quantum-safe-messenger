@@ -12,3 +12,7 @@ export const keyController = new KeyController(keyRepository);
  * Singleton SocketController — receives the shared MessageService.
  */
 export const socketController = new SocketController(messageService);
+
+// Export classes for type safety in other files
+export * from './KeyController';
+export * from './SocketController';
