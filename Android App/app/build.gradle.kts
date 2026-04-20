@@ -81,4 +81,9 @@ dependencies {
 
 // ViewModel + Lifecycle (needed later for MVI architecture)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Protobuf
+    implementation(libs.protobuf.javalite)
+// OkHttp
+    implementation(libs.okhttp)
 }
