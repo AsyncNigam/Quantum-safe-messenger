@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.protobuf)
 }
 
 android {
@@ -53,6 +54,21 @@ android {
     buildFeatures {
         compose = true
     }
+
+
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.24.4"
+    }
+    generateProtoTasks {
+        all().configureEach {
+            builtins.register("java") {
+                option("lite")
+            }
+        }
+    }
 }
 
 dependencies {
@@ -86,4 +102,6 @@ dependencies {
     implementation(libs.protobuf.javalite)
 // OkHttp
     implementation(libs.okhttp)
+
+    implementation(libs.socketio.client)
 }
