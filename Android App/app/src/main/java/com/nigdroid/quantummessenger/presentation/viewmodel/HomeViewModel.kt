@@ -3,18 +3,16 @@ package com.nigdroid.quantummessenger.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nigdroid.quantummessenger.data.local.ChatMessageDao
-import com.nigdroid.quantummessenger.domain.model.InboxItem
 import com.nigdroid.quantummessenger.domain.usecase.GetInboxUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SyncContactsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel for the Home/Inbox screen.
+ */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getInboxUseCase: GetInboxUseCase,
@@ -22,34 +20,39 @@ class HomeViewModel @Inject constructor(
     private val chatMessageDao: ChatMessageDao
 ) : ViewModel() {
 
-    // In a real app, this would come from a SessionManager
-    private val currentUserId = "current_user_id" 
+    // In a production app, the current user ID would be retrieved from a session/auth manager.
+    private val currentUserId = "current_user_id"
 
-    val inboxState: StateFlow<List<InboxItem>> = getInboxUseCase(currentUserId)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-
-    private val _isSyncing = MutableStateFlow(false)
-    val isSyncing = _isSyncing.asStateFlow()
+    private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
+        observeInbox()
         syncContacts()
+    }
+
+    private fun observeInbox() {
+        viewModelScope.launch {
+            getInboxUseCase(currentUserId)
+                .catch { e ->
+                    _uiState.value = HomeUiState.Error(e.message ?: "Unknown error")
+                }
+                .collect { items ->
+                    _uiState.value = HomeUiState.Success(items)
+                }
+        }
     }
 
     fun syncContacts() {
         viewModelScope.launch {
-            _isSyncing.value = true
+            // Trigger sync which handles its own errors and updates the DB
             syncContactsUseCase()
-            _isSyncing.value = false
         }
     }
 
-    fun deleteConversation(userId: String) {
+    fun deleteConversation(otherUserId: String) {
         viewModelScope.launch {
-            chatMessageDao.deleteConversation(currentUserId, userId)
+            chatMessageDao.deleteConversation(currentUserId, otherUserId)
         }
     }
 }

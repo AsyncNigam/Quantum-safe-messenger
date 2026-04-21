@@ -21,14 +21,13 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            abiFilters += listOf("arm64-v8a")
+            abiFilters.clear()
+            abiFilters.add("arm64-v8a")
         }
 
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++17"
-                // 16 KB page size alignment for Android 15+ compliance
-                cppFlags += "-Wl,-z,max-page-size=16384"
             }
         }
     }
@@ -42,7 +41,7 @@ android {
 
     packaging {
         jniLibs {
-            // Disable legacy packaging to allow direct memory mapping at correct alignment
+            // Ensure .so files are page-aligned for Android 15+
             useLegacyPackaging = false
         }
     }

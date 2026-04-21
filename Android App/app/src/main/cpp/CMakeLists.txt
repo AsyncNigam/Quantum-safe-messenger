@@ -14,18 +14,18 @@ set_target_properties(liboqs PROPERTIES
     IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/liboqs/lib/${ANDROID_ABI}/liboqs.a
 )
 
-# Build your native-lib as before
+# Build the quantum_crypto library (formerly native-lib)
 add_library(
-    native-lib
+    quantum_crypto
     SHARED
     native-lib.cpp
 )
 
 find_library(log-lib log)
 
-# Link native-lib against both liboqs and Android log
+# Link quantum_crypto against both liboqs and Android log
 target_link_libraries(
-    native-lib
+    quantum_crypto
     liboqs
     ${log-lib}
 )

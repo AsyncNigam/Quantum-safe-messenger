@@ -7,7 +7,7 @@
 // ─── ML-KEM-768 Key Generation ───────────────────────────────────────────────
 // Returns a 2-element byte[][] — [0] = public key, [1] = private key
 extern "C" JNIEXPORT jobjectArray JNICALL
-Java_com_nigdroid_quantummessenger_crypto_CryptoEngine_generateKemKeypair(
+Java_com_nigdroid_quantummessenger_crypto_PostQuantumCrypto_jniGenerateKemKeypair(
         JNIEnv* env, jobject) {
 
     OQS_init();
@@ -43,7 +43,7 @@ Java_com_nigdroid_quantummessenger_crypto_CryptoEngine_generateKemKeypair(
 // ─── ML-KEM-768 Encapsulation ─────────────────────────────────────────────────
 // Given recipient's public key → returns [0] = ciphertext, [1] = shared secret
 extern "C" JNIEXPORT jobjectArray JNICALL
-Java_com_nigdroid_quantummessenger_crypto_CryptoEngine_kemEncapsulate(
+Java_com_nigdroid_quantummessenger_crypto_PostQuantumCrypto_jniKemEncapsulate(
         JNIEnv* env, jobject,
         jbyteArray recipientPublicKey) {
 
@@ -84,7 +84,7 @@ Java_com_nigdroid_quantummessenger_crypto_CryptoEngine_kemEncapsulate(
 // ─── ML-KEM-768 Decapsulation ─────────────────────────────────────────────────
 // Given our private key + ciphertext → returns shared secret bytes
 extern "C" JNIEXPORT jbyteArray JNICALL
-Java_com_nigdroid_quantummessenger_crypto_CryptoEngine_kemDecapsulate(
+Java_com_nigdroid_quantummessenger_crypto_PostQuantumCrypto_jniKemDecapsulate(
         JNIEnv* env, jobject,
         jbyteArray ciphertext,
         jbyteArray privateKey) {
