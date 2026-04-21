@@ -2,6 +2,7 @@ package com.nigdroid.quantummessenger.presentation.ui.screen.auth
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -439,7 +440,7 @@ private fun GlowingButton(
         initialValue = 0.3f,
         targetValue = 0.8f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1500, easing = LinearEasing),
+            animation = tween<Float>(durationMillis = 1500, easing = LinearEasing),
             repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
         ),
         label = "glowAlpha"
@@ -486,7 +487,7 @@ private fun CryptographicMeshAnimation(modifier: Modifier = Modifier) {
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 8000, easing = LinearEasing)
+            animation = tween<Float>(durationMillis = 8000, easing = LinearEasing)
         ),
         label = "offset1"
     )
@@ -495,7 +496,7 @@ private fun CryptographicMeshAnimation(modifier: Modifier = Modifier) {
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 6000, easing = LinearEasing)
+            animation = tween<Float>(durationMillis = 6000, easing = LinearEasing)
         ),
         label = "offset2"
     )

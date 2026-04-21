@@ -1,8 +1,5 @@
 package com.nigdroid.quantummessenger.domain.model
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
-
 /**
  * Domain models for authentication
  */
@@ -12,7 +9,6 @@ import kotlinx.parcelize.Parcelize
  * All private keys are stored securely in Android Keystore.
  * This model only contains references and public key material.
  */
-@Parcelize
 data class Identity(
     val userId: String,
     val phoneNumber: String,
@@ -22,7 +18,7 @@ data class Identity(
     val ed25519PublicKey: ByteArray,    // Ed25519 signature key (bytes)
     val createdAt: Long = System.currentTimeMillis(),
     val keyStoreAliasPrefix: String = "quantum_messenger_"
-) : Parcelable {
+) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Identity) return false

@@ -1,9 +1,10 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.protobuf)
-    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.kotlinCompose)
+    alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.protobuf)
 }
 
 android {
@@ -29,6 +30,7 @@ android {
             }
         }
     }
+
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
@@ -45,26 +47,43 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     buildFeatures {
         compose = true
+    }
+
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
 }
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.24.4"
+        artifact = "com.google.protobuf:protoc:4.34.1"
     }
     generateProtoTasks {
-        all().configureEach {
-            builtins.register("java") {
-                option("lite")
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
             }
         }
     }
+}
+
+ksp {
+    arg("dagger.validateTransitiveComponentDependencies", "disabled")
+    arg("dagger.allowValidation", "false")
+    arg("room.generateKotlin", "true")
+    arg("ksp.incremental", "false")
 }
 
 dependencies {
@@ -85,40 +104,28 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-
-    // Google Tink - handles AES-GCM and ChaCha20 safely
+    implementation(libs.androidx.security.crypto)
     implementation(libs.tink.android)
-
-// Kotlin Coroutines - for running crypto off the main thread
     implementation(libs.kotlinx.coroutines.android)
-
-// ViewModel + Lifecycle (needed later for MVI architecture)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
-    // Protobuf
-    implementation(libs.protobuf.javalite)
-// OkHttp
     implementation(libs.okhttp)
-
     implementation(libs.socketio.client)
-
-    // Retrofit
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
 
-    // Hilt
     implementation(libs.hilt.android)
-    add("kapt", libs.hilt.compiler)
+    ksp(libs.hilt.compiler) // Switched to KSP for AGP 9 compliance
 
-    // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    add("kapt", libs.room.compiler)
+    ksp(libs.room.compiler)
 
-    // SQLCipher
     implementation(libs.sqlcipher)
+    implementation(libs.protobuf.javalite)
 
-    // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.navigation.compose)
 }

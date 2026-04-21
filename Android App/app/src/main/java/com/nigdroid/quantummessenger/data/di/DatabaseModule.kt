@@ -45,4 +45,10 @@ object DatabaseModule {
     fun provideChatMessageDao(database: QuantumMessengerDatabase): ChatMessageDao {
         return database.chatMessageDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideContactDao(database: QuantumMessengerDatabase): com.nigdroid.quantummessenger.data.local.ContactDao {
+        return database.contactDao()
+    }
 }

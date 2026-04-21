@@ -11,6 +11,7 @@ import com.nigdroid.quantummessenger.domain.model.IdentityGenerationResult
 import com.nigdroid.quantummessenger.domain.repository.AuthRepository
 import com.nigdroid.quantummessenger.domain.usecase.GenerateIdentityUseCase
 import com.nigdroid.quantummessenger.network.api.AuthenticationService
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
@@ -29,7 +30,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
-    private val context: Context,
+    @ApplicationContext private val context: Context,
     private val authService: AuthenticationService,
     private val generateIdentityUseCase: GenerateIdentityUseCase
 ) : AuthRepository {

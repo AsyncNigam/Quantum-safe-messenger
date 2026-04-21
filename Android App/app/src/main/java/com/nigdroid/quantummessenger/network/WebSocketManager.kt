@@ -4,21 +4,25 @@ import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import com.nigdroid.quantummessenger.proto.ChatMessage
+import com.nigdroid.quantummessenger.proto.ChatMessageProto
 import org.json.JSONObject
 
+import javax.inject.Inject
+import javax.inject.Singleton
+
 sealed class SocketEvent {
-    data class MessageReceived(val message: ChatMessage) : SocketEvent()
+    data class MessageReceived(val message: ChatMessageProto.ChatMessage) : SocketEvent()
     data object Connected : SocketEvent()
     data object Disconnected : SocketEvent()
     data class Error(val error: String) : SocketEvent()
 }
 
-object WebSocketManager {
+@Singleton
+class WebSocketManager @Inject constructor() {
 
     // Replace with your PC's local IP (run ipconfig in PowerShell)
     // Do NOT use localhost — it won't reach your PC from a physical phone
-    private const val SERVER_URL = "http://192.168.x.x:3000"
+    private val SERVER_URL = "http://192.168.x.x:3000"
 
     private var socket: Socket? = null
 
@@ -51,7 +55,7 @@ object WebSocketManager {
             on("receive_message") { args ->
                 try {
                     val bytes = args[0] as ByteArray
-                    val message = ChatMessage.parseFrom(bytes)
+                    val message = ChatMessageProto.ChatMessage.parseFrom(bytes)
                     _events.tryEmit(SocketEvent.MessageReceived(message))
                 } catch (e: Exception) {
                     _events.tryEmit(SocketEvent.Error("Parse error: ${e.message}"))
@@ -62,7 +66,7 @@ object WebSocketManager {
         }
     }
 
-    fun sendMessage(message: ChatMessage) {
+    fun sendMessage(message: ChatMessageProto.ChatMessage) {
         // Serialize to Protobuf bytes and emit to server
         socket?.emit("send_message", message.toByteArray())
     }

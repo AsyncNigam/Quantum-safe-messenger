@@ -6,7 +6,7 @@ import com.nigdroid.quantummessenger.crypto.CryptoEngine
 import com.nigdroid.quantummessenger.crypto.KemKeypair
 import com.nigdroid.quantummessenger.network.SocketEvent
 import com.nigdroid.quantummessenger.network.WebSocketManager
-import com.nigdroid.quantummessenger.proto.ChatMessage
+import com.nigdroid.quantummessenger.proto.ChatMessageProto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,7 +28,9 @@ data class MessagingUiState(
 )
 
 // ── ViewModel ─────────────────────────────────────────────────────────────────
-class MessagingViewModel : ViewModel() {
+class MessagingViewModel @javax.inject.Inject constructor(
+    private val webSocketManager: com.nigdroid.quantummessenger.network.WebSocketManager
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MessagingUiState())
     val uiState: StateFlow<MessagingUiState> = _uiState.asStateFlow()
@@ -65,13 +67,13 @@ class MessagingViewModel : ViewModel() {
 
     // ── Connect to backend ────────────────────────────────────────────────────
     fun connect(jwtToken: String) {
-        WebSocketManager.connect(jwtToken)
+        webSocketManager.connect(jwtToken)
     }
 
     // ── Observe all socket events ─────────────────────────────────────────────
     private fun observeSocketEvents() {
         viewModelScope.launch {
-            WebSocketManager.events.collect { event ->
+            webSocketManager.events.collect { event ->
                 when (event) {
 
                     is SocketEvent.Connected -> {
@@ -102,7 +104,7 @@ class MessagingViewModel : ViewModel() {
     }
 
     // ── Handle incoming encrypted message ─────────────────────────────────────
-    private fun handleIncomingMessage(message: ChatMessage) {
+    private fun handleIncomingMessage(message: ChatMessageProto.ChatMessage) {
         viewModelScope.launch(Dispatchers.Default) {
             try {
                 val keypair = ownKeypair ?: return@launch
@@ -166,14 +168,14 @@ class MessagingViewModel : ViewModel() {
                 // For now we send kemCiphertext + plaintext concatenated as stub
                 val payload = encap.ciphertext + plaintextBytes
 
-                val proto = ChatMessage.newBuilder()
+                val proto = ChatMessageProto.ChatMessage.newBuilder()
                     .setSenderId("self")           // Phase 5: real user ID from Supabase auth
                     .setRecipientId(recipientId)
                     .setPayload(com.google.protobuf.ByteString.copyFrom(payload))
                     .setTimestamp(System.currentTimeMillis())
                     .build()
 
-                WebSocketManager.sendMessage(proto)
+                webSocketManager.sendMessage(proto)
 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -191,6 +193,6 @@ class MessagingViewModel : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        WebSocketManager.disconnect()
+        webSocketManager.disconnect()
     }
 }

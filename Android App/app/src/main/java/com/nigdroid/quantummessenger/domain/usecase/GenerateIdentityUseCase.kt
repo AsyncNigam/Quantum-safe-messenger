@@ -105,7 +105,9 @@ class GenerateIdentityUseCase @Inject constructor() {
     @VisibleForTesting
     internal fun generateMLKemKey(userId: String): KeyPair {
         return try {
-            val (publicKey, privateKey) = PostQuantumCrypto.generateMLKemKeypair()
+            val keyPairResult = PostQuantumCrypto.generateMLKemKeypair()
+            val publicKey = keyPairResult.first    // Pair<ByteArray, ByteArray>.first
+            val privateKey = keyPairResult.second   // Pair<ByteArray, ByteArray>.second
 
             // Store private key in Android Keystore
             storeKeyInKeystore(
@@ -130,7 +132,9 @@ class GenerateIdentityUseCase @Inject constructor() {
     @VisibleForTesting
     internal fun generateMLDsaKey(userId: String): KeyPair {
         return try {
-            val (publicKey, privateKey) = PostQuantumCrypto.generateMLDsaKeypair()
+            val keyPairResult = PostQuantumCrypto.generateMLDsaKeypair()
+            val publicKey = keyPairResult.first    // Pair<ByteArray, ByteArray>.first
+            val privateKey = keyPairResult.second   // Pair<ByteArray, ByteArray>.second
 
             // Store private key in Android Keystore
             storeKeyInKeystore(

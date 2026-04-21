@@ -2,6 +2,7 @@ package com.nigdroid.quantummessenger.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nigdroid.quantummessenger.data.local.ChatMessageDao
 import com.nigdroid.quantummessenger.domain.model.InboxItem
 import com.nigdroid.quantummessenger.domain.usecase.GetInboxUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SyncContactsUseCase

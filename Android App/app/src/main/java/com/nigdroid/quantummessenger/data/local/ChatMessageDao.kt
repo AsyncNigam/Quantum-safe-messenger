@@ -37,6 +37,7 @@ interface ChatMessageDao {
     @Query("DELETE FROM chat_messages WHERE (senderId = :userId AND receiverId = :otherUserId) OR (senderId = :otherUserId AND receiverId = :userId)")
     suspend fun deleteConversation(userId: String, otherUserId: String)
 
+    /*
     @Query("""
         SELECT * FROM chat_messages 
         WHERE id IN (
@@ -47,4 +48,5 @@ interface ChatMessageDao {
         ORDER BY timestamp DESC
     """)
     fun getLastMessagesForUser(userId: String): Flow<List<ChatMessageEntity>>
+    */
 }
