@@ -2,15 +2,13 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.protobuf)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.hilt)
 }
 
 android {
     namespace = "com.nigdroid.quantummessenger"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.nigdroid.quantummessenger"
@@ -54,11 +52,6 @@ android {
     buildFeatures {
         compose = true
     }
-
-    kotlin {
-        jvmToolchain(17)
-    }
-
 }
 
 protobuf {
@@ -109,14 +102,18 @@ dependencies {
 
     implementation(libs.socketio.client)
 
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+
     // Hilt
     implementation(libs.hilt.android)
-    annotationProcessor(libs.hilt.compiler)
+    add("kapt", libs.hilt.compiler)
 
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    annotationProcessor(libs.room.compiler)
+    add("kapt", libs.room.compiler)
 
     // SQLCipher
     implementation(libs.sqlcipher)
