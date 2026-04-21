@@ -5,6 +5,7 @@ import com.nigdroid.quantummessenger.domain.usecase.GetChatHistoryUseCase
 import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SendMessageUseCase
 import com.nigdroid.quantummessenger.network.WebSocketManager
+import androidx.work.WorkManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,9 +24,10 @@ object UseCaseModule {
     @Singleton
     fun provideSendMessageUseCase(
         chatRepository: ChatRepository,
-        webSocketManager: WebSocketManager
+        webSocketManager: WebSocketManager,
+        workManager: WorkManager
     ): SendMessageUseCase {
-        return SendMessageUseCase(chatRepository, webSocketManager)
+        return SendMessageUseCase(chatRepository, webSocketManager, workManager)
     }
 
     @Provides
