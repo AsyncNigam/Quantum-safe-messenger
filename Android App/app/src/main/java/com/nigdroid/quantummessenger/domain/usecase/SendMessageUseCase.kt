@@ -1,7 +1,10 @@
 package com.nigdroid.quantummessenger.domain.usecase
 
+import androidx.work.*
 import com.google.protobuf.ByteString
+import com.nigdroid.quantummessenger.data.worker.SendMessageWorker
 import com.nigdroid.quantummessenger.domain.model.ChatMessage
+import com.nigdroid.quantummessenger.domain.model.MessageStatus
 import com.nigdroid.quantummessenger.domain.model.MessageType
 import com.nigdroid.quantummessenger.domain.repository.ChatRepository
 import com.nigdroid.quantummessenger.network.WebSocketManager
@@ -11,30 +14,14 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
- * Use case for sending a message.
- *
- * This use case:
- * 1. Takes a plain text message string
- * 2. Encrypts and stores it locally via the ChatRepository
- * 3. Serializes it into the Protobuf ChatMessage schema
- * 4. Sends it to the server via WebSocketManager
- *
- * All operations are performed on IO dispatcher to avoid blocking the main thread.
+ * Enhanced Use Case for sending messages with Background Resilience.
  */
 class SendMessageUseCase @Inject constructor(
     private val chatRepository: ChatRepository,
-    private val webSocketManager: WebSocketManager
+    private val webSocketManager: WebSocketManager,
+    private val workManager: WorkManager
 ) {
 
-    /**
-     * Sends a message with the given parameters.
-     *
-     * @param plainTextContent The unencrypted message text
-     * @param senderId The ID of the current user (sender)
-     * @param receiverId The ID of the recipient user
-     * @param messageType The type of message (TEXT, IMAGE, FILE)
-     * @throws Exception if encryption, database insertion, or WebSocket transmission fails
-     */
     suspend operator fun invoke(
         plainTextContent: String,
         senderId: String,
@@ -42,43 +29,69 @@ class SendMessageUseCase @Inject constructor(
         messageType: MessageType = MessageType.TEXT
     ) {
         withContext(Dispatchers.IO) {
+            // 1. Prepare domain model
+            val domainMessage = ChatMessage(
+                senderId = senderId,
+                receiverId = receiverId,
+                content = plainTextContent,
+                timestamp = System.currentTimeMillis(),
+                messageType = messageType,
+                status = MessageStatus.PENDING // Initially pending
+            )
+
+            // 2. Save to local DB and get the generated ID
+            val messageId = chatRepository.sendMessage(domainMessage)
+
+            // 3. Prepare Protobuf payload
+            val protoMessage = ProtoMessage.newBuilder()
+                .setSenderId(senderId)
+                .setRecipientId(receiverId)
+                .setPayload(ByteString.copyFrom(plainTextContent.toByteArray(Charsets.UTF_8)))
+                .setTimestamp(domainMessage.timestamp)
+                .build()
+
             try {
-                // Create domain model with plain text
-                val domainMessage = ChatMessage(
-                    senderId = senderId,
-                    receiverId = receiverId,
-                    content = plainTextContent,
-                    timestamp = System.currentTimeMillis(),
-                    messageType = messageType,
-                    isRead = false
-                )
-
-                // Save encrypted to local database
-                val messageId = chatRepository.sendMessage(domainMessage)
-
-                // Convert to Protobuf for transmission
-                // Payload contains the plain text (server will handle encryption if needed)
-                val protoMessage = ProtoMessage.newBuilder()
-                    .setSenderId(senderId)
-                    .setRecipientId(receiverId)
-                    .setPayload(ByteString.copyFrom(plainTextContent.toByteArray(Charsets.UTF_8)))
-                    .setTimestamp(System.currentTimeMillis())
-                    .build()
-
-                // Send via WebSocket
-                webSocketManager.sendMessage(protoMessage)
+                // 4. Try immediate send via WebSocket
+                if (webSocketManager.isConnected()) {
+                    webSocketManager.sendMessage(protoMessage)
+                    // Update status to SENT immediately
+                    chatRepository.updateMessageStatus(messageId, MessageStatus.SENT)
+                } else {
+                    // Fallback to WorkManager if not connected
+                    enqueueBackgroundSend(messageId, protoMessage, receiverId)
+                }
             } catch (e: Exception) {
-                // Re-throw to be handled by ViewModel with proper error messaging
-                throw SendMessageException("Failed to send message: ${e.message}", e)
+                // If immediate send fails, enqueue for background retry
+                enqueueBackgroundSend(messageId, protoMessage, receiverId)
             }
         }
     }
-}
 
-/**
- * Custom exception for send message failures.
- */
-class SendMessageException(
-    message: String,
-    cause: Throwable? = null
-) : Exception(message, cause)
+    private fun enqueueBackgroundSend(
+        messageId: Long,
+        protoMessage: ProtoMessage,
+        recipientId: String
+    ) {
+        val inputData = Data.Builder()
+            .putLong(SendMessageWorker.KEY_MESSAGE_ID, messageId)
+            .putByteArray(SendMessageWorker.KEY_PAYLOAD, protoMessage.toByteArray())
+            .putString(SendMessageWorker.KEY_RECIPIENT_ID, recipientId)
+            .build()
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val sendRequest = OneTimeWorkRequestBuilder<SendMessageWorker>()
+            .setConstraints(constraints)
+            .setInputData(inputData)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, WorkRequest.MIN_BACKOFF_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "send_msg_$messageId",
+            ExistingWorkPolicy.REPLACE,
+            sendRequest
+        )
+    }
+}

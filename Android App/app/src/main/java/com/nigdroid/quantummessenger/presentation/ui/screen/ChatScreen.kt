@@ -62,6 +62,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ErrorOutline
+import com.nigdroid.quantummessenger.domain.model.MessageStatus
+
 /**
  * Main chat screen composable with glassmorphism design.
  *
@@ -360,11 +365,35 @@ private fun MessageBubble(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = formatTimestamp(message.timestamp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                fontSize = 11.sp
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = formatTimestamp(message.timestamp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    fontSize = 11.sp
+                )
+
+                if (isOwn) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    val statusIcon = when (message.status) {
+                        MessageStatus.PENDING -> Icons.Default.AccessTime
+                        MessageStatus.SENT -> Icons.Default.Check
+                        MessageStatus.ERROR -> Icons.Default.ErrorOutline
+                    }
+                    val statusTint = when (message.status) {
+                        MessageStatus.ERROR -> Color.Red
+                        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    }
+                    Icon(
+                        imageVector = statusIcon,
+                        contentDescription = message.status.name,
+                        tint = statusTint,
+                        modifier = Modifier.width(12.dp).height(12.dp)
+                    )
+                }
+            }
         }
     }
 }

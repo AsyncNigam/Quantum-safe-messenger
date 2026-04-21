@@ -5,6 +5,7 @@ import com.nigdroid.quantummessenger.data.local.ChatMessageDao
 import com.nigdroid.quantummessenger.data.local.ChatMessageEntity
 import com.nigdroid.quantummessenger.data.local.LocalMessageType
 import com.nigdroid.quantummessenger.domain.model.ChatMessage
+import com.nigdroid.quantummessenger.domain.model.MessageStatus
 import com.nigdroid.quantummessenger.domain.model.MessageType
 import com.nigdroid.quantummessenger.domain.repository.ChatRepository
 import kotlinx.coroutines.flow.Flow
@@ -32,7 +33,8 @@ class ChatRepositoryImpl @Inject constructor(
             content = encryptedContent,
             timestamp = message.timestamp,
             messageType = message.messageType.toLocalMessageType(),
-            isRead = message.isRead
+            isRead = message.isRead,
+            status = message.status
         )
 
         return chatMessageDao.insertMessage(entity)
@@ -64,6 +66,10 @@ class ChatRepositoryImpl @Inject constructor(
         chatMessageDao.deleteConversation(userId, otherUserId)
     }
 
+    override suspend fun updateMessageStatus(messageId: Long, status: MessageStatus) {
+        chatMessageDao.updateMessageStatus(messageId, status)
+    }
+
     /**
      * Decrypts a ChatMessageEntity to a ChatMessage domain model.
      */
@@ -73,7 +79,6 @@ class ChatRepositoryImpl @Inject constructor(
             val decryptedBytes = cryptoManager.decrypt(encryptedBytes)
             String(decryptedBytes, Charsets.UTF_8)
         } catch (e: Exception) {
-            // If decryption fails, return a placeholder or handle error
             "[Decryption failed]"
         }
 
@@ -84,23 +89,18 @@ class ChatRepositoryImpl @Inject constructor(
             content = decryptedContent,
             timestamp = entity.timestamp,
             messageType = entity.messageType.toMessageType(),
-            isRead = entity.isRead
+            isRead = entity.isRead,
+            status = entity.status
         )
     }
 }
 
-/**
- * Converts domain MessageType to local LocalMessageType.
- */
 private fun MessageType.toLocalMessageType(): LocalMessageType = when (this) {
     MessageType.TEXT -> LocalMessageType.TEXT
     MessageType.IMAGE -> LocalMessageType.IMAGE
     MessageType.FILE -> LocalMessageType.FILE
 }
 
-/**
- * Converts local LocalMessageType to domain MessageType.
- */
 private fun LocalMessageType.toMessageType(): MessageType = when (this) {
     LocalMessageType.TEXT -> MessageType.TEXT
     LocalMessageType.IMAGE -> MessageType.IMAGE

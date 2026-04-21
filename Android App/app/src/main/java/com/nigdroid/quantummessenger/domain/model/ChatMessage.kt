@@ -11,7 +11,8 @@ data class ChatMessage(
     val content: String, // Plain text content (decrypted)
     val timestamp: Long,
     val messageType: MessageType = MessageType.TEXT,
-    val isRead: Boolean = false
+    val isRead: Boolean = false,
+    val status: MessageStatus = MessageStatus.SENT
 )
 
 enum class MessageType {

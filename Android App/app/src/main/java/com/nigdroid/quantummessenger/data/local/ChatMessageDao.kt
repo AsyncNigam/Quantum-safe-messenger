@@ -37,6 +37,9 @@ interface ChatMessageDao {
     @Query("DELETE FROM chat_messages WHERE (senderId = :userId AND receiverId = :otherUserId) OR (senderId = :otherUserId AND receiverId = :userId)")
     suspend fun deleteConversation(userId: String, otherUserId: String)
 
+    @Query("UPDATE chat_messages SET status = :status WHERE id = :messageId")
+    suspend fun updateMessageStatus(messageId: Long, status: com.nigdroid.quantummessenger.domain.model.MessageStatus)
+
     @Query("""
         SELECT * FROM chat_messages 
         WHERE (senderId = :userId OR receiverId = :userId)

@@ -2,6 +2,7 @@ package com.nigdroid.quantummessenger.network.di
 
 import com.nigdroid.quantummessenger.network.WebSocketManager
 import com.nigdroid.quantummessenger.network.api.ContactApiService
+import com.nigdroid.quantummessenger.network.api.MessageApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -49,5 +50,11 @@ object NetworkModule {
     @Singleton
     fun provideContactApiService(@Named("secureRetrofit") retrofit: Retrofit): ContactApiService {
         return retrofit.create(ContactApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMessageApiService(@Named("secureRetrofit") retrofit: Retrofit): MessageApiService {
+        return retrofit.create(MessageApiService::class.java)
     }
 }

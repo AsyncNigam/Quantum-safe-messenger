@@ -3,6 +3,8 @@ package com.nigdroid.quantummessenger.data.local
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+import com.nigdroid.quantummessenger.domain.model.MessageStatus
+
 /**
  * Entity representing a chat message stored in the encrypted database.
  */
@@ -15,7 +17,8 @@ data class ChatMessageEntity(
     val content: String, // Encrypted content
     val timestamp: Long,
     val messageType: LocalMessageType = LocalMessageType.TEXT,
-    val isRead: Boolean = false
+    val isRead: Boolean = false,
+    val status: MessageStatus = MessageStatus.SENT
 )
 
 enum class LocalMessageType {

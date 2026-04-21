@@ -49,4 +49,9 @@ interface ChatRepository {
      * @param otherUserId Other user ID
      */
     suspend fun deleteConversation(userId: String, otherUserId: String)
+
+    /**
+     * Updates the delivery status of a message.
+     */
+    suspend fun updateMessageStatus(messageId: Long, status: com.nigdroid.quantummessenger.domain.model.MessageStatus)
 }
