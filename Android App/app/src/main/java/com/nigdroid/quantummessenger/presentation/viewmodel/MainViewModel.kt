@@ -24,8 +24,15 @@ class MainViewModel @Inject constructor(
     private val _startDestination = MutableStateFlow<Any?>(null)
     val startDestination: StateFlow<Any?> = _startDestination.asStateFlow()
 
+    private val _isUnlocked = MutableStateFlow(false)
+    val isUnlocked: StateFlow<Boolean> = _isUnlocked.asStateFlow()
+
     init {
         checkRegistrationStatus()
+    }
+
+    fun setUnlocked(unlocked: Boolean) {
+        _isUnlocked.value = unlocked
     }
 
     private fun checkRegistrationStatus() {
