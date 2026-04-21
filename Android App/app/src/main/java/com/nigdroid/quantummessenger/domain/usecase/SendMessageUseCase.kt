@@ -5,7 +5,7 @@ import com.nigdroid.quantummessenger.domain.model.ChatMessage
 import com.nigdroid.quantummessenger.domain.model.MessageType
 import com.nigdroid.quantummessenger.domain.repository.ChatRepository
 import com.nigdroid.quantummessenger.network.WebSocketManager
-import com.nigdroid.quantummessenger.proto.ChatMessageProto
+import com.nigdroid.quantummessenger.proto.ChatMessage as ProtoMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -58,7 +58,7 @@ class SendMessageUseCase @Inject constructor(
 
                 // Convert to Protobuf for transmission
                 // Payload contains the plain text (server will handle encryption if needed)
-                val protoMessage = ChatMessageProto.ChatMessage.newBuilder()
+                val protoMessage = ProtoMessage.newBuilder()
                     .setSenderId(senderId)
                     .setRecipientId(receiverId)
                     .setPayload(ByteString.copyFrom(plainTextContent.toByteArray(Charsets.UTF_8)))

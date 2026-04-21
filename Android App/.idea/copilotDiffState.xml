@@ -21,6 +21,14 @@
             </PendingDiffInfo>
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/proto/encrypted_payload.proto">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/proto/encrypted_payload.proto" />
+              <option name="updatedContent" value="syntax = &quot;proto3&quot;;&#10;&#10;option java_package = &quot;com.nigdroid.quantummessenger.proto&quot;;&#10;option java_multiple_files = true;&#10;&#10;// Internal structure of encrypted message payload&#10;message EncryptedPayload {&#10;    string content = 1;           // The actual message text&#10;    string message_type = 2;      // TEXT, IMAGE, FILE, etc.&#10;    map&lt;string, string&gt; metadata = 3;  // Optional metadata (reply-to, etc.)&#10;}&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
       </map>
     </option>
   </component>

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option java_package = "com.nigdroid.quantummessenger.proto";
+option java_multiple_files = true;
+
+// Internal structure of encrypted message payload
+message EncryptedPayload {
+    string content = 1;           // The actual message text
+    string message_type = 2;      // TEXT, IMAGE, FILE, etc.
+    map<string, string> metadata = 3;  // Optional metadata (reply-to, etc.)
+}
+

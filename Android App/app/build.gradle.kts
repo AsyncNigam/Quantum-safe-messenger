@@ -27,6 +27,8 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++17"
+                // 16 KB page size alignment for Android 15+ compliance
+                cppFlags += "-Wl,-z,max-page-size=16384"
             }
         }
     }
@@ -35,6 +37,13 @@ android {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
             version = "3.22.1"
+        }
+    }
+
+    packaging {
+        jniLibs {
+            // Disable legacy packaging to allow direct memory mapping at correct alignment
+            useLegacyPackaging = false
         }
     }
 

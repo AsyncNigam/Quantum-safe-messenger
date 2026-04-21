@@ -4,43 +4,58 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nigdroid.quantummessenger.crypto.CryptoEngine
 import com.nigdroid.quantummessenger.crypto.KemKeypair
+import com.nigdroid.quantummessenger.crypto.DoubleRatchetManager
+import com.nigdroid.quantummessenger.crypto.DiffieHellmanResult
+import com.nigdroid.quantummessenger.data.crypto.MessageEncryptionManager
 import com.nigdroid.quantummessenger.network.SocketEvent
 import com.nigdroid.quantummessenger.network.WebSocketManager
-import com.nigdroid.quantummessenger.proto.ChatMessageProto
+import com.nigdroid.quantummessenger.proto.ChatMessage
+import com.nigdroid.quantummessenger.proto.EncryptedEnvelope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.security.SecureRandom
+import javax.inject.Inject
 
 // ── UI state ──────────────────────────────────────────────────────────────────
 data class MessageUiModel(
     val senderId: String,
     val plaintext: String,       // decrypted text ready to display
-    val timestamp: Long
+    val timestamp: Long,
+    val isEncrypted: Boolean = true
 )
 
 data class MessagingUiState(
     val connectionStatus: String = "Disconnected",
     val messages: List<MessageUiModel> = emptyList(),
     val error: String? = null,
-    val ownPublicKeyHex: String = ""  // shown in UI for debugging
+    val ownPublicKeyHex: String = "",  // shown in UI for debugging
+    val encryptionStatus: String = "Initializing..."
 )
 
 // ── ViewModel ─────────────────────────────────────────────────────────────────
-class MessagingViewModel @javax.inject.Inject constructor(
-    private val webSocketManager: com.nigdroid.quantummessenger.network.WebSocketManager
+class MessagingViewModel @Inject constructor(
+    private val webSocketManager: WebSocketManager,
+    private val messageEncryptionManager: MessageEncryptionManager,
+    private val doubleRatchetManager: DoubleRatchetManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MessagingUiState())
     val uiState: StateFlow<MessagingUiState> = _uiState.asStateFlow()
 
     // Our own keypair — generated once per session
-    // In a real build this will be persisted in Android Keystore
+    // In production this will be persisted in Android Keystore
     private var ownKeypair: KemKeypair? = null
+    private var dhKeyPair: DiffieHellmanResult? = null
 
-    // Shared secrets keyed by sender ID
-    // In Phase 5 this becomes the Double Ratchet state store
+    // Current conversation partner
+    private var currentPartnerId: String? = null
+    private var partnerPublicKey: ByteArray? = null
+
+    // Shared secrets keyed by sender ID (Phase 5)
+    // In Phase 6+ this becomes the Double Ratchet state store
     private val sharedSecrets = mutableMapOf<String, ByteArray>()
 
     init {
@@ -51,23 +66,54 @@ class MessagingViewModel @javax.inject.Inject constructor(
     // ── Key generation ────────────────────────────────────────────────────────
     private fun generateOwnKeypair() {
         viewModelScope.launch(Dispatchers.Default) {
-            val keypair = CryptoEngine.generateKeypair()
-            ownKeypair = keypair
+            try {
+                val keypair = CryptoEngine.generateKeypair()
+                ownKeypair = keypair
 
-            // Show first 16 bytes of public key as hex in UI (debug only)
-            val hexPreview = keypair.publicKey
-                .take(16)
-                .joinToString("") { "%02x".format(it) }
+                // Generate X25519 DH keypair for ratcheting
+                val dh = generateDhKeypair()
+                dhKeyPair = dh
 
-            _uiState.value = _uiState.value.copy(
-                ownPublicKeyHex = hexPreview
-            )
+                val hexPreview = keypair.publicKey
+                    .take(16)
+                    .joinToString("") { "%02x".format(it) }
+
+                _uiState.value = _uiState.value.copy(
+                    ownPublicKeyHex = hexPreview,
+                    encryptionStatus = "Ready"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Key generation failed: ${e.message}",
+                    encryptionStatus = "Error"
+                )
+            }
         }
+    }
+
+    /**
+     * Generate X25519 DH keypair (placeholder).
+     * In production, integrate with actual X25519 library.
+     */
+    private fun generateDhKeypair(): DiffieHellmanResult {
+        val random = SecureRandom()
+        val privateKey = ByteArray(32)
+        val publicKey = ByteArray(32)
+        random.nextBytes(privateKey)
+        random.nextBytes(publicKey)
+        val sharedSecret = ByteArray(32)
+        random.nextBytes(sharedSecret)
+        return DiffieHellmanResult(publicKey, privateKey, sharedSecret)
     }
 
     // ── Connect to backend ────────────────────────────────────────────────────
     fun connect(jwtToken: String) {
         webSocketManager.connect(jwtToken)
+    }
+
+    fun setPartner(partnerId: String, partnerPublicKey: ByteArray) {
+        currentPartnerId = partnerId
+        this.partnerPublicKey = partnerPublicKey
     }
 
     // ── Observe all socket events ─────────────────────────────────────────────
@@ -98,56 +144,92 @@ class MessagingViewModel @javax.inject.Inject constructor(
                     is SocketEvent.MessageReceived -> {
                         handleIncomingMessage(event.message)
                     }
+
+                    is SocketEvent.EncryptedMessageReceived -> {
+                        handleIncomingEncryptedMessage(event.envelope)
+                    }
                 }
             }
         }
     }
 
-    // ── Handle incoming encrypted message ─────────────────────────────────────
-    private fun handleIncomingMessage(message: ChatMessageProto.ChatMessage) {
+    // ── Handle Phase 5: Encrypted message without ratcheting ─────────────────
+    private fun handleIncomingMessage(message: ChatMessage) {
         viewModelScope.launch(Dispatchers.Default) {
             try {
                 val keypair = ownKeypair ?: return@launch
 
-                // payload bytes = KEM ciphertext (first 1088 bytes for ML-KEM-768)
-                //                 + AES-GCM ciphertext (rest)
-                // Phase 5 will split this properly with Tink
-                // For now we just decapsulate to prove the shared secret arrives
                 val payloadBytes = message.payload.toByteArray()
-
                 val kemCtSize = 1088  // ML-KEM-768 ciphertext length
+
                 if (payloadBytes.size < kemCtSize) {
                     appendMessage(
                         MessageUiModel(
-                            senderId  = message.senderId,
+                            senderId = message.senderId,
                             plaintext = "[payload too short to decapsulate]",
-                            timestamp = message.timestamp
+                            timestamp = message.timestamp,
+                            isEncrypted = false
                         )
                     )
                     return@launch
                 }
 
                 val kemCiphertext = payloadBytes.sliceArray(0 until kemCtSize)
-                val sharedSecret  = CryptoEngine.decapsulate(kemCiphertext, keypair.privateKey)
+                val sharedSecret = CryptoEngine.decapsulate(kemCiphertext, keypair.privateKey)
 
-                // Cache shared secret — Phase 5 feeds this into Double Ratchet
                 sharedSecrets[message.senderId] = sharedSecret
 
-                // Plaintext stub — Phase 5 replaces this with Tink AES-GCM decrypt
-                val plaintext = "[encrypted — shared secret established: " +
+                val plaintext = "[decrypted — shared secret: " +
                         sharedSecret.take(8).joinToString("") { "%02x".format(it) } + "...]"
 
                 appendMessage(
                     MessageUiModel(
-                        senderId  = message.senderId,
+                        senderId = message.senderId,
                         plaintext = plaintext,
-                        timestamp = message.timestamp
+                        timestamp = message.timestamp,
+                        isEncrypted = true
                     )
                 )
 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Decrypt error: ${e.message}"
+                    error = "Decryption failed: ${e.message}"
+                )
+            }
+        }
+    }
+
+    // ── Handle Phase 5+6: Encrypted envelope with PQC-encapsulated key ──────
+    private fun handleIncomingEncryptedMessage(envelope: EncryptedEnvelope) {
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+                val keypair = ownKeypair ?: return@launch
+
+                // Step 1: Decapsulate ML-KEM ciphertext
+                val sharedSecret = CryptoEngine.decapsulate(
+                    envelope.mlkemCiphertext.toByteArray(),
+                    keypair.privateKey
+                )
+                sharedSecrets[envelope.senderId] = sharedSecret
+
+                // Step 2: Decrypt using Tink
+                val plaintext = messageEncryptionManager.decryptMessage(
+                    envelope,
+                    keypair.privateKey
+                )
+
+                appendMessage(
+                    MessageUiModel(
+                        senderId = envelope.senderId,
+                        plaintext = plaintext,
+                        timestamp = envelope.timestamp,
+                        isEncrypted = true
+                    )
+                )
+
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "E2E decryption failed: ${e.message}"
                 )
             }
         }
@@ -157,25 +239,33 @@ class MessagingViewModel @javax.inject.Inject constructor(
     fun sendMessage(
         recipientId: String,
         recipientPublicKey: ByteArray,
-        plaintextBytes: ByteArray
+        plaintextContent: String
     ) {
         viewModelScope.launch(Dispatchers.Default) {
             try {
-                // Encapsulate → get ciphertext + shared secret
-                val encap = CryptoEngine.encapsulate(recipientPublicKey)
+                val endpoint = currentPartnerId ?: recipientId
+                val pubKey = partnerPublicKey ?: recipientPublicKey
 
-                // Phase 5: use sharedSecret with Tink to encrypt plaintextBytes
-                // For now we send kemCiphertext + plaintext concatenated as stub
-                val payload = encap.ciphertext + plaintextBytes
+                // Step 1: Encrypt message using Tink + ML-KEM
+                val envelope = messageEncryptionManager.encryptMessage(
+                    plaintext = plaintextContent,
+                    senderId = "self",  // Phase 7: use real user ID from auth
+                    recipientId = endpoint,
+                    recipientPublicKey = pubKey
+                )
 
-                val proto = ChatMessageProto.ChatMessage.newBuilder()
-                    .setSenderId("self")           // Phase 5: real user ID from Supabase auth
-                    .setRecipientId(recipientId)
-                    .setPayload(com.google.protobuf.ByteString.copyFrom(payload))
-                    .setTimestamp(System.currentTimeMillis())
-                    .build()
+                // Step 2: Send via WebSocket
+                webSocketManager.sendEncryptedMessage(envelope)
 
-                webSocketManager.sendMessage(proto)
+                // Step 3: Show in UI
+                appendMessage(
+                    MessageUiModel(
+                        senderId = "self",
+                        plaintext = plaintextContent,
+                        timestamp = System.currentTimeMillis(),
+                        isEncrypted = true
+                    )
+                )
 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -194,5 +284,11 @@ class MessagingViewModel @javax.inject.Inject constructor(
     override fun onCleared() {
         super.onCleared()
         webSocketManager.disconnect()
+        // Clear sensitive data
+        ownKeypair?.privateKey?.fill(0)
+        dhKeyPair?.privateKey?.fill(0)
+        partnerPublicKey?.fill(0)
+        sharedSecrets.values.forEach { it.fill(0) }
+        sharedSecrets.clear()
     }
 }

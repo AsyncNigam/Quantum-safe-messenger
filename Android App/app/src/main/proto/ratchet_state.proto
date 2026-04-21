@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option java_package = "com.nigdroid.quantummessenger.proto";
+option java_multiple_files = true;
+
+// Metadata for Double Ratchet messaging
+message MessageKeyInfo {
+    int32 send_chain_length = 1;      // How many times we've ratcheted
+    int32 message_counter = 2;        // Counter for this chain
+    bytes next_public_key = 3;        // Our next DH public key (for receiving party)
+}
+
+// Stored ratchet state for a conversation
+message RatchetSessionState {
+    string user_id = 1;               // ID of the other user
+    bytes send_chain_key = 2;         // For encrypting messages we send
+    bytes receive_chain_key = 3;      // For decrypting messages we receive
+    bytes dh_public_key = 4;          // Our current DH public key
+    bytes dh_private_key = 5;         // Our current DH private key (STORED SECURELY)
+    bytes remote_dh_public_key = 6;   // The other user's last DH public key
+    int32 send_chain_counter = 7;     // How many times we've ratcheted send
+    int32 receive_chain_counter = 8;  // How many times they've ratcheted
+    int64 timestamp = 9;              // When this session was established
+}
+

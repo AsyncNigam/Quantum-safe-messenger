@@ -3,12 +3,21 @@ syntax = "proto3";
 package com.nigdroid.quantummessenger.proto;
 
 option java_package = "com.nigdroid.quantummessenger.proto";
-option java_outer_classname = "ChatMessageProto";
+option java_multiple_files = true;
 
+// The encrypted message envelope that travels over the wire
+message EncryptedEnvelope {
+    string recipient_id = 1;
+    bytes ciphertext = 2;       // AES-encrypted message data
+    bytes mlkem_ciphertext = 3; // ML-KEM (PQC) encapsulated key
+    int64 timestamp = 4;
+    string sender_id = 5;       // Who sent this message
+}
+
+// Original ChatMessage structure for backward compatibility
 message ChatMessage {
   string sender_id = 1;
   string recipient_id = 2;
   bytes payload = 3;
   int64 timestamp = 4;
 }
-

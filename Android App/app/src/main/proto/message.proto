@@ -3,9 +3,6 @@ syntax = "proto3";
 option java_package = "com.nigdroid.quantummessenger.proto";
 option java_multiple_files = true;
 
-message ChatMessage {
-  string sender_id = 1;
-  string recipient_id = 2;
-  bytes payload = 3;
-  int64 timestamp = 4;
-}
+// This file is deprecated. Use chat_message.proto instead.
+// All message definitions have been moved to chat_message.proto
+

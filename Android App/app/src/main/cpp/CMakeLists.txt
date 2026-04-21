@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project("quantummessenger")
 
+# 16 KB page size alignment for Android 15+ compliance
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
+
 # Tell CMake where the liboqs header files are
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/liboqs/include)
 
