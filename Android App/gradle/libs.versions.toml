@@ -25,6 +25,7 @@ sqlcipher = "4.5.4"
 lifecycleViewmodel = "2.10.0"
 securityCrypto = "1.1.0-alpha06"
 kotlinxSerialization = "1.7.3"
+datastore = "1.2.1"
 
 
 [libraries]
@@ -63,6 +64,7 @@ androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmode
 androidx-lifecycle-viewmodel-hilt = { module = "androidx.hilt:hilt-lifecycle-viewmodel", version = "1.0.0-alpha03" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version = "1.2.0" }
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 
 

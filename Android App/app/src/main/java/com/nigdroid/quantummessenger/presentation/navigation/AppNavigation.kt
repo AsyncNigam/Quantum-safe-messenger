@@ -1,22 +1,27 @@
 package com.nigdroid.quantummessenger.presentation.navigation
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import com.nigdroid.quantummessenger.presentation.ui.screen.ChatScreen
 import com.nigdroid.quantummessenger.presentation.ui.screen.auth.AuthScreen
 import com.nigdroid.quantummessenger.presentation.ui.screen.home.HomeScreen
 
+/**
+ * AppNavigation handles the type-safe navigation between screens.
+ * Includes premium transitions matching the Glassmorphism aesthetic.
+ */
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    startDestination: String,
+    startDestination: Any,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -24,50 +29,40 @@ fun AppNavigation(
         startDestination = startDestination,
         modifier = modifier
     ) {
-        composable(
-            route = Screen.Auth.route,
-            enterTransition = { fadeIn(animationSpec = tween(500)) },
-            exitTransition = { fadeOut(animationSpec = tween(500)) }
+        // Auth Screen
+        composable<AuthRoute>(
+            enterTransition = { fadeIn(animationSpec = tween(700)) },
+            exitTransition = { fadeOut(animationSpec = tween(700)) }
         ) {
             AuthScreen(
                 onAuthSuccess = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Auth.route) { inclusive = true }
+                    navController.navigate(HomeRoute) {
+                        popUpTo(AuthRoute) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(
-            route = Screen.Home.route,
+        // Home/Inbox Screen
+        composable<HomeRoute>(
             enterTransition = {
                 slideIntoContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(400)
-                ) + fadeIn(animationSpec = tween(400))
+                    AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = spring(stiffness = Spring.StiffnessLow)
+                ) + fadeIn()
             },
             exitTransition = {
                 slideOutOfContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(400)
-                ) + fadeOut(animationSpec = tween(400))
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = spring(stiffness = Spring.StiffnessLow)
+                ) + fadeOut()
             },
-            popEnterTransition = {
-                slideIntoContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(400)
-                ) + fadeIn(animationSpec = tween(400))
-            },
-            popExitTransition = {
-                slideOutOfContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(400)
-                ) + fadeOut(animationSpec = tween(400))
-            }
+            popEnterTransition = { fadeIn() },
+            popExitTransition = { fadeOut() }
         ) {
             HomeScreen(
                 onChatClick = { userId ->
-                    navController.navigate(Screen.Chat.createRoute(userId))
+                    navController.navigate(ChatRoute(userId))
                 },
                 onNewChatClick = {
                     // Navigate to Contact Discovery or similar
@@ -75,24 +70,23 @@ fun AppNavigation(
             )
         }
 
-        composable(
-            route = Screen.Chat.route,
-            arguments = listOf(navArgument("userId") { type = NavType.StringType }),
+        // Chat Screen
+        composable<ChatRoute>(
             enterTransition = {
                 slideIntoContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(400)
-                ) + fadeIn(animationSpec = tween(400))
+                    AnimatedContentTransitionScope.SlideDirection.Start,
+                    animationSpec = tween(500)
+                ) + fadeIn()
             },
             exitTransition = {
                 slideOutOfContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(400)
-                ) + fadeOut(animationSpec = tween(400))
+                    AnimatedContentTransitionScope.SlideDirection.End,
+                    animationSpec = tween(500)
+                ) + fadeOut()
             }
         ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
-            ChatScreen(participantId = userId)
+            val chatRoute: ChatRoute = backStackEntry.toRoute()
+            ChatScreen(participantId = chatRoute.userId)
         }
     }
 }
