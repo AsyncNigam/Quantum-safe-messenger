@@ -3,6 +3,7 @@ package com.nigdroid.quantummessenger.network.di
 import com.nigdroid.quantummessenger.network.WebSocketManager
 import com.nigdroid.quantummessenger.network.api.ContactApiService
 import com.nigdroid.quantummessenger.network.api.MessageApiService
+import com.nigdroid.quantummessenger.util.Constants
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,8 +20,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
-    private const val BASE_URL = "http://10.0.2.2:3000/" // Default for Android Emulator localhost
 
     @Provides
     @Singleton
@@ -40,7 +39,7 @@ object NetworkModule {
     @Named("secureRetrofit")
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(Constants.BACKEND_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

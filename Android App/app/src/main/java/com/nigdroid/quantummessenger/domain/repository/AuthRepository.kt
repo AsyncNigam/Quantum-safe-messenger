@@ -14,10 +14,10 @@ interface AuthRepository {
     /**
      * Generate cryptographic identity for new user
      *
-     * @param phoneNumber User's phone number in E.164 format
+     * @param identifier User's identifier (Email or Phone)
      * @return IdentityGenerationResult with generated identity or error
      */
-    suspend fun generateIdentity(phoneNumber: String): IdentityGenerationResult
+    suspend fun generateIdentity(identifier: String): IdentityGenerationResult
 
     /**
      * Register generated identity with authentication server
@@ -38,10 +38,10 @@ interface AuthRepository {
     /**
      * Check if user is already registered
      *
-     * @param phoneNumber Phone number to check
+     * @param identifier Identifier to check
      * @return true if registered, false otherwise
      */
-    suspend fun isUserRegistered(phoneNumber: String): Boolean
+    suspend fun isUserRegistered(identifier: String): Boolean
 
     /**
      * Retrieve stored identity (after registration)
@@ -55,5 +55,45 @@ interface AuthRepository {
      * Clear all authentication data (logout)
      */
     suspend fun clearAuthentication()
+
+    /**
+     * Sign in anonymously to Supabase to get a valid JWT
+     */
+    suspend fun signInAnonymously(): Result<Unit>
+
+    /**
+     * Start phone number authentication by sending an OTP
+     *
+     * @param phoneNumber Phone number in E.164 format
+     * @return Result of the operation
+     */
+    // suspend fun sendOtpToPhone(phoneNumber: String): Result<Unit>
+
+    /**
+     * Verify the OTP sent to the phone number
+     *
+     * @param phoneNumber Phone number in E.164 format
+     * @param otp The one-time password received
+     * @return Result of the operation
+     */
+    // suspend fun verifyOtp(phoneNumber: String, otp: String): Result<Unit>
+
+    /**
+     * Sign in with email and password via Supabase
+     *
+     * @param email User's email address
+     * @param password User's password
+     * @return Result of the operation
+     */
+    suspend fun signInWithEmail(email: String, password: String): Result<Unit>
+
+    /**
+     * Sign up with email and password via Supabase
+     *
+     * @param email User's email address
+     * @param password User's password
+     * @return Result of the operation
+     */
+    suspend fun signUpWithEmail(email: String, password: String): Result<Unit>
 }
 

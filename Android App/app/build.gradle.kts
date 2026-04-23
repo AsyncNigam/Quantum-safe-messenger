@@ -144,4 +144,12 @@ dependencies {
     ksp(libs.androidx.hilt.compiler.work)
     implementation(libs.androidx.biometric)
     implementation("androidx.appcompat:appcompat:1.7.0")
+
+    // Supabase & Ktor
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
 }

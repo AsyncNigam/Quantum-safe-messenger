@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import com.nigdroid.quantummessenger.proto.ChatMessage
+import com.nigdroid.quantummessenger.proto.ChatMessage as ProtoMessage
 import com.nigdroid.quantummessenger.proto.EncryptedEnvelope
 import org.json.JSONObject
 
@@ -16,7 +16,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 sealed class SocketEvent {
-    data class MessageReceived(val message: ChatMessage) : SocketEvent()
+    data class MessageReceived(val message: ProtoMessage) : SocketEvent()
     data class EncryptedMessageReceived(val envelope: EncryptedEnvelope) : SocketEvent()
     data object Connected : SocketEvent()
     data object Disconnected : SocketEvent()
@@ -26,9 +26,8 @@ sealed class SocketEvent {
 @Singleton
 class WebSocketManager @Inject constructor() {
 
-    // Replace with your PC's local IP (run ipconfig in PowerShell)
-    // Do NOT use localhost — it won't reach your PC from a physical phone
-    private val SERVER_URL = "http://192.168.x.x:3000"
+    // Updated to your computer's local IP
+    private val SERVER_URL = "http://192.168.1.2:3000"
 
     private var socket: Socket? = null
 
@@ -68,7 +67,7 @@ class WebSocketManager @Inject constructor() {
             on("receive_message") { args ->
                 try {
                     val bytes = args[0] as ByteArray
-                    val message = ChatMessage.parseFrom(bytes)
+                    val message = ProtoMessage.parseFrom(bytes)
                     _events.tryEmit(SocketEvent.MessageReceived(message))
                 } catch (e: Exception) {
                     _events.tryEmit(SocketEvent.Error("Parse error: ${e.message}"))
@@ -90,7 +89,7 @@ class WebSocketManager @Inject constructor() {
         }
     }
 
-    fun sendMessage(message: ChatMessage) {
+    fun sendMessage(message: ProtoMessage) {
         // Serialize to Protobuf bytes and emit to server (legacy)
         socket?.emit("send_message", message.toByteArray())
     }

@@ -19,6 +19,8 @@ sealed class AuthState {
     data class GeneratingKeys(val progress: Int = 0) : AuthState()
     data class Uploading(val identity: Identity) : AuthState()
     data class Success(val userId: String, val identity: Identity) : AuthState()
+    data class Authenticating(val email: String) : AuthState()
+    data class WaitingForEmailConfirmation(val email: String) : AuthState()
     data class Error(val message: String, val exception: Exception?, val step: ErrorStep = ErrorStep.UNKNOWN) : AuthState()
 }
 
@@ -35,69 +37,101 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    fun secureLogin(phoneNumber: String) {
+    fun loginWithEmail(email: String, password: String) {
         viewModelScope.launch {
-            try {
-                val validationError = validatePhoneNumber(phoneNumber)
-                if (validationError != null) {
-                    _authState.value = AuthState.Error(validationError, null, ErrorStep.VALIDATION)
-                    return@launch
-                }
+            if (!validateEmail(email)) {
+                _authState.value = AuthState.Error("Invalid email format", null, ErrorStep.VALIDATION)
+                return@launch
+            }
 
-                _authState.value = AuthState.GeneratingKeys(progress = 0)
-                val generationResult = authRepository.generateIdentity(phoneNumber)
-
-                when (generationResult) {
-                    is IdentityGenerationResult.Success -> {
-                        val identity = generationResult.identity
-                        _authState.value = AuthState.Uploading(identity)
-
-                        val registerResult = authRepository.registerIdentity(identity)
-                        when (registerResult) {
-                            is AuthenticationResult.Success -> {
-                                sessionManager.setUserRegistered(true)
-                                _authState.value = AuthState.Success(registerResult.userId, registerResult.identity)
-                            }
-                            is AuthenticationResult.Error -> {
-                                _authState.value = AuthState.Error(registerResult.message, registerResult.exception, ErrorStep.REGISTRATION)
-                            }
-                            AuthenticationResult.InvalidInput -> {
-                                _authState.value = AuthState.Error("Invalid identity format", null, ErrorStep.VALIDATION)
-                            }
-                            AuthenticationResult.NetworkError -> {
-                                _authState.value = AuthState.Error("Network error. Please check your connection.", null, ErrorStep.REGISTRATION)
-                            }
-                        }
-                    }
-                    is IdentityGenerationResult.Error -> {
-                        _authState.value = AuthState.Error(generationResult.message, generationResult.exception, ErrorStep.KEY_GENERATION)
-                    }
-                    IdentityGenerationResult.Cancelled -> {
-                        _authState.value = AuthState.Idle
-                    }
-                }
-            } catch (e: Exception) {
-                _authState.value = AuthState.Error("Unexpected error: ${e.message}", e, ErrorStep.UNKNOWN)
+            _authState.value = AuthState.Authenticating(email)
+            val result = authRepository.signInWithEmail(email, password)
+            
+            if (result.isSuccess) {
+                // After successful sign in, proceed to identity registration
+                handleSuccessfulAuth(email)
+            } else {
+                _authState.value = AuthState.Error(
+                    "Login failed: ${result.exceptionOrNull()?.message}",
+                    result.exceptionOrNull() as? Exception,
+                    ErrorStep.AUTHENTICATION
+                )
             }
         }
     }
 
-    fun retryLogin(phoneNumber: String) {
-        _authState.value = AuthState.Idle
-        secureLogin(phoneNumber)
-    }
+    fun signUpWithEmail(email: String, password: String) {
+        viewModelScope.launch {
+            if (!validateEmail(email)) {
+                _authState.value = AuthState.Error("Invalid email format", null, ErrorStep.VALIDATION)
+                return@launch
+            }
 
-    fun cancelLogin() {
-        _authState.value = AuthState.Idle
-    }
+            _authState.value = AuthState.Authenticating(email)
+            val result = authRepository.signUpWithEmail(email, password)
 
-    private fun validatePhoneNumber(phoneNumber: String): String? {
-        return when {
-            phoneNumber.isBlank() -> "Phone number cannot be empty"
-            !phoneNumber.startsWith("+") -> "Phone number must start with +"
-            phoneNumber.length < 10 -> "Phone number is too short"
-            phoneNumber.length > 15 -> "Phone number is too long"
-            else -> null
+            if (result.isSuccess) {
+                // After sign up, we might need email confirmation. 
+                // We'll try to proceed, but handleSuccessfulAuth will check for session.
+                _authState.value = AuthState.WaitingForEmailConfirmation(email)
+            } else {
+                _authState.value = AuthState.Error(
+                    "Sign up failed: ${result.exceptionOrNull()?.message}",
+                    result.exceptionOrNull() as? Exception,
+                    ErrorStep.AUTHENTICATION
+                )
+            }
         }
+    }
+
+    /**
+     * This can be called after user confirms email and clicks a button, or after login
+     */
+    fun onEmailConfirmed(email: String) {
+        viewModelScope.launch {
+            handleSuccessfulAuth(email)
+        }
+    }
+
+    private suspend fun handleSuccessfulAuth(identifier: String) {
+        try {
+            _authState.value = AuthState.GeneratingKeys(progress = 0)
+            val generationResult = authRepository.generateIdentity(identifier)
+
+            when (generationResult) {
+                is IdentityGenerationResult.Success -> {
+                    val identity = generationResult.identity
+                    _authState.value = AuthState.Uploading(identity)
+
+                    val registerResult = authRepository.registerIdentity(identity)
+                    when (registerResult) {
+                        is AuthenticationResult.Success -> {
+                            sessionManager.setUserRegistered(true)
+                            _authState.value = AuthState.Success(registerResult.userId, registerResult.identity)
+                        }
+                        is AuthenticationResult.Error -> {
+                            _authState.value = AuthState.Error(registerResult.message, registerResult.exception, ErrorStep.REGISTRATION)
+                        }
+                        else -> {
+                            _authState.value = AuthState.Error("Registration failed", null, ErrorStep.REGISTRATION)
+                        }
+                    }
+                }
+                is IdentityGenerationResult.Error -> {
+                    _authState.value = AuthState.Error(generationResult.message, generationResult.exception, ErrorStep.KEY_GENERATION)
+                }
+                else -> _authState.value = AuthState.Idle
+            }
+        } catch (e: Exception) {
+            _authState.value = AuthState.Error("Unexpected error: ${e.message}", e, ErrorStep.UNKNOWN)
+        }
+    }
+
+    fun retryLogin() {
+        _authState.value = AuthState.Idle
+    }
+
+    private fun validateEmail(email: String): Boolean {
+        return email.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 }

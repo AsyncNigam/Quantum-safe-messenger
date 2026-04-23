@@ -11,7 +11,7 @@ package com.nigdroid.quantummessenger.domain.model
  */
 data class Identity(
     val userId: String,
-    val phoneNumber: String,
+    val identifier: String,             // Email or Phone Number
     val mlKemPublicKey: ByteArray,      // ML-KEM public key (bytes)
     val mlDsaPublicKey: ByteArray,      // ML-DSA signature verification key (bytes)
     val x25519PublicKey: ByteArray,     // X25519 ephemeral key (bytes)
@@ -22,11 +22,11 @@ data class Identity(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Identity) return false
-        return userId == other.userId && phoneNumber == other.phoneNumber
+        return userId == other.userId && identifier == other.identifier
     }
 
     override fun hashCode(): Int {
-        return 31 * userId.hashCode() + phoneNumber.hashCode()
+        return 31 * userId.hashCode() + identifier.hashCode()
     }
 }
 
@@ -34,7 +34,7 @@ data class Identity(
  * Request payload for authentication server registration
  */
 data class AuthRegisterRequest(
-    val phoneNumber: String,
+    val identifier: String,             // Email or Phone Number
     val mlKemPublicKey: String,         // Base64 encoded
     val mlDsaPublicKey: String,         // Base64 encoded
     val x25519PublicKey: String,        // Base64 encoded
@@ -97,4 +97,3 @@ sealed class AuthenticationResult {
     object NetworkError : AuthenticationResult()
     object InvalidInput : AuthenticationResult()
 }
-
