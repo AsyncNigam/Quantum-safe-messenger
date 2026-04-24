@@ -144,6 +144,9 @@ dependencies {
     ksp(libs.androidx.hilt.compiler.work)
     implementation(libs.androidx.biometric)
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // Supabase & Ktor
     implementation(platform(libs.supabase.bom))

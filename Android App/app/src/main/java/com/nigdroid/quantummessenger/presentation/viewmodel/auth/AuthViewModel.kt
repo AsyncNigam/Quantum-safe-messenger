@@ -19,8 +19,7 @@ sealed class AuthState {
     data class GeneratingKeys(val progress: Int = 0) : AuthState()
     data class Uploading(val identity: Identity) : AuthState()
     data class Success(val userId: String, val identity: Identity) : AuthState()
-    data class Authenticating(val email: String) : AuthState()
-    data class WaitingForEmailConfirmation(val email: String) : AuthState()
+    object Authenticating : AuthState()
     data class Error(val message: String, val exception: Exception?, val step: ErrorStep = ErrorStep.UNKNOWN) : AuthState()
 }
 
@@ -37,59 +36,20 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    fun loginWithEmail(email: String, password: String) {
+    fun signInWithGoogle(idToken: String, email: String, nonce: String? = null) {
         viewModelScope.launch {
-            if (!validateEmail(email)) {
-                _authState.value = AuthState.Error("Invalid email format", null, ErrorStep.VALIDATION)
-                return@launch
-            }
-
-            _authState.value = AuthState.Authenticating(email)
-            val result = authRepository.signInWithEmail(email, password)
+            _authState.value = AuthState.Authenticating
+            val result = authRepository.signInWithGoogle(idToken, nonce)
             
             if (result.isSuccess) {
-                // After successful sign in, proceed to identity registration
                 handleSuccessfulAuth(email)
             } else {
                 _authState.value = AuthState.Error(
-                    "Login failed: ${result.exceptionOrNull()?.message}",
+                    "Google Sign-In failed: ${result.exceptionOrNull()?.message}",
                     result.exceptionOrNull() as? Exception,
                     ErrorStep.AUTHENTICATION
                 )
             }
-        }
-    }
-
-    fun signUpWithEmail(email: String, password: String) {
-        viewModelScope.launch {
-            if (!validateEmail(email)) {
-                _authState.value = AuthState.Error("Invalid email format", null, ErrorStep.VALIDATION)
-                return@launch
-            }
-
-            _authState.value = AuthState.Authenticating(email)
-            val result = authRepository.signUpWithEmail(email, password)
-
-            if (result.isSuccess) {
-                // After sign up, we might need email confirmation. 
-                // We'll try to proceed, but handleSuccessfulAuth will check for session.
-                _authState.value = AuthState.WaitingForEmailConfirmation(email)
-            } else {
-                _authState.value = AuthState.Error(
-                    "Sign up failed: ${result.exceptionOrNull()?.message}",
-                    result.exceptionOrNull() as? Exception,
-                    ErrorStep.AUTHENTICATION
-                )
-            }
-        }
-    }
-
-    /**
-     * This can be called after user confirms email and clicks a button, or after login
-     */
-    fun onEmailConfirmed(email: String) {
-        viewModelScope.launch {
-            handleSuccessfulAuth(email)
         }
     }
 
@@ -129,9 +89,5 @@ class AuthViewModel @Inject constructor(
 
     fun retryLogin() {
         _authState.value = AuthState.Idle
-    }
-
-    private fun validateEmail(email: String): Boolean {
-        return email.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 }

@@ -82,7 +82,7 @@ process.on('SIGINT',  () => void gracefulShutdown('SIGINT'));
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
-httpServer.listen(appConfig.port, () => {
+httpServer.listen(appConfig.port, '0.0.0.0', () => {
   console.log(`✅  Quantum Messenger API  →  http://localhost:${appConfig.port}`);
   console.log(`🔌  Socket.io              →  ws://localhost:${appConfig.port}`);
   console.log(`🛡️  Helmet + Rate Limiting  →  active`);

@@ -35,9 +35,17 @@ export const validateKeyBundle = (
   res: Response,
   next: NextFunction,
 ): void => {
+  console.log('[VALIDATOR] Received body keys:', Object.keys(req.body));
+  console.log('[VALIDATOR] Body:', JSON.stringify(req.body, null, 2));
+  
   const result = keyBundleSchema.safeParse(req.body);
 
   if (!result.success) {
+    console.log('[VALIDATOR] ❌ Validation failed:');
+    result.error.issues.forEach(issue => {
+      console.log(`  - ${issue.path.join('.')}: ${issue.message}`);
+    });
+    
     res.status(400).json({
       error: 'Validation failed',
       issues: result.error.issues.map((issue) => ({
@@ -48,6 +56,7 @@ export const validateKeyBundle = (
     return;
   }
 
+  console.log('[VALIDATOR] ✅ Validation passed');
   // Replace raw body with sanitized, schema-validated data
   req.body = result.data;
   next();

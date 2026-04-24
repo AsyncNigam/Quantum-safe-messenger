@@ -62,38 +62,11 @@ interface AuthRepository {
     suspend fun signInAnonymously(): Result<Unit>
 
     /**
-     * Start phone number authentication by sending an OTP
+     * Sign in with Google ID Token via Supabase
      *
-     * @param phoneNumber Phone number in E.164 format
+     * @param idToken Google ID Token from Credential Manager
+     * @param nonce The nonce used to generate the ID token
      * @return Result of the operation
      */
-    // suspend fun sendOtpToPhone(phoneNumber: String): Result<Unit>
-
-    /**
-     * Verify the OTP sent to the phone number
-     *
-     * @param phoneNumber Phone number in E.164 format
-     * @param otp The one-time password received
-     * @return Result of the operation
-     */
-    // suspend fun verifyOtp(phoneNumber: String, otp: String): Result<Unit>
-
-    /**
-     * Sign in with email and password via Supabase
-     *
-     * @param email User's email address
-     * @param password User's password
-     * @return Result of the operation
-     */
-    suspend fun signInWithEmail(email: String, password: String): Result<Unit>
-
-    /**
-     * Sign up with email and password via Supabase
-     *
-     * @param email User's email address
-     * @param password User's password
-     * @return Result of the operation
-     */
-    suspend fun signUpWithEmail(email: String, password: String): Result<Unit>
+    suspend fun signInWithGoogle(idToken: String, nonce: String? = null): Result<Unit>
 }
-

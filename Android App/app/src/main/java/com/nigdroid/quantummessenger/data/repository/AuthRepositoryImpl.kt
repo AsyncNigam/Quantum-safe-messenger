@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Base64
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import com.nigdroid.quantummessenger.domain.model.AuthRegisterRequest
 import com.nigdroid.quantummessenger.domain.model.AuthenticationResult
 import com.nigdroid.quantummessenger.domain.model.Identity
 import com.nigdroid.quantummessenger.domain.model.IdentityGenerationResult
@@ -20,18 +19,10 @@ import javax.inject.Singleton
 import com.nigdroid.quantummessenger.network.api.KeyUploadRequest
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.Google
+import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
-import io.github.jan.supabase.auth.user.UserInfo
 
-/**
- * Implementation of AuthRepository
- *
- * Orchestrates:
- * 1. Supabase Email/Password Authentication
- * 2. Cryptographic identity generation
- * 3. Server registration (Key bundle upload)
- */
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -63,7 +54,6 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun registerIdentity(identity: Identity): AuthenticationResult =
         withContext(Dispatchers.IO) {
             try {
-                // 1. Get the current Supabase session
                 val session = when (val status = supabaseAuth.sessionStatus.value) {
                     is SessionStatus.Authenticated -> status.session
                     else -> null
@@ -72,15 +62,13 @@ class AuthRepositoryImpl @Inject constructor(
                 if (session == null) {
                     return@withContext AuthenticationResult.Error(
                         exception = Exception("No active session"),
-                        message = "Please sign in or confirm your email to continue."
+                        message = "Please sign in with Google to continue."
                     )
                 }
 
                 val jwtToken = "Bearer ${session.accessToken}"
-                // Store token locally
                 sessionManager.setAuthToken(session.accessToken)
 
-                // 2. Prepare key upload request
                 val request = KeyUploadRequest(
                     x25519PublicKey = Base64.encodeToString(identity.x25519PublicKey, Base64.NO_WRAP),
                     mlKemPublicKey = Base64.encodeToString(identity.mlKemPublicKey, Base64.NO_WRAP),
@@ -88,27 +76,19 @@ class AuthRepositoryImpl @Inject constructor(
                     mlDsaSignature = Base64.encodeToString(identity.mlDsaPublicKey, Base64.NO_WRAP)
                 )
 
-                // 3. Upload to backend
                 val response = authService.uploadKeyBundle(jwtToken, request)
 
                 if (response.isSuccessful) {
                     storeIdentity(identity)
                     sessionManager.setUserRegistered(true)
-
-                    AuthenticationResult.Success(
-                        userId = identity.userId,
-                        identity = identity
-                    )
+                    AuthenticationResult.Success(identity.userId, identity)
                 } else {
-                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
                     AuthenticationResult.Error(
                         exception = Exception("Server error: ${response.code()}"),
-                        message = "Backend upload failed (${response.code()}). Check if your backend is running."
+                        message = "Backend upload failed (${response.code()})."
                     )
                 }
-
             } catch (e: Exception) {
-                e.printStackTrace()
                 AuthenticationResult.Error(e, "Connection failed: ${e.localizedMessage}")
             }
         }
@@ -123,25 +103,14 @@ class AuthRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun signInWithEmail(email: String, password: String): Result<Unit> =
+    override suspend fun signInWithGoogle(idToken: String, nonce: String?): Result<Unit> =
         withContext(Dispatchers.IO) {
             try {
-                supabaseAuth.signInWith(Email) {
-                    this.email = email
-                    this.password = password
-                }
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Result.failure(e)
-            }
-        }
-
-    override suspend fun signUpWithEmail(email: String, password: String): Result<Unit> =
-        withContext(Dispatchers.IO) {
-            try {
-                supabaseAuth.signUpWith(Email) {
-                    this.email = email
-                    this.password = password
+                // Using the IDToken provider for native sign in
+                supabaseAuth.signInWith(IDToken) {
+                    this.idToken = idToken
+                    this.nonce = nonce
+                    this.provider = Google
                 }
                 Result.success(Unit)
             } catch (e: Exception) {

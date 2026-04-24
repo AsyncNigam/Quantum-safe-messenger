@@ -18,6 +18,9 @@ services:
 
   # ─── Quantum Messenger Backend ─────────────────────────────────────────────
   backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: quantum-messenger:latest
     container_name: quantum-backend
     ports:

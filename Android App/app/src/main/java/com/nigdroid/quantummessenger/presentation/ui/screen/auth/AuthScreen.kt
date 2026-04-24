@@ -1,41 +1,43 @@
 package com.nigdroid.quantummessenger.presentation.ui.screen.auth
 
-import androidx.compose.animation.AnimatedVisibility
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.nigdroid.quantummessenger.presentation.ui.background.AnimatedMeshGradientBackground
-import com.nigdroid.quantummessenger.presentation.ui.theme.glassmorphism
 import com.nigdroid.quantummessenger.presentation.viewmodel.auth.AuthState
 import com.nigdroid.quantummessenger.presentation.viewmodel.auth.AuthViewModel
+import com.nigdroid.quantummessenger.util.Constants
+import kotlinx.coroutines.launch
+import java.security.MessageDigest
+import java.util.UUID
 import kotlin.math.sin
 
 @Composable
@@ -43,175 +45,123 @@ fun AuthScreen(
     onAuthSuccess: (String) -> Unit = {},
     viewModel: AuthViewModel = hiltViewModel()
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var isSignUp by remember { mutableStateOf(false) }
-
     val authState by viewModel.authState.collectAsState()
-    val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val credentialManager = remember { CredentialManager.create(context) }
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
-            val userId = (authState as AuthState.Success).userId
-            onAuthSuccess(userId)
+            onAuthSuccess((authState as AuthState.Success).userId)
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
-    ) {
-        AnimatedMeshGradientBackground(
-            modifier = Modifier.fillMaxSize(),
-            isDarkTheme = false
-        )
+    val handleGoogleSignIn = {
+        coroutineScope.launch {
+            try {
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(Constants.GOOGLE_CLIENT_ID)
+                    .setAutoSelectEnabled(false)
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                val result = credentialManager.getCredential(context, request)
+                handleSignInResult(result, viewModel)
+            } catch (e: GetCredentialException) {
+                Log.e("AuthScreen", "Credential Manager Error: ${e.message}", e)
+                Toast.makeText(context, "Sign-in error: ${e.message}", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Log.e("AuthScreen", "General Error: ${e.message}", e)
+                Toast.makeText(context, "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+        AnimatedMeshGradientBackground(modifier = Modifier.fillMaxSize(), isDarkTheme = false)
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding()
-                .padding(horizontal = 24.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AuthHeader()
-
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(64.dp))
 
             when (val state = authState) {
-                is AuthState.Idle -> {
-                    IdleContent(
-                        email = email,
-                        password = password,
-                        isSignUp = isSignUp,
-                        onEmailChange = { email = it },
-                        onPasswordChange = { password = it },
-                        onToggleMode = { isSignUp = !isSignUp },
-                        onActionClick = {
-                            focusManager.clearFocus()
-                            if (isSignUp) {
-                                viewModel.signUpWithEmail(email, password)
-                            } else {
-                                viewModel.loginWithEmail(email, password)
-                            }
-                        }
-                    )
-                }
-
-                is AuthState.Authenticating -> {
-                    AuthenticatingContent()
-                }
-
-                is AuthState.WaitingForEmailConfirmation -> {
-                    EmailConfirmationContent(
-                        email = state.email,
-                        onConfirmed = { viewModel.onEmailConfirmed(state.email) }
-                    )
-                }
-
-                is AuthState.GeneratingKeys -> {
-                    GeneratingKeysContent()
-                }
-
-                is AuthState.Uploading -> {
-                    UploadingContent()
-                }
-
-                is AuthState.Success -> {
-                    SuccessContent(userId = state.userId)
-                }
-
-                is AuthState.Error -> {
-                    ErrorContent(
-                        message = state.message,
-                        onRetry = { viewModel.retryLogin() }
-                    )
-                }
+                is AuthState.Idle -> IdleContent(onGoogleClick = { handleGoogleSignIn() })
+                is AuthState.Authenticating -> LoadingView("Authenticating with Google...")
+                is AuthState.GeneratingKeys -> LoadingView("Generating Secure Identity...")
+                is AuthState.Uploading -> LoadingView("Securing your account...")
+                is AuthState.Success -> SuccessContent()
+                is AuthState.Error -> ErrorContent(state.message) { viewModel.retryLogin() }
             }
         }
+    }
+}
+
+private fun handleSignInResult(result: GetCredentialResponse, viewModel: AuthViewModel) {
+    val credential = result.credential
+    if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+        // Pass the token to the viewmodel. Nonce is null as it's skipped in Supabase.
+        viewModel.signInWithGoogle(
+            idToken = googleIdTokenCredential.idToken,
+            email = googleIdTokenCredential.id,
+            nonce = null
+        )
     }
 }
 
 @Composable
 private fun AuthHeader() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Quantum Messenger", fontSize = 32.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+        Text("Quantum Messenger", fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Post-Quantum Secure Messaging", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+        Text("Post-Quantum Secure Messaging", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
     }
 }
 
 @Composable
-private fun IdleContent(
-    email: String,
-    password: String,
-    isSignUp: Boolean,
-    onEmailChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onToggleMode: () -> Unit,
-    onActionClick: () -> Unit
-) {
+private fun IdleContent(onGoogleClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).glassmorphism(20f, 16, false).background(Color(0x4DFFFFFF)).padding(4.dp)) {
-            TextField(value = email, onValueChange = onEmailChange, modifier = Modifier.fillMaxWidth(), placeholder = { Text("email@example.com") }, label = { Text("Email") }, singleLine = true, colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent))
+        Text(
+            "Protect your conversations with post-quantum encryption. Connect with Google to begin.",
+            textAlign = TextAlign.Center, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        Spacer(modifier = Modifier.height(48.dp))
+        Card(
+            onClick = onGoogleClick,
+            modifier = Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(28.dp)),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Continue with Google", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
         }
+    }
+}
+
+@Composable
+private fun LoadingView(text: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        CircularProgressIndicator(strokeWidth = 3.dp)
         Spacer(modifier = Modifier.height(16.dp))
-        Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).glassmorphism(20f, 16, false).background(Color(0x4DFFFFFF)).padding(4.dp)) {
-            TextField(value = password, onValueChange = onPasswordChange, modifier = Modifier.fillMaxWidth(), placeholder = { Text("••••••••") }, label = { Text("Password") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent))
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        GlowingButton(text = if (isSignUp) "Create Account" else "Secure Login", onClick = onActionClick, enabled = email.isNotBlank() && password.length >= 6)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = if (isSignUp) "Already have an account? Login" else "Don't have an account? Sign Up", modifier = Modifier.clickable { onToggleMode() }, color = MaterialTheme.colorScheme.primary)
+        Text(text, fontWeight = FontWeight.Medium)
     }
 }
 
 @Composable
-private fun EmailConfirmationContent(email: String, onConfirmed: () -> Unit) {
+private fun SuccessContent() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Email Confirmation Sent", fontSize = 20.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Please check $email and confirm your email address.", textAlign = TextAlign.Center)
-        Spacer(modifier = Modifier.height(24.dp))
-        GlowingButton(text = "I've Confirmed", onClick = onConfirmed)
-    }
-}
-
-@Composable
-private fun AuthenticatingContent() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        CircularProgressIndicator()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("Connecting to Supabase...")
-    }
-}
-
-@Composable
-private fun GeneratingKeysContent() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        CryptographicMeshAnimation(modifier = Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(20.dp)))
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("Generating Cryptographic Identity...", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-        CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
-    }
-}
-
-@Composable
-private fun UploadingContent() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        CircularProgressIndicator()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("Uploading keys to your backend...")
-    }
-}
-
-@Composable
-private fun SuccessContent(userId: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("✓", fontSize = 72.sp, color = Color.Green)
-        Text("Identity Ready", fontSize = 20.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+        Text("✓", fontSize = 80.sp, color = Color(0xFF4CAF50))
+        Text("Identity Secured", fontSize = 24.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -219,29 +169,17 @@ private fun SuccessContent(userId: String) {
 private fun ErrorContent(message: String, onRetry: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text("⚠️", fontSize = 64.sp)
-        Text("Authentication Error", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = Color.Red)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(message, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 16.dp))
-        Spacer(modifier = Modifier.height(24.dp))
-        GlowingButton(text = "Back to Login", onClick = onRetry)
-    }
-}
-
-@Composable
-private fun GlowingButton(text: String, onClick: () -> Unit, enabled: Boolean = true) {
-    val infiniteTransition = rememberInfiniteTransition()
-    val glowAlpha by infiniteTransition.animateFloat(0.3f, 0.8f, infiniteRepeatable(tween(1500, easing = LinearEasing), androidx.compose.animation.core.RepeatMode.Reverse))
-    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Brush.linearGradient(listOf(Color(0xFF6366FF).copy(alpha = glowAlpha), Color(0xFF8E6FA8).copy(alpha = glowAlpha * 0.7f))))) {
-        Button(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)), colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)) {
-            Text(text, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, modifier = Modifier.padding(vertical = 12.dp))
-        }
+        Text("Auth Error", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text(message, textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp), color = MaterialTheme.colorScheme.error)
+        Spacer(modifier = Modifier.height(32.dp))
+        Button(onClick = onRetry) { Text("Try Again") }
     }
 }
 
 @Composable
 private fun CryptographicMeshAnimation(modifier: Modifier = Modifier) {
-    val infiniteTransition = rememberInfiniteTransition()
-    val offset1 by infiniteTransition.animateFloat(0f, 360f, infiniteRepeatable(tween(8000, easing = LinearEasing)))
-    val offset2 by infiniteTransition.animateFloat(0f, 360f, infiniteRepeatable(tween(6000, easing = LinearEasing)))
-    Box(modifier = modifier.background(Brush.radialGradient(listOf(Color(0x4D6366FF).copy(alpha = 0.6f + sin((offset1 * Math.PI).toFloat() / 180f) * 0.2f), Color(0x4D00BCD4).copy(alpha = 0.4f + sin((offset2 * Math.PI).toFloat() / 180f) * 0.2f), Color(0x4D8E6FA8).copy(alpha = 0.3f)), center = Offset(0.5f + sin((offset1 * Math.PI / 180.0)).toFloat() * 0.3f, 0.5f + sin((offset2 * Math.PI / 180.0)).toFloat() * 0.3f), radius = 400f)))
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+    val offset1 by infiniteTransition.animateFloat(0f, 360f, infiniteRepeatable(tween(10000, easing = LinearEasing)), label = "")
+    val offset2 by infiniteTransition.animateFloat(0f, 360f, infiniteRepeatable(tween(7000, easing = LinearEasing)), label = "")
+    Box(modifier = modifier.background(Brush.radialGradient(listOf(Color(0xFF6366FF).copy(alpha = 0.4f + sin((offset1 * Math.PI).toFloat() / 180f) * 0.1f), Color(0xFF00BCD4).copy(alpha = 0.3f + sin((offset2 * Math.PI).toFloat() / 180f) * 0.1f), Color(0xFF8E6FA8).copy(alpha = 0.2f)), center = Offset(0.5f + sin((offset1 * Math.PI / 180.0)).toFloat() * 0.2f, 0.5f + sin((offset2 * Math.PI / 180.0)).toFloat() * 0.2f), radius = 600f)))
 }

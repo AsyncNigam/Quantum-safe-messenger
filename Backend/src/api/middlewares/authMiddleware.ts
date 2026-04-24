@@ -20,19 +20,26 @@ export const authMiddleware = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
+    console.log('[AUTH] Authorization header:', authHeader ? 'Present' : 'MISSING');
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[AUTH] ❌ Invalid/missing auth header');
       res.status(401).json({ error: 'Missing or invalid Authorization header' });
       return;
     }
 
     const token = authHeader.split(' ')[1];
+    console.log('[AUTH] Token length:', token.length);
+    
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
+      console.log('[AUTH] ❌ Token validation failed:', error?.message);
       res.status(401).json({ error: 'Unauthorized', details: error?.message });
       return;
     }
 
+    console.log('[AUTH] ✅ User authenticated:', user.id);
     req.user = user;
     next();
   } catch (err) {
