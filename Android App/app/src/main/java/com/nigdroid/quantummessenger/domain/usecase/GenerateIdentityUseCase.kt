@@ -20,19 +20,16 @@ import javax.inject.Inject
  */
 class GenerateIdentityUseCase @Inject constructor() {
 
-    suspend operator fun invoke(identifier: String): IdentityGenerationResult =
+    suspend operator fun invoke(identifier: String, userId: String): IdentityGenerationResult =
         withContext(Dispatchers.Default) {
             try {
                 // Validate input
-                if (identifier.isBlank()) {
+                if (identifier.isBlank() || userId.isBlank()) {
                     return@withContext IdentityGenerationResult.Error(
-                        exception = IllegalArgumentException("Identifier cannot be empty"),
-                        message = "Invalid identifier"
+                        exception = IllegalArgumentException("Identifier and UserID cannot be empty"),
+                        message = "Invalid identity data"
                     )
                 }
-
-                // Generate unique user ID
-                val userId = UUID.randomUUID().toString()
 
                 // Step 1: Generate ML-KEM keypair
                 val mlKemPair = generateMLKemKey(userId)
@@ -57,7 +54,23 @@ class GenerateIdentityUseCase @Inject constructor() {
                     keyStoreAliasPrefix = "quantum_${userId}_"
                 )
 
-                IdentityGenerationResult.Success(identity)
+                // Generate signatures of the public keys to prove possession and bind them
+                val bundleToSign = identity.mlKemPublicKey + identity.mlDsaPublicKey + 
+                                  identity.x25519PublicKey + identity.ed25519PublicKey
+                
+                val mlDsaSignature = PostQuantumCrypto.signWithMLDsa(bundleToSign, mlDsaPair.privateKey ?: ByteArray(0))
+                val ed25519Signature = signWithEd25519(bundleToSign, ed25519Pair.privateKey ?: ByteArray(0))
+
+                // Clear private keys from memory immediately after signing
+                mlKemPair.clear()
+                mlDsaPair.clear()
+                x25519Pair.clear()
+                ed25519Pair.clear()
+
+                IdentityGenerationResult.Success(identity.copy(
+                    mlDsaSignature = mlDsaSignature,
+                    ed25519Signature = ed25519Signature
+                ))
 
             } catch (e: CryptoException) {
                 IdentityGenerationResult.Error(
@@ -80,8 +93,7 @@ class GenerateIdentityUseCase @Inject constructor() {
             val privateKey = keyPairResult.second
 
             storeKeyInKeystore(userId, "ml_kem", privateKey)
-            privateKey.fill(0)
-            KeyPair(publicKey = publicKey, privateKey = null)
+            KeyPair(publicKey = publicKey, privateKey = privateKey)
         } catch (e: Exception) {
             throw CryptoException("Failed to generate ML-KEM keypair", e)
         }
@@ -95,8 +107,7 @@ class GenerateIdentityUseCase @Inject constructor() {
             val privateKey = keyPairResult.second
 
             storeKeyInKeystore(userId, "ml_dsa", privateKey)
-            privateKey.fill(0)
-            KeyPair(publicKey = publicKey, privateKey = null)
+            KeyPair(publicKey = publicKey, privateKey = privateKey)
         } catch (e: Exception) {
             throw CryptoException("Failed to generate ML-DSA keypair", e)
         }
@@ -112,7 +123,7 @@ class GenerateIdentityUseCase @Inject constructor() {
             val privateKeyBytes = keyPair.private.encoded
 
             storeKeyInKeystore(userId, "x25519", privateKeyBytes)
-            KeyPair(publicKey = publicKeyBytes, privateKey = null)
+            KeyPair(publicKey = publicKeyBytes, privateKey = privateKeyBytes)
         } catch (e: Exception) {
             throw CryptoException("Failed to generate X25519 keypair", e)
         }
@@ -128,7 +139,7 @@ class GenerateIdentityUseCase @Inject constructor() {
             val privateKeyBytes = keyPair.private.encoded
 
             storeKeyInKeystore(userId, "ed25519", privateKeyBytes)
-            KeyPair(publicKey = publicKeyBytes, privateKey = null)
+            KeyPair(publicKey = publicKeyBytes, privateKey = privateKeyBytes)
         } catch (e: Exception) {
             throw CryptoException("Failed to generate Ed25519 keypair", e)
         }
@@ -137,5 +148,19 @@ class GenerateIdentityUseCase @Inject constructor() {
     @VisibleForTesting
     internal fun storeKeyInKeystore(userId: String, keyType: String, keyMaterial: ByteArray) {
         // Implementation for storage logic
+    }
+
+    private fun signWithEd25519(data: ByteArray, privateKeyBytes: ByteArray): ByteArray {
+        return try {
+            if (privateKeyBytes.isEmpty()) return ByteArray(0)
+            val kf = java.security.KeyFactory.getInstance("Ed25519")
+            val privKey = kf.generatePrivate(java.security.spec.PKCS8EncodedKeySpec(privateKeyBytes))
+            val sig = java.security.Signature.getInstance("Ed25519")
+            sig.initSign(privKey)
+            sig.update(data)
+            sig.sign()
+        } catch (e: Exception) {
+            ByteArray(0)
+        }
     }
 }

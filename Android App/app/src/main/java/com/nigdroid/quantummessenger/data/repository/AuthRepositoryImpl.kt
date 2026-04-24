@@ -46,9 +46,9 @@ class AuthRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun generateIdentity(identifier: String): IdentityGenerationResult =
+    override suspend fun generateIdentity(identifier: String, userId: String): IdentityGenerationResult =
         withContext(Dispatchers.Default) {
-            generateIdentityUseCase.invoke(identifier)
+            generateIdentityUseCase.invoke(identifier, userId)
         }
 
     override suspend fun registerIdentity(identity: Identity): AuthenticationResult =
@@ -70,10 +70,11 @@ class AuthRepositoryImpl @Inject constructor(
                 sessionManager.setAuthToken(session.accessToken)
 
                 val request = KeyUploadRequest(
+                    userId = identity.userId,
                     x25519PublicKey = Base64.encodeToString(identity.x25519PublicKey, Base64.NO_WRAP),
                     mlKemPublicKey = Base64.encodeToString(identity.mlKemPublicKey, Base64.NO_WRAP),
-                    ed25519Signature = Base64.encodeToString(identity.ed25519PublicKey, Base64.NO_WRAP),
-                    mlDsaSignature = Base64.encodeToString(identity.mlDsaPublicKey, Base64.NO_WRAP)
+                    ed25519Signature = Base64.encodeToString(identity.ed25519Signature, Base64.NO_WRAP),
+                    mlDsaSignature = Base64.encodeToString(identity.mlDsaSignature, Base64.NO_WRAP)
                 )
 
                 val response = authService.uploadKeyBundle(jwtToken, request)
@@ -138,6 +139,9 @@ class AuthRepositoryImpl @Inject constructor(
         withContext(Dispatchers.IO) {
             sharedPreferences.contains("identity_$identifier")
         }
+
+    override suspend fun getCurrentUserId(): String? =
+        (supabaseAuth.sessionStatus.value as? SessionStatus.Authenticated)?.session?.user?.id
 
     override suspend fun getStoredIdentity(userId: String): Identity? = null
 

@@ -55,8 +55,11 @@ class AuthViewModel @Inject constructor(
 
     private suspend fun handleSuccessfulAuth(identifier: String) {
         try {
+            // Get the actual Supabase User ID to ensure consistency with the backend RLS
+            val supabaseUserId = authRepository.getCurrentUserId() ?: "unknown_user"
+
             _authState.value = AuthState.GeneratingKeys(progress = 0)
-            val generationResult = authRepository.generateIdentity(identifier)
+            val generationResult = authRepository.generateIdentity(identifier, supabaseUserId)
 
             when (generationResult) {
                 is IdentityGenerationResult.Success -> {

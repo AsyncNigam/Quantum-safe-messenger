@@ -16,6 +16,8 @@ data class Identity(
     val mlDsaPublicKey: ByteArray,      // ML-DSA signature verification key (bytes)
     val x25519PublicKey: ByteArray,     // X25519 ephemeral key (bytes)
     val ed25519PublicKey: ByteArray,    // Ed25519 signature key (bytes)
+    val mlDsaSignature: ByteArray = ByteArray(0), // Signature of the key bundle
+    val ed25519Signature: ByteArray = ByteArray(0), // Signature of the key bundle
     val createdAt: Long = System.currentTimeMillis(),
     val keyStoreAliasPrefix: String = "quantum_messenger_"
 ) {

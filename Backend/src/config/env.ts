@@ -10,6 +10,7 @@ export interface AppConfig {
 export interface SupabaseConfig {
   url: string;
   anonKey: string;
+  serviceRoleKey: string;
 }
 
 export interface RedisConfig {
@@ -34,6 +35,7 @@ export const appConfig: AppConfig = {
 export const supabaseConfig: SupabaseConfig = {
   url: requireEnv('SUPABASE_URL'),
   anonKey: requireEnv('SUPABASE_ANON_KEY'),
+  serviceRoleKey: requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
 };
 
 export const redisConfig: RedisConfig = {

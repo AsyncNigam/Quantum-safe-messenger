@@ -15,9 +15,10 @@ interface AuthRepository {
      * Generate cryptographic identity for new user
      *
      * @param identifier User's identifier (Email or Phone)
+     * @param userId The unique user ID from the auth provider (Supabase)
      * @return IdentityGenerationResult with generated identity or error
      */
-    suspend fun generateIdentity(identifier: String): IdentityGenerationResult
+    suspend fun generateIdentity(identifier: String, userId: String): IdentityGenerationResult
 
     /**
      * Register generated identity with authentication server
@@ -55,6 +56,11 @@ interface AuthRepository {
      * Clear all authentication data (logout)
      */
     suspend fun clearAuthentication()
+
+    /**
+     * Get the current authenticated user's ID
+     */
+    suspend fun getCurrentUserId(): String?
 
     /**
      * Sign in anonymously to Supabase to get a valid JWT

@@ -1,11 +1,11 @@
-import { supabase } from '../config/supabase';
+import { supabase, supabaseAdmin } from '../config/supabase';
 import { KeyRepository } from './KeyRepository';
 
 /**
  * Singleton KeyRepository instance.
- * The Supabase client is injected here once and shared across the app.
+ * Injects both public (supabase) and admin (supabaseAdmin) clients.
  */
-export const keyRepository = new KeyRepository(supabase);
+export const keyRepository = new KeyRepository(supabase, supabaseAdmin);
 
 // Export the class for type safety in other files
 export * from './KeyRepository';

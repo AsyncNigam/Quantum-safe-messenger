@@ -44,6 +44,7 @@ data class KeyBundleDto(
 )
 
 data class KeyUploadRequest(
+    val userId: String,
     val x25519PublicKey: String,
     val mlKemPublicKey: String,
     val ed25519Signature: String,

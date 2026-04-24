@@ -72,8 +72,15 @@ fun AuthScreen(
                 val result = credentialManager.getCredential(context, request)
                 handleSignInResult(result, viewModel)
             } catch (e: GetCredentialException) {
-                Log.e("AuthScreen", "Credential Manager Error: ${e.message}", e)
-                Toast.makeText(context, "Sign-in error: ${e.message}", Toast.LENGTH_LONG).show()
+                Log.e("AuthScreen", "Google Error: ${e.message}")
+                // Show the specific error message to help identify if it's SHA-1 or Consent Screen
+                val errorMsg = when {
+                    e.message?.contains("7") == true -> "Network Error: Check Internet or Device Time"
+                    e.message?.contains("10") == true -> "Developer Console Error: Check SHA-1 and Package Name"
+                    e.message?.contains("16") == true -> "Cancelled by user"
+                    else -> e.message ?: "Sign-in failed"
+                }
+                Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
                 Log.e("AuthScreen", "General Error: ${e.message}", e)
                 Toast.makeText(context, "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()

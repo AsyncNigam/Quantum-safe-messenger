@@ -46,8 +46,10 @@ class CryptoManager @Inject constructor(
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(256)
-                .setUserAuthenticationRequired(true) // Mathematically bind to secure enclave/biometrics
-                .setUserAuthenticationValidityDurationSeconds(-1) // Require auth for every use (or 0 for prompt-only)
+                // Set authentication required to false for the Tink Master Key 
+                // because Tink does not support interactive biometric prompts 
+                // during automated operations like database access.
+                .setUserAuthenticationRequired(false)
                 .build()
             )
             keyGenerator.generateKey()
@@ -80,9 +82,10 @@ class CryptoManager @Inject constructor(
     }
 
     companion object {
-        private const val KEYSET_NAME = "quantum_messenger_keyset"
-        private const val PREF_FILE_NAME = "quantum_messenger_prefs"
-        private const val MASTER_KEY_ALIAS = "quantum_messenger_auth_bound_key"
+        private const val KEYSET_NAME = "quantum_messenger_keyset_v2"
+        private const val PREF_FILE_NAME = "quantum_messenger_prefs_v2"
+        // Updated alias to force fresh generation without biometric requirement
+        private const val MASTER_KEY_ALIAS = "quantum_messenger_master_key_v2"
         private val FIXED_PLAINTEXT = ByteArray(32) { 0x42 }
     }
 }

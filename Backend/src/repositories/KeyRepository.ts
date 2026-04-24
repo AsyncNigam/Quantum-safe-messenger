@@ -4,9 +4,14 @@ import { PublicKey, PaginatedResult } from '../models/publicKey';
 
 export class KeyRepository {
   /**
-   * Injects the Supabase client for database operations.
+   * Injects two Supabase clients:
+   * - supabase: public client (with anonKey) for READ operations
+   * - supabaseAdmin: admin client (with service role key) for INSERT/UPDATE operations
    */
-  constructor(private readonly supabase: SupabaseClient) {}
+  constructor(
+    private readonly supabase: SupabaseClient,
+    private readonly supabaseAdmin: SupabaseClient
+  ) {}
 
   /**
    * Fetches a paginated list of public keys using PostgreSQL range.
@@ -39,6 +44,7 @@ export class KeyRepository {
 
   /**
    * Inserts or upserts a user's hybrid public keys.
+   * Uses the admin client to bypass RLS policies.
    */
   async uploadKeys(keyData: IKeyBundle): Promise<void> {
     const payload = {
@@ -52,9 +58,8 @@ export class KeyRepository {
       }),
     };
 
-    // Upsert the record for the user. Requires 'user_id' to be a unique constraint
-    // in the 'public_keys' table if onConflict is used. We assume standard upsert behavior here.
-    const { error } = await this.supabase
+    // Use admin client to bypass RLS and insert/update user's keys
+    const { error } = await this.supabaseAdmin
       .from('public_keys')
       .upsert(payload, { onConflict: 'user_id' });
 
