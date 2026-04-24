@@ -1,396 +1,420 @@
 package com.nigdroid.quantummessenger.presentation.ui.screen
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.*
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.nigdroid.quantummessenger.domain.model.ChatMessage
+import com.nigdroid.quantummessenger.domain.model.MessageStatus
+import com.nigdroid.quantummessenger.domain.model.MessageType
 import com.nigdroid.quantummessenger.presentation.ui.background.AnimatedMeshGradientBackground
+import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumColors
+import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumMessengerTheme
 import com.nigdroid.quantummessenger.presentation.ui.theme.glassmorphism
+import com.nigdroid.quantummessenger.presentation.ui.theme.glassmorphismBubbleOwn
+import com.nigdroid.quantummessenger.presentation.ui.theme.glassmorphismBubbleOther
 import com.nigdroid.quantummessenger.presentation.viewmodel.ChatUiState
 import com.nigdroid.quantummessenger.presentation.viewmodel.ChatViewModel
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ErrorOutline
-import com.nigdroid.quantummessenger.domain.model.MessageStatus
+// ─────────────────────────────────────────────────────────────────────────────
+// Root composable
+// ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Main chat screen composable with glassmorphism design.
- *
- * Features:
- * - Edge-to-edge layout under status and navigation bars
- * - Animated background with mesh gradient
- * - Glassmorphism message bubbles
- * - Real-time message updates via ViewModel
- * - Smooth animations for message entry
- * - Responsive input field with send button
- * - Graceful error and loading states
- */
 @Composable
 fun ChatScreen(
-    currentUserId: String = "current_user",
-    participantId: String = "participant_user",
-    viewModel: ChatViewModel = hiltViewModel()
+    currentUserId : String       = "current_user",
+    participantId : String       = "participant_user",
+    onBack        : () -> Unit   = {},
+    viewModel     : ChatViewModel = hiltViewModel()
 ) {
     var messageInput by remember { mutableStateOf("") }
-    val uiState by viewModel.uiState.collectAsState()
-    val focusManager = LocalFocusManager.current
+    val uiState      by viewModel.uiState.collectAsState()
+    val focusManager  = LocalFocusManager.current
     val lazyListState = rememberLazyListState()
 
-    // Initialize ViewModel on first composition
     LaunchedEffect(Unit) {
         viewModel.initialize(currentUserId, participantId)
     }
 
-    // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(uiState) {
         if (uiState is ChatUiState.Success) {
-            val messageCount = (uiState as ChatUiState.Success).messages.size
-            if (messageCount > 0) {
-                lazyListState.animateScrollToItem(messageCount - 1)
-            }
+            val count = (uiState as ChatUiState.Success).messages.size
+            if (count > 0) lazyListState.animateScrollToItem(count - 1)
         }
     }
 
+    ChatScreenContent(
+        uiState       = uiState,
+        currentUserId = currentUserId,
+        participantId = participantId,
+        messageInput  = messageInput,
+        lazyListState = lazyListState,
+        onBack        = onBack,
+        onInputChange = { messageInput = it },
+        onSend        = {
+            if (messageInput.isNotBlank()) {
+                viewModel.sendMessage(messageInput)
+                messageInput = ""
+                focusManager.clearFocus()
+            }
+        },
+        onRetry       = { viewModel.retryLoadingMessages() }
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Screen layout (decoupled for preview)
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun ChatScreenContent(
+    uiState       : ChatUiState,
+    currentUserId : String,
+    participantId : String,
+    messageInput  : String,
+    lazyListState : LazyListState,
+    onBack        : () -> Unit,
+    onInputChange : (String) -> Unit,
+    onSend        : () -> Unit,
+    onRetry       : () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
     ) {
-        // Animated background
-        AnimatedMeshGradientBackground(
-            modifier = Modifier.fillMaxSize()
-        )
+        AnimatedMeshGradientBackground(modifier = Modifier.fillMaxSize())
 
-        // Main content
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .imePadding()
         ) {
-            // Header
-            ChatHeader()
+            // ── Header ───────────────────────────────────────────────────────
+            ChatHeader(
+                participantInitial = participantId.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                participantName    = "Secure Chat",
+                onBack             = onBack
+            )
 
-            // Content based on state
-            when (uiState) {
-                is ChatUiState.Loading -> {
-                    LoadingState()
-                }
-
-                is ChatUiState.Success -> {
-                    val state = uiState as ChatUiState.Success
-                    ChatMessageList(
-                        messages = state.messages,
-                        currentUserId = currentUserId,
-                        lazyListState = lazyListState,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    ChatInputField(
-                        messageInput = messageInput,
-                        onMessageChange = { messageInput = it },
-                        onSendClick = {
-                            if (messageInput.isNotBlank()) {
-                                viewModel.sendMessage(messageInput)
-                                messageInput = ""
-                                focusManager.clearFocus()
-                            }
-                        },
-                        isSending = state.isSending,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                    )
-                }
-
-                is ChatUiState.Error -> {
-                    val state = uiState as ChatUiState.Error
-                    ErrorState(
-                        errorMessage = state.message,
-                        onRetry = { viewModel.retryLoadingMessages() },
-                        modifier = Modifier.weight(1f)
-                    )
+            // ── Content ──────────────────────────────────────────────────────
+            AnimatedContent(
+                targetState   = uiState,
+                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(150)) },
+                label         = "chatStateAnim",
+                modifier      = Modifier.weight(1f)
+            ) { state ->
+                when (state) {
+                    is ChatUiState.Loading -> ChatLoadingState()
+                    is ChatUiState.Error   -> ChatErrorState(state.message, onRetry)
+                    is ChatUiState.Success -> {
+                        if (state.messages.isEmpty()) {
+                            ChatEmptyState()
+                        } else {
+                            ChatMessageList(
+                                messages      = state.messages,
+                                currentUserId = currentUserId,
+                                lazyListState = lazyListState
+                            )
+                        }
+                    }
                 }
             }
+
+            // ── Input bar (always visible) ───────────────────────────────────
+            val isSending = (uiState as? ChatUiState.Success)?.isSending ?: false
+            ChatInputBar(
+                messageInput  = messageInput,
+                onInputChange = onInputChange,
+                onSend        = onSend,
+                isSending     = isSending
+            )
         }
     }
 }
 
-/**
- * Chat screen header with title and participant info.
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// Header
+// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
-private fun ChatHeader() {
+private fun ChatHeader(
+    participantInitial : String,
+    participantName    : String,
+    onBack             : () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0x1AFFFFFF))
-            .padding(16.dp),
-        contentAlignment = Alignment.CenterStart
+            .glassmorphism(cornerRadius = 0, overlayAlpha = 0.10f)
+            .background(QuantumColors.GlassWhite08)
+            .padding(horizontal = 8.dp, vertical = 10.dp)
     ) {
-        Column {
-            Text(
-                text = "Secure Chat",
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-            )
-            Text(
-                text = "End-to-end encrypted",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-        }
-    }
-}
-
-/**
- * Loading state UI with animated progress indicator.
- */
-@Composable
-private fun LoadingState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Row(
+            modifier          = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .width(48.dp)
-                    .height(48.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Loading messages...",
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                fontSize = 14.sp
-            )
-        }
-    }
-}
-
-/**
- * Error state UI with retry option.
- */
-@Composable
-private fun ErrorState(
-    errorMessage: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(24.dp)
-        ) {
-            Text(
-                text = "⚠️",
-                fontSize = 48.sp
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Oops!",
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = errorMessage,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            androidx.compose.material3.Button(
-                onClick = onRetry,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(horizontal = 32.dp, vertical = 12.dp)
+            // Back button
+            IconButton(
+                onClick  = onBack,
+                modifier = Modifier.size(40.dp)
             ) {
-                Text("Retry", color = Color.White)
+                Icon(
+                    imageVector        = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint               = QuantumColors.TextPrimary
+                )
             }
-        }
-    }
-}
 
-/**
- * LazyColumn displaying chat messages with glassmorphism bubbles.
- */
-@Composable
-private fun ChatMessageList(
-    messages: List<ChatMessage>,
-    currentUserId: String,
-    lazyListState: androidx.compose.foundation.lazy.LazyListState,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        state = lazyListState,
-        contentPadding = PaddingValues(vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(
-            items = messages,
-            key = { it.id }
-        ) { message ->
-            AnimatedVisibility(
-                visible = true,
-                enter = slideInVertically(
-                    initialOffsetY = { 30 },
-                    animationSpec = spring(
-                        dampingRatio = 0.6f,
-                        stiffness = Spring.StiffnessMedium
+            Spacer(Modifier.width(4.dp))
+
+            // Avatar
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(QuantumColors.Primary, QuantumColors.Accent.copy(alpha = 0.7f))
+                        ),
+                        shape = CircleShape
                     )
-                ),
-                exit = slideOutVertically()
+                    .clip(CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                MessageBubble(
-                    message = message,
-                    isOwn = message.senderId == currentUserId
+                Text(
+                    text       = participantInitial,
+                    color      = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize   = 18.sp
+                )
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            // Name + status
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text       = participantName,
+                    style      = MaterialTheme.typography.titleMedium,
+                    color      = QuantumColors.TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .background(QuantumColors.Success, CircleShape)
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text(
+                        text  = "End-to-end encrypted",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = QuantumColors.TextTertiary
+                    )
+                }
+            }
+
+            // Options
+            IconButton(onClick = {}) {
+                Icon(
+                    imageVector        = Icons.Default.MoreVert,
+                    contentDescription = "Options",
+                    tint               = QuantumColors.TextSecondary
                 )
             }
         }
     }
 }
 
-/**
- * Individual message bubble with glassmorphism effect.
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// Message list
+// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
-private fun MessageBubble(
-    message: ChatMessage,
-    isOwn: Boolean
+private fun ChatMessageList(
+    messages      : List<ChatMessage>,
+    currentUserId : String,
+    lazyListState : LazyListState
 ) {
+    LazyColumn(
+        modifier       = Modifier.fillMaxSize(),
+        state          = lazyListState,
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        // Group messages by date — insert date separators
+        val grouped = messages.groupBy { msg ->
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(msg.timestamp))
+        }
+        grouped.forEach { (dateKey, msgs) ->
+            // Date separator
+            item(key = "date_$dateKey") {
+                DateSeparator(timestamp = msgs.first().timestamp)
+            }
+            items(msgs, key = { it.id }) { message ->
+                AnimatedVisibility(
+                    visible       = true,
+                    enter         = slideInVertically(
+                        initialOffsetY = { 30 },
+                        animationSpec  = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                    ) + fadeIn()
+                ) {
+                    MessageBubble(
+                        message = message,
+                        isOwn   = message.senderId == currentUserId
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DateSeparator(timestamp: Long) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .glassmorphism(cornerRadius = 12, overlayAlpha = 0.08f)
+                .background(QuantumColors.GlassWhite08, RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp))
+                .padding(horizontal = 14.dp, vertical = 5.dp)
+        ) {
+            val today    = Calendar.getInstance()
+            val msgCal   = Calendar.getInstance().apply { time = Date(timestamp) }
+            val dateStr  = when {
+                today.get(Calendar.DATE) == msgCal.get(Calendar.DATE)
+                        && today.get(Calendar.YEAR) == msgCal.get(Calendar.YEAR) -> "Today"
+                today.get(Calendar.DATE) - msgCal.get(Calendar.DATE) == 1
+                        && today.get(Calendar.YEAR) == msgCal.get(Calendar.YEAR) -> "Yesterday"
+                else -> SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(Date(timestamp))
+            }
+            Text(
+                text  = dateStr,
+                style = MaterialTheme.typography.labelSmall,
+                color = QuantumColors.TextTertiary
+            )
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Message bubble
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun MessageBubble(message: ChatMessage, isOwn: Boolean) {
+    Box(
+        modifier          = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = if (isOwn) 48.dp else 0.dp,
+                end   = if (isOwn) 0.dp  else 48.dp
+            ),
         contentAlignment = if (isOwn) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth(0.75f)
-                .clip(RoundedCornerShape(16.dp))
-                .glassmorphism(
-                    blurRadius = 15f,
-                    cornerRadius = 16,
-                    isDarkTheme = false
-                )
-                .background(
-                    color = if (isOwn) {
-                        Color(0x4D6366FF) // Blue tint for own messages
-                    } else {
-                        Color(0x4DFFFFFF) // White tint for others
-                    }
-                )
-                .padding(12.dp),
+            modifier = if (isOwn) {
+                Modifier
+                    .glassmorphismBubbleOwn()
+                    .clip(
+                        RoundedCornerShape(
+                            topStart     = 18.dp,
+                            topEnd       = 4.dp,
+                            bottomStart  = 18.dp,
+                            bottomEnd    = 18.dp
+                        )
+                    )
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            } else {
+                Modifier
+                    .glassmorphismBubbleOther()
+                    .background(
+                        color = QuantumColors.GlassWhite08,
+                        shape = RoundedCornerShape(
+                            topStart     = 4.dp,
+                            topEnd       = 18.dp,
+                            bottomStart  = 18.dp,
+                            bottomEnd    = 18.dp
+                        )
+                    )
+                    .clip(
+                        RoundedCornerShape(
+                            topStart     = 4.dp,
+                            topEnd       = 18.dp,
+                            bottomStart  = 18.dp,
+                            bottomEnd    = 18.dp
+                        )
+                    )
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            },
             horizontalAlignment = if (isOwn) Alignment.End else Alignment.Start
         ) {
             Text(
-                text = message.content,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 14.sp,
-                lineHeight = 18.sp
+                text      = message.content,
+                style     = MaterialTheme.typography.bodyLarge.copy(
+                    color  = QuantumColors.TextPrimary,
+                    fontSize = 15.sp,
+                    lineHeight = 22.sp
+                )
             )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
+            Spacer(Modifier.height(4.dp))
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
+                verticalAlignment  = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = formatTimestamp(message.timestamp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    fontSize = 11.sp
+                    text  = formatTimestamp(message.timestamp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isOwn) Color.White.copy(alpha = 0.6f) else QuantumColors.TextTertiary,
+                    fontSize = 10.sp
                 )
-
                 if (isOwn) {
-                    Spacer(modifier = Modifier.width(4.dp))
-                    val statusIcon = when (message.status) {
-                        MessageStatus.PENDING -> Icons.Default.AccessTime
-                        MessageStatus.SENT -> Icons.Default.Check
-                        MessageStatus.ERROR -> Icons.Default.ErrorOutline
-                    }
-                    val statusTint = when (message.status) {
-                        MessageStatus.ERROR -> Color.Red
-                        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    val (icon, tint) = when (message.status) {
+                        MessageStatus.PENDING -> Icons.Default.AccessTime to QuantumColors.TextTertiary
+                        MessageStatus.SENT    -> Icons.Default.Check       to QuantumColors.Teal
+                        MessageStatus.ERROR   -> Icons.Default.ErrorOutline to QuantumColors.Error
                     }
                     Icon(
-                        imageVector = statusIcon,
+                        imageVector        = icon,
                         contentDescription = message.status.name,
-                        tint = statusTint,
-                        modifier = Modifier.width(12.dp).height(12.dp)
+                        tint               = tint,
+                        modifier           = Modifier.size(12.dp)
                     )
                 }
             }
@@ -398,98 +422,262 @@ private fun MessageBubble(
     }
 }
 
-/**
- * Glassmorphic chat input field with send button.
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// Input bar
+// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
-private fun ChatInputField(
-    messageInput: String,
-    onMessageChange: (String) -> Unit,
-    onSendClick: () -> Unit,
-    isSending: Boolean,
-    modifier: Modifier = Modifier
+private fun ChatInputBar(
+    messageInput  : String,
+    onInputChange : (String) -> Unit,
+    onSend        : () -> Unit,
+    isSending     : Boolean
 ) {
     Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(24.dp))
-            .glassmorphism(
-                blurRadius = 20f,
-                cornerRadius = 24,
-                isDarkTheme = false
-            )
-            .background(Color(0x4DFFFFFF))
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .glassmorphism(cornerRadius = 0, overlayAlpha = 0.08f)
+            .background(QuantumColors.GlassWhite08)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment     = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        TextField(
-            value = messageInput,
-            onValueChange = onMessageChange,
+        // ── Text field ───────────────────────────────────────────────────────
+        Box(
             modifier = Modifier
                 .weight(1f)
-                .clip(RoundedCornerShape(20.dp)),
-            placeholder = { Text("Type a message...", fontSize = 14.sp) },
-            maxLines = 3,
-            singleLine = false,
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Sentences,
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Send
-            ),
-            keyboardActions = KeyboardActions(
-                onSend = {
-                    if (messageInput.isNotBlank() && !isSending) {
-                        onSendClick()
-                    }
-                }
-            ),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                cursorColor = MaterialTheme.colorScheme.primary
-            ),
-            enabled = !isSending,
-            textStyle = androidx.compose.ui.text.TextStyle(
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface
+                .heightIn(min = 48.dp, max = 120.dp)
+                .glassmorphism(cornerRadius = 24, overlayAlpha = 0.10f)
+                .background(QuantumColors.SurfaceInput, RoundedCornerShape(24.dp))
+                .clip(RoundedCornerShape(24.dp))
+        ) {
+            TextField(
+                value         = messageInput,
+                onValueChange = onInputChange,
+                modifier      = Modifier.fillMaxWidth(),
+                placeholder   = {
+                    Text(
+                        "Message…",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = QuantumColors.TextTertiary
+                    )
+                },
+                maxLines      = 4,
+                singleLine    = false,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType   = KeyboardType.Text,
+                    imeAction      = ImeAction.Send
+                ),
+                keyboardActions = KeyboardActions(onSend = { if (!isSending) onSend() }),
+                enabled         = !isSending,
+                textStyle       = MaterialTheme.typography.bodyLarge.copy(
+                    color    = QuantumColors.TextPrimary,
+                    fontSize = 15.sp
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor   = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor   = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor             = QuantumColors.Primary
+                )
             )
-        )
+        }
 
-        IconButton(
-            onClick = onSendClick,
-            enabled = messageInput.isNotBlank() && !isSending,
+        // ── Send button ──────────────────────────────────────────────────────
+        val sendEnabled = messageInput.isNotBlank() && !isSending
+        val buttonScale by animateFloatAsState(
+            targetValue   = if (sendEnabled) 1f else 0.85f,
+            animationSpec = spring(Spring.DampingRatioMediumBouncy),
+            label         = "sendBtnScale"
+        )
+        Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.8f))
-                .padding(8.dp)
+                .size(48.dp)
+                .scale(buttonScale)
+                .background(
+                    brush = if (sendEnabled) Brush.linearGradient(
+                        colors = listOf(QuantumColors.Primary, QuantumColors.Accent.copy(alpha = 0.8f))
+                    ) else Brush.linearGradient(
+                        colors = listOf(QuantumColors.TextDisabled, QuantumColors.TextDisabled)
+                    ),
+                    shape = CircleShape
+                )
+                .clip(CircleShape)
+                .clickable(enabled = sendEnabled, onClick = onSend),
+            contentAlignment = Alignment.Center
         ) {
             if (isSending) {
                 CircularProgressIndicator(
-                    color = Color.White,
-                    modifier = Modifier
-                        .width(20.dp)
-                        .height(20.dp),
-                    strokeWidth = 2.dp
+                    color       = Color.White,
+                    strokeWidth = 2.dp,
+                    modifier    = Modifier.size(22.dp)
                 )
             } else {
                 Icon(
-                    imageVector = Icons.Default.Send,
-                    contentDescription = "Send message",
-                    tint = Color.White,
-                    modifier = Modifier
-                        .width(20.dp)
-                        .height(20.dp)
+                    imageVector        = Icons.Default.Send,
+                    contentDescription = "Send",
+                    tint               = Color.White,
+                    modifier           = Modifier.size(20.dp)
                 )
             }
         }
     }
 }
 
-/**
- * Formats timestamp to HH:mm format.
- */
-private fun formatTimestamp(timestamp: Long): String {
-    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
+// ─────────────────────────────────────────────────────────────────────────────
+// Empty / Loading / Error
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun ChatEmptyState() {
+    Column(
+        modifier            = Modifier.fillMaxSize(),
+        verticalArrangement   = Arrangement.Center,
+        horizontalAlignment   = Alignment.CenterHorizontally
+    ) {
+        Text("🔐", fontSize = 52.sp)
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text  = "Post-quantum secured",
+            style = MaterialTheme.typography.titleMedium,
+            color = QuantumColors.TextPrimary
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text      = "Send the first message.\nYour conversation is encrypted.",
+            style     = MaterialTheme.typography.bodyMedium,
+            color     = QuantumColors.TextTertiary,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun ChatLoadingState() {
+    Column(
+        modifier            = Modifier.fillMaxSize(),
+        verticalArrangement   = Arrangement.Center,
+        horizontalAlignment   = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator(
+            color       = QuantumColors.Primary,
+            strokeWidth = 3.dp,
+            modifier    = Modifier.size(46.dp)
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text  = "Decrypting messages…",
+            style = MaterialTheme.typography.bodyMedium,
+            color = QuantumColors.TextTertiary
+        )
+    }
+}
+
+@Composable
+private fun ChatErrorState(message: String, onRetry: () -> Unit) {
+    Column(
+        modifier            = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        verticalArrangement   = Arrangement.Center,
+        horizontalAlignment   = Alignment.CenterHorizontally
+    ) {
+        Text("⚠️", fontSize = 48.sp)
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text  = "Connection error",
+            style = MaterialTheme.typography.titleLarge,
+            color = QuantumColors.Error
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text      = message,
+            style     = MaterialTheme.typography.bodyMedium,
+            color     = QuantumColors.TextSecondary,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(28.dp))
+        Button(
+            onClick  = onRetry,
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            shape    = RoundedCornerShape(16.dp),
+            colors   = ButtonDefaults.buttonColors(containerColor = QuantumColors.Primary)
+        ) {
+            Text("Retry", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+private fun formatTimestamp(ts: Long): String =
+    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(ts))
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Previews
+// ─────────────────────────────────────────────────────────────────────────────
+
+private val sampleMessages = listOf(
+    ChatMessage(id = 1L, senderId = "other",        receiverId = "me", content = "Hey! Is this quantum-encrypted? 🔐",      timestamp = System.currentTimeMillis() - 180_000, status = MessageStatus.SENT, messageType = MessageType.TEXT),
+    ChatMessage(id = 2L, senderId = "current_user", receiverId = "other", content = "Yes! Post-quantum CRYSTALS-Kyber key exchange. Nobody can read it.", timestamp = System.currentTimeMillis() - 120_000, status = MessageStatus.SENT, messageType = MessageType.TEXT),
+    ChatMessage(id = 3L, senderId = "other",        receiverId = "me", content = "That's incredible. Even quantum computers can't break it?", timestamp = System.currentTimeMillis() - 90_000, status = MessageStatus.SENT, messageType = MessageType.TEXT),
+    ChatMessage(id = 4L, senderId = "current_user", receiverId = "other", content = "Exactly. That's the whole point 🛡️", timestamp = System.currentTimeMillis() - 30_000, status = MessageStatus.PENDING, messageType = MessageType.TEXT),
+)
+
+@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Chat — Messages", widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewChatMessages() {
+    QuantumMessengerTheme {
+        ChatScreenContent(
+            uiState       = ChatUiState.Success(sampleMessages),
+            currentUserId = "current_user",
+            participantId = "other",
+            messageInput  = "Type something…",
+            lazyListState = rememberLazyListState(),
+            onBack        = {},
+            onInputChange = {},
+            onSend        = {},
+            onRetry       = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Chat — Empty", widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewChatEmpty() {
+    QuantumMessengerTheme {
+        ChatScreenContent(
+            uiState       = ChatUiState.Success(emptyList()),
+            currentUserId = "current_user",
+            participantId = "other",
+            messageInput  = "",
+            lazyListState = rememberLazyListState(),
+            onBack        = {},
+            onInputChange = {},
+            onSend        = {},
+            onRetry       = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Chat — Loading", widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewChatLoading() {
+    QuantumMessengerTheme {
+        ChatScreenContent(
+            uiState       = ChatUiState.Loading,
+            currentUserId = "current_user",
+            participantId = "other",
+            messageInput  = "",
+            lazyListState = rememberLazyListState(),
+            onBack        = {},
+            onInputChange = {},
+            onSend        = {},
+            onRetry       = {}
+        )
+    }
 }

@@ -1,202 +1,137 @@
 package com.nigdroid.quantummessenger.presentation.ui.background
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.graphics.*
+import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumColors
+import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Animated Mesh Gradient Background for Chat Screen
+ * Animated Mesh Gradient Background — Quantum Messenger
  *
- * Features:
- * - Smooth, continuously animating gradients
- * - Multiple color stops for rich visual depth
- * - Low performance impact using optimized rendering
- * - Adapts to light/dark theme
- * - Creates beautiful "blob" animations using sine waves
+ * Three layered animated "blobs" of colour painted on a deep-black canvas,
+ * producing the premium iOS-style aurora/mesh gradient look.
  *
- * Perfect for creating engaging, modern UIs without heavyweight
- * graphics libraries.
+ * Performance: uses Canvas + infinite-transition floats only — no bitmaps.
  */
 @Composable
 fun AnimatedMeshGradientBackground(
     modifier: Modifier = Modifier,
-    isDarkTheme: Boolean = false
+    isDarkTheme: Boolean = true  // kept for API compat, always dark now
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "meshGradient")
+    val infiniteTransition = rememberInfiniteTransition(label = "meshBg")
 
-    // Animate color positions and offsets
-    val offsetX by infiniteTransition.animateFloat(
+    // Three independent phase animations at different speeds
+    val phase1 by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 1f,
+        targetValue  = (2 * Math.PI).toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 8000, easing = LinearEasing)
+            animation = tween(durationMillis = 9_000, easing = LinearEasing)
         ),
-        label = "offsetX"
+        label = "phase1"
     )
-
-    val offsetY by infiniteTransition.animateFloat(
+    val phase2 by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 1f,
+        targetValue  = (2 * Math.PI).toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 10000, easing = LinearEasing)
+            animation = tween(durationMillis = 13_000, easing = LinearEasing)
         ),
-        label = "offsetY"
+        label = "phase2"
     )
-
-    // Create animated gradient colors with sine wave modulation
-    val colors = if (isDarkTheme) {
-        getDarkThemeColors(offsetX, offsetY)
-    } else {
-        getLightThemeColors(offsetX, offsetY)
-    }
-
-    // Radial gradient center follows animation
-    val centerOffsetX = 0.5f + (sin(offsetX * Math.PI.toFloat()) * 0.3f)
-    val centerOffsetY = 0.5f + (sin(offsetY * Math.PI.toFloat()) * 0.3f)
+    val phase3 by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue  = (2 * Math.PI).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 17_000, easing = LinearEasing)
+        ),
+        label = "phase3"
+    )
 
     Box(
         modifier = modifier
-            .background(
-                brush = Brush.linearGradient(
-                    colors = colors,
-                    start = Offset(0f, 0f),
-                    end = Offset(1f, 1f)
+            .background(QuantumColors.Background)   // true black base
+    ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val w = size.width
+            val h = size.height
+
+            // Blob 1 — Primary violet, top-right area
+            val blob1X = w * (0.6f + 0.25f * sin(phase1.toDouble()).toFloat())
+            val blob1Y = h * (0.25f + 0.20f * cos(phase1.toDouble()).toFloat())
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        QuantumColors.Primary.copy(alpha = 0.55f),
+                        QuantumColors.PrimaryDark.copy(alpha = 0.20f),
+                        Color.Transparent
+                    ),
+                    center = Offset(blob1X, blob1Y),
+                    radius = w * 0.65f
+                ),
+                center = Offset(blob1X, blob1Y),
+                radius = w * 0.65f
+            )
+
+            // Blob 2 — Magenta/accent, bottom-left area
+            val blob2X = w * (0.25f + 0.20f * cos(phase2.toDouble()).toFloat())
+            val blob2Y = h * (0.70f + 0.18f * sin(phase2.toDouble()).toFloat())
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        QuantumColors.Accent.copy(alpha = 0.28f),
+                        QuantumColors.AccentSoft.copy(alpha = 0.10f),
+                        Color.Transparent
+                    ),
+                    center = Offset(blob2X, blob2Y),
+                    radius = w * 0.55f
+                ),
+                center = Offset(blob2X, blob2Y),
+                radius = w * 0.55f
+            )
+
+            // Blob 3 — Cyan/teal, centre
+            val blob3X = w * (0.50f + 0.15f * sin((phase3 + 1f).toDouble()).toFloat())
+            val blob3Y = h * (0.45f + 0.15f * cos((phase3 * 0.7f).toDouble()).toFloat())
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        QuantumColors.Teal.copy(alpha = 0.15f),
+                        QuantumColors.TealDark.copy(alpha = 0.06f),
+                        Color.Transparent
+                    ),
+                    center = Offset(blob3X, blob3Y),
+                    radius = w * 0.45f
+                ),
+                center = Offset(blob3X, blob3Y),
+                radius = w * 0.45f
+            )
+
+            // ── Noise overlay (fine grain via small radial dots pattern) ────
+            // Light scanline-like vignette from top — keeps text readable
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Black.copy(alpha = 0.25f),
+                        Color.Transparent,
+                        Color.Black.copy(alpha = 0.40f)
+                    )
                 )
             )
-    )
-}
-
-/**
- * Provides animated gradient colors for light theme
- * Primary: Soft blue/cyan gradient with warm accents
- */
-private fun getLightThemeColors(offsetX: Float, offsetY: Float): List<Color> {
-    // Base colors with subtle animation
-    val primaryBlue = Color(0x4D6366FF) // Primary blue with transparency
-    val secondaryPurple = Color(0x4D8E6FA8) // Secondary purple
-    val accentCyan = Color(0x4D00BCD4) // Accent cyan
-    val lightBackground = Color(0xFFF5F7FA) // Light background
-
-    // Apply sine wave modulation for smooth color transitions
-    val modulationX = sin((offsetX * Math.PI).toFloat() * 2).toFloat() * 0.2f
-    val modulationY = sin((offsetY * Math.PI).toFloat() * 2).toFloat() * 0.2f
-
-    return listOf(
-        lightBackground.copy(alpha = 0.85f + modulationX * 0.1f),
-        primaryBlue.copy(alpha = 0.4f + modulationY * 0.1f),
-        secondaryPurple.copy(alpha = 0.3f - modulationX * 0.1f),
-        accentCyan.copy(alpha = 0.25f + modulationY * 0.15f),
-        lightBackground.copy(alpha = 0.8f - modulationX * 0.1f)
-    )
-}
-
-/**
- * Provides animated gradient colors for dark theme
- * Primary: Deep blue/purple gradient with vibrant accents
- */
-private fun getDarkThemeColors(offsetX: Float, offsetY: Float): List<Color> {
-    // Dark theme colors with more saturation
-    val darkBackground = Color(0xFF0F1419)
-    val deepBlue = Color(0x4D1F3A8F)
-    val deepPurple = Color(0x4D370D52)
-    val accentViolet = Color(0x4D6A4C93)
-    val brightCyan = Color(0x4D00D9FF)
-
-    // Apply sine wave modulation
-    val modulationX = sin((offsetX * Math.PI).toFloat() * 2).toFloat() * 0.2f
-    val modulationY = sin((offsetY * Math.PI).toFloat() * 2).toFloat() * 0.2f
-
-    return listOf(
-        darkBackground.copy(alpha = 0.95f + modulationX * 0.05f),
-        deepBlue.copy(alpha = 0.5f + modulationY * 0.15f),
-        deepPurple.copy(alpha = 0.4f - modulationX * 0.1f),
-        brightCyan.copy(alpha = 0.3f + modulationY * 0.2f),
-        accentViolet.copy(alpha = 0.25f + modulationX * 0.15f)
-    )
-}
-
-/**
- * Simple Box composable for background composition.
- * Defined here to keep the background module self-contained.
- */
-@Composable
-private fun SimpleBox(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit = {}
-) {
-    Box(modifier = modifier) {
-        content()
+        }
     }
 }
 
 /**
- * Enhanced Animated Mesh Gradient with Multiple Blob Animations
- *
- * This variant uses multiple animated offset points to create
- * a more complex, organic "blob" effect.
+ * Advanced variant — alias kept for any callers that reference the old name.
  */
 @Composable
 fun AdvancedAnimatedMeshGradientBackground(
     modifier: Modifier = Modifier,
-    isDarkTheme: Boolean = false
-) {
-    val infiniteTransition = rememberInfiniteTransition(label = "advancedMeshGradient")
-
-    // Multiple parallel animations for different color regions
-    val blobOffset1 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 7000, easing = LinearEasing)
-        ),
-        label = "blobOffset1"
-    )
-
-    val blobOffset2 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 9000, easing = LinearEasing)
-        ),
-        label = "blobOffset2"
-    )
-
-    // Convert angles to positions with sine/cosine
-    val offsetX = (sin((blobOffset1 * Math.PI / 180.0)).toFloat() + 1f) / 2f
-    val offsetY = (sin(((blobOffset2 + 90f) * Math.PI / 180.0)).toFloat() + 1f) / 2f
-
-    val colors = if (isDarkTheme) {
-        getDarkThemeColors(offsetX, offsetY)
-    } else {
-        getLightThemeColors(offsetX, offsetY)
-    }
-
-    Box(
-        modifier = modifier
-            .background(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        colors[1],
-                        colors[2],
-                        colors[3],
-                        colors[4],
-                        colors[0]
-                    ),
-                    center = Offset(offsetX, offsetY),
-                    radius = 800f
-                )
-            )
-    )
-}
-
+    isDarkTheme: Boolean = true
+) = AnimatedMeshGradientBackground(modifier = modifier, isDarkTheme = isDarkTheme)
