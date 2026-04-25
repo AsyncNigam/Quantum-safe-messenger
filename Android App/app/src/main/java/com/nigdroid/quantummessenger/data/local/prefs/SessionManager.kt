@@ -21,22 +21,30 @@ class SessionManager @Inject constructor(
     private val IS_USER_REGISTERED  = booleanPreferencesKey("is_user_registered")
     private val TEXT_FINGERPRINT    = stringPreferencesKey("text_fingerprint")
     private val DISPLAY_NAME        = stringPreferencesKey("display_name")
+    private val ML_KEM_PUBLIC_KEY   = stringPreferencesKey("ml_kem_public_key")
+    private val X25519_PUBLIC_KEY   = stringPreferencesKey("x25519_public_key")
+    private val FCM_TOKEN           = stringPreferencesKey("fcm_token")
 
     // ── Reactive flows ─────────────────────────────────────────────────────────
 
     val isUserRegistered: Flow<Boolean> = context.dataStore.data
         .map { it[IS_USER_REGISTERED] ?: false }
 
-    /**
-     * The user's permanent anonymous identity — a 64-char hex SHA-256 fingerprint.
-     * Used as the Bearer token for HTTP auth and the fingerprint for Socket.io auth.
-     */
     val textFingerprint: Flow<String?> = context.dataStore.data
         .map { it[TEXT_FINGERPRINT] }
 
-    /** Local display name — never sent to the server. Purely for the user's own reference. */
     val displayName: Flow<String?> = context.dataStore.data
         .map { it[DISPLAY_NAME] }
+
+    val mlKemPublicKey: Flow<String?> = context.dataStore.data
+        .map { it[ML_KEM_PUBLIC_KEY] }
+
+    val x25519PublicKey: Flow<String?> = context.dataStore.data
+        .map { it[X25519_PUBLIC_KEY] }
+
+    /** Firebase Cloud Messaging token for push notifications. */
+    val fcmToken: Flow<String?> = context.dataStore.data
+        .map { it[FCM_TOKEN] }
 
     // ── Mutators ───────────────────────────────────────────────────────────────
 
@@ -60,6 +68,23 @@ class SessionManager @Inject constructor(
                 prefs[DISPLAY_NAME] = name
             } else {
                 prefs.remove(DISPLAY_NAME)
+            }
+        }
+    }
+
+    suspend fun setPublicKeys(mlKemBase64: String, x25519Base64: String) {
+        context.dataStore.edit { prefs ->
+            prefs[ML_KEM_PUBLIC_KEY] = mlKemBase64
+            prefs[X25519_PUBLIC_KEY] = x25519Base64
+        }
+    }
+
+    suspend fun setFcmToken(token: String?) {
+        context.dataStore.edit { prefs ->
+            if (token != null) {
+                prefs[FCM_TOKEN] = token
+            } else {
+                prefs.remove(FCM_TOKEN)
             }
         }
     }

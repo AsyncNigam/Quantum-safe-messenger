@@ -5,6 +5,7 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
+import android.util.Base64
 import com.google.crypto.tink.Aead
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.aead.AeadKeyTemplates
@@ -13,6 +14,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.security.KeyStore
+import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -156,13 +158,33 @@ class CryptoManager @Inject constructor(
         }
 
     /**
-     * Derive a deterministic 32-byte passphrase for SQLCipher.
-     * The passphrase is derived by encrypting a fixed plaintext with the master key.
+     * Returns a deterministic 32-byte passphrase for SQLCipher.
+     *
+     * Strategy: generate a random 32-byte passphrase ONCE, encrypt it with Tink AEAD,
+     * and store the ciphertext in SharedPreferences. On subsequent calls, decrypt the
+     * stored ciphertext to recover the same passphrase.
+     *
+     * This is deterministic because we always decrypt the SAME ciphertext, unlike the
+     * old approach which called aead.encrypt() each time (randomized nonce = different
+     * output each time → "file is not a database" on restart).
      */
     suspend fun getDatabasePassphrase(): ByteArray = withContext(Dispatchers.IO) {
-        val passphraseData = "database_passphrase".toByteArray(Charsets.UTF_8)
-        val encrypted = aead.encrypt(FIXED_PLAINTEXT, passphraseData)
-        encrypted.copyOf(32)
+        val prefs = context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE)
+        val storedCiphertext = prefs.getString(DB_PASSPHRASE_KEY, null)
+
+        if (storedCiphertext != null) {
+            // Decrypt the previously stored passphrase
+            val cipherBytes = Base64.decode(storedCiphertext, Base64.NO_WRAP)
+            return@withContext aead.decrypt(cipherBytes, DB_AAD)
+        }
+
+        // First launch: generate a random passphrase, encrypt & persist it
+        val passphrase = ByteArray(32).also { SecureRandom().nextBytes(it) }
+        val encrypted = aead.encrypt(passphrase, DB_AAD)
+        val encoded = Base64.encodeToString(encrypted, Base64.NO_WRAP)
+        prefs.edit().putString(DB_PASSPHRASE_KEY, encoded).apply()
+
+        passphrase
     }
 
     companion object {
@@ -173,6 +195,7 @@ class CryptoManager @Inject constructor(
         private const val PREF_FILE_NAME   = "quantum_messenger_prefs_v3"
         const val MASTER_KEY_ALIAS         = "quantum_messenger_master_key_v3"
 
-        private val FIXED_PLAINTEXT = ByteArray(32) { 0x42 }
+        private const val DB_PASSPHRASE_KEY = "db_passphrase_ciphertext_v1"
+        private val DB_AAD = "sqlcipher_passphrase".toByteArray(Charsets.UTF_8)
     }
 }

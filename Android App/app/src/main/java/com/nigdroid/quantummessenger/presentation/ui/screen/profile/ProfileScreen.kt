@@ -45,6 +45,7 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
     val displayName by viewModel.displayName.collectAsState()
     val mlKemKey    by viewModel.mlKemPublicKey.collectAsState()
     val x25519Key   by viewModel.x25519PublicKey.collectAsState()
+    val isEditing   by viewModel.isEditing.collectAsState()
 
     var nameInput by remember(displayName) { mutableStateOf(displayName ?: "") }
     var showAboutSheet by remember { mutableStateOf(false) }
@@ -76,9 +77,16 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
 
             // ── Display Name ─────────────────────────────────────────
             DisplayNameCard(
+                displayName = displayName,
                 nameInput = nameInput,
+                isEditing = isEditing,
                 onNameChange = { nameInput = it },
-                onSave = { viewModel.saveDisplayName(nameInput) }
+                onSave = { viewModel.saveDisplayName(nameInput) },
+                onEdit = { viewModel.startEditing() },
+                onCancel = {
+                    nameInput = displayName ?: ""
+                    viewModel.cancelEditing()
+                }
             )
             Spacer(Modifier.height(16.dp))
 
@@ -142,7 +150,15 @@ private fun ProfileAvatar(displayName: String?) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun DisplayNameCard(nameInput: String, onNameChange: (String) -> Unit, onSave: () -> Unit) {
+private fun DisplayNameCard(
+    displayName: String?,
+    nameInput: String,
+    isEditing: Boolean,
+    onNameChange: (String) -> Unit,
+    onSave: () -> Unit,
+    onEdit: () -> Unit,
+    onCancel: () -> Unit
+) {
     Box(
         Modifier.fillMaxWidth()
             .glassmorphism(cornerRadius = 20, overlayAlpha = 0.10f)
@@ -159,25 +175,67 @@ private fun DisplayNameCard(nameInput: String, onNameChange: (String) -> Unit, o
             }
             Text("Local only — never sent to the server.", style = MaterialTheme.typography.bodySmall,
                 color = QuantumColors.TextTertiary)
-            OutlinedTextField(
-                value = nameInput, onValueChange = onNameChange,
-                placeholder = { Text("Anonymous", color = QuantumColors.TextTertiary) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = QuantumColors.Primary,
-                    unfocusedBorderColor = QuantumColors.GlassBorder,
-                    cursorColor = QuantumColors.Primary,
-                    focusedTextColor = QuantumColors.TextPrimary,
-                    unfocusedTextColor = QuantumColors.TextPrimary
+
+            if (isEditing) {
+                // ── Edit Mode ────────────────────────────────────────────
+                OutlinedTextField(
+                    value = nameInput, onValueChange = onNameChange,
+                    placeholder = { Text("Anonymous", color = QuantumColors.TextTertiary) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = QuantumColors.Primary,
+                        unfocusedBorderColor = QuantumColors.GlassBorder,
+                        cursorColor = QuantumColors.Primary,
+                        focusedTextColor = QuantumColors.TextPrimary,
+                        unfocusedTextColor = QuantumColors.TextPrimary
+                    )
                 )
-            )
-            Button(
-                onClick = onSave, modifier = Modifier.fillMaxWidth().height(44.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = QuantumColors.Primary)
-            ) { Text("Save", fontWeight = FontWeight.Bold) }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onCancel,
+                        modifier = Modifier.weight(1f).height(44.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, QuantumColors.GlassBorder)
+                    ) { Text("Cancel", color = QuantumColors.TextSecondary) }
+                    Button(
+                        onClick = onSave,
+                        modifier = Modifier.weight(1f).height(44.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = QuantumColors.Primary)
+                    ) { Text("Save", fontWeight = FontWeight.Bold) }
+                }
+            } else {
+                // ── View Mode ────────────────────────────────────────────
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glassmorphism(cornerRadius = 14, overlayAlpha = 0.06f)
+                        .background(QuantumColors.GlassWhite08, RoundedCornerShape(14.dp))
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable(onClick = onEdit)
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = displayName ?: "Anonymous",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = if (displayName != null) QuantumColors.TextPrimary
+                                else QuantumColors.TextTertiary
+                    )
+                    Icon(
+                        Icons.Default.Edit, "Edit",
+                        tint = QuantumColors.Primary.copy(alpha = 0.7f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -466,7 +524,7 @@ private fun PreviewProfile() {
                 Spacer(Modifier.height(28.dp))
                 ProfileAvatar("Nigam")
                 Spacer(Modifier.height(24.dp))
-                DisplayNameCard("Nigam", {}, {})
+                DisplayNameCard("Nigam", "Nigam", false, {}, {}, {}, {})
                 Spacer(Modifier.height(16.dp))
                 QrCodeCard("a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890")
                 Spacer(Modifier.height(16.dp))

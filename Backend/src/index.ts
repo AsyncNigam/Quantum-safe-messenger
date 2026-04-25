@@ -8,6 +8,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 
 import { appConfig }                                        from './config/env';
 import { pubClient, subClient, connectRedis }                from './config/redis';
+import { initFirebase }                                      from './config/firebase';
 import { errorHandler, generalLimiter, socketAuthMiddleware } from './api/middlewares';
 import { socketController }                                  from './api/controllers';
 import { authRoutes, keyRoutes, healthRoutes }                from './api/routes';
@@ -41,6 +42,9 @@ app.use(errorHandler);
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
 async function bootstrap(): Promise<void> {
+  // ─── Firebase Admin SDK (for push notifications) ────────────────────────────
+  initFirebase();
+
   // ─── HTTP Server ────────────────────────────────────────────────────────────
   const httpServer = http.createServer(app);
 

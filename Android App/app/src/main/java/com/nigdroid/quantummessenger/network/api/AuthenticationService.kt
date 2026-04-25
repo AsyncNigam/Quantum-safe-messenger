@@ -49,6 +49,18 @@ interface AuthenticationService {
         @Header("Authorization") auth: String,
         @retrofit2.http.Path("fingerprint") fingerprint: String
     ): Response<LookupResponse>
+
+    /**
+     * POST /api/auth/fcm-token
+     *
+     * Register or update FCM token for push notifications.
+     * Requires Bearer auth.
+     */
+    @POST("api/auth/fcm-token")
+    suspend fun registerFcmToken(
+        @Header("Authorization") auth: String,
+        @Body request: FcmTokenRequest
+    ): Response<GenericResponse>
 }
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────
@@ -95,3 +107,8 @@ data class LookupResponse(
     val mlKemPublicKey: String,
     val x25519PublicKey: String
 )
+
+data class FcmTokenRequest(
+    val fcmToken: String
+)
+

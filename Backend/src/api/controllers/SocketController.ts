@@ -1,8 +1,12 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { MessageService } from '../../services/MessageService';
+import { FcmService } from '../../services/fcmService';
 
 export class SocketController {
-  constructor(private readonly messageService: MessageService) {}
+  constructor(
+    private readonly messageService: MessageService,
+    private readonly fcmService: FcmService,
+  ) {}
 
   private async isOnline(io: SocketIOServer, fingerprint: string): Promise<boolean> {
     const sockets = await io.in(fingerprint).fetchSockets();
@@ -49,8 +53,13 @@ export class SocketController {
           io.to(to).emit('receive_message', payload);
           console.log(`[Socket] Delivered (online)  | from=fp:${fingerprint.slice(0, 8)} | to=fp:${to.slice(0, 8)}`);
         } else {
+          // Queue message for later delivery
           await this.messageService.queueOfflineMessage(to, payload);
           console.log(`[Socket] Queued   (offline)  | from=fp:${fingerprint.slice(0, 8)} | to=fp:${to.slice(0, 8)}`);
+
+          // Send push notification (Zero-Knowledge: only sender fingerprint, no content)
+          this.fcmService.sendPushNotification(to, fingerprint, 'new_message')
+            .catch((err) => console.warn(`[Socket] FCM push failed:`, (err as Error).message));
         }
       } catch (err: unknown) {
         console.error(`[Socket] send_message error:`, (err as Error).message);
@@ -63,3 +72,4 @@ export class SocketController {
     });
   };
 }
+

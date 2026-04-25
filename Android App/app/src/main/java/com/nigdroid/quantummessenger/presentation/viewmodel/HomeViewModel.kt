@@ -3,6 +3,7 @@ package com.nigdroid.quantummessenger.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nigdroid.quantummessenger.data.local.ChatMessageDao
+import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import com.nigdroid.quantummessenger.domain.usecase.GetInboxUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SyncContactsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,23 +18,32 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val getInboxUseCase: GetInboxUseCase,
     private val syncContactsUseCase: SyncContactsUseCase,
-    private val chatMessageDao: ChatMessageDao
+    private val chatMessageDao: ChatMessageDao,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
-
-    // In a production app, the current user ID would be retrieved from a session/auth manager.
-    private val currentUserId = "current_user_id"
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    /** The real user fingerprint — loaded from SessionManager. */
+    private var currentUserId: String? = null
+
     init {
-        observeInbox()
+        loadUserAndObserveInbox()
         syncContacts()
     }
 
-    private fun observeInbox() {
+    private fun loadUserAndObserveInbox() {
         viewModelScope.launch {
-            getInboxUseCase(currentUserId)
+            // Get the user's fingerprint first, then observe inbox
+            currentUserId = sessionManager.textFingerprint.firstOrNull()
+
+            if (currentUserId == null) {
+                _uiState.value = HomeUiState.Error("Not registered — please restart the app.")
+                return@launch
+            }
+
+            getInboxUseCase(currentUserId!!)
                 .catch { e ->
                     _uiState.value = HomeUiState.Error(e.message ?: "Unknown error")
                 }
@@ -52,7 +62,8 @@ class HomeViewModel @Inject constructor(
 
     fun deleteConversation(otherUserId: String) {
         viewModelScope.launch {
-            chatMessageDao.deleteConversation(currentUserId, otherUserId)
+            val userId = currentUserId ?: return@launch
+            chatMessageDao.deleteConversation(userId, otherUserId)
         }
     }
 }

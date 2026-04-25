@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.protobuf)
+    alias(libs.plugins.googleServices)
 }
 
 android {
@@ -161,5 +162,7 @@ dependencies {
     // ML Kit Barcode Scanning — on-device QR code detection
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
 
-
+    // Firebase Cloud Messaging (Push Notifications)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 }

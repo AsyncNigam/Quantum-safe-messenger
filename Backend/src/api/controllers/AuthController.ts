@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import { createHash } from 'crypto';
 import { UserRepository } from '../../repositories/UserRepository';
+import { FcmService } from '../../services/fcmService';
 import { RegisterInput } from '../validators/registerValidator';
 
 export class AuthController {
-  constructor(private readonly userRepo: UserRepository) {}
+  constructor(
+    private readonly userRepo: UserRepository,
+    private readonly fcmService: FcmService,
+  ) {}
 
   /**
    * POST /auth/register
@@ -56,7 +60,7 @@ export class AuthController {
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const { fingerprint } = req.params;
+      const fingerprint = req.params.fingerprint as string;
 
       if (!fingerprint || fingerprint.length !== 64 || !/^[a-f0-9]+$/.test(fingerprint)) {
         res.status(400).json({ error: 'Invalid fingerprint format' });
@@ -82,4 +86,38 @@ export class AuthController {
       next(err);
     }
   };
+
+  /**
+   * POST /auth/fcm-token
+   *
+   * Register or update the FCM push notification token for a user.
+   * Requires Bearer auth (fingerprint).
+   */
+  public registerFcmToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const fingerprint = (req as any).fingerprint as string;
+      const { fcmToken } = req.body;
+
+      if (!fcmToken || typeof fcmToken !== 'string' || fcmToken.length < 10) {
+        res.status(400).json({ error: 'Invalid FCM token' });
+        return;
+      }
+
+      await this.fcmService.upsertToken(fingerprint, fcmToken);
+
+      console.log(`[Auth] 📱 FCM token registered | fingerprint=${fingerprint.slice(0, 12)}…`);
+
+      res.status(200).json({
+        success: true,
+        message: 'FCM token registered',
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }
+

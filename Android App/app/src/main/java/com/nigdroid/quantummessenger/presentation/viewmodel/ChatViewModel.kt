@@ -8,12 +8,14 @@ import com.nigdroid.quantummessenger.domain.usecase.GetChatHistoryUseCase
 import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageResult
 import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SendMessageUseCase
+import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,7 +36,8 @@ import javax.inject.Inject
 class ChatViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val receiveMessageUseCase: ReceiveMessageUseCase,
-    private val getChatHistoryUseCase: GetChatHistoryUseCase
+    private val getChatHistoryUseCase: GetChatHistoryUseCase,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     // Private mutable state
@@ -43,27 +46,39 @@ class ChatViewModel @Inject constructor(
     // Public immutable state for UI consumption
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
-    // Current user and recipient IDs (would be set from args/saved state in production)
+    // Current user and recipient IDs
     private var currentUserId: String = ""
     private var recipientUserId: String = ""
 
     /**
-     * Initializes the ViewModel with user IDs and starts observing messages.
-     * Call this when the screen is first loaded.
+     * Initializes the ViewModel with the recipient and starts observing messages.
+     * The current user's ID is loaded from SessionManager (real fingerprint).
      *
-     * @param userId The ID of the current user
+     * @param userId The ID of the current user (optional — auto-loaded from session)
      * @param participantId The ID of the user to chat with
      */
     fun initialize(userId: String, participantId: String) {
-        currentUserId = userId
         recipientUserId = participantId
 
-        // Load chat history and observe for changes
-        loadChatHistory()
+        viewModelScope.launch {
+            // Use provided userId, or fall back to SessionManager fingerprint
+            currentUserId = userId.ifBlank {
+                sessionManager.textFingerprint.firstOrNull() ?: ""
+            }
 
-        // Observe incoming messages from WebSocket
-        observeIncomingMessages()
+            if (currentUserId.isBlank()) {
+                _uiState.value = ChatUiState.Error("Not registered — please restart the app.")
+                return@launch
+            }
+
+            // Load chat history and observe for changes
+            loadChatHistory()
+
+            // Observe incoming messages from WebSocket
+            observeIncomingMessages()
+        }
     }
+
 
     /**
      * Loads the chat history between the current user and the recipient.

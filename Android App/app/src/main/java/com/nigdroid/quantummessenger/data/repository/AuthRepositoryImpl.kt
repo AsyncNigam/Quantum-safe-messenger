@@ -11,6 +11,7 @@ import com.nigdroid.quantummessenger.network.api.RegisterRequest
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.nigdroid.quantummessenger.network.fcm.FcmTokenManager
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,7 +19,8 @@ import javax.inject.Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authService: AuthenticationService,
     private val generateIdentityUseCase: GenerateIdentityUseCase,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val fcmTokenManager: FcmTokenManager
 ) : AuthRepository {
 
     /**
@@ -71,9 +73,13 @@ class AuthRepositoryImpl @Inject constructor(
                     x25519PublicKey  = keys.x25519PublicKey
                 )
 
-                // Step 4: Persist fingerprint in encrypted DataStore
+                // Step 4: Persist fingerprint and public keys in encrypted DataStore
                 sessionManager.setTextFingerprint(fingerprint)
+                sessionManager.setPublicKeys(mlKemB64, x25519B64)
                 sessionManager.setUserRegistered(true)
+
+                // Step 5: Sync FCM token with backend for push notifications
+                try { fcmTokenManager.syncToken() } catch (_: Exception) { }
 
                 IdentityGenerationResult.Success(identity)
 

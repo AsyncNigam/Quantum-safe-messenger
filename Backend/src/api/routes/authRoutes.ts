@@ -31,4 +31,17 @@ router.get(
   authController.lookup,
 );
 
+/**
+ * POST /auth/fcm-token
+ *
+ * Register or update the FCM push notification token.
+ * Requires Bearer auth.
+ */
+router.post(
+  '/fcm-token',
+  authMiddleware,
+  authController.registerFcmToken,
+);
+
 export default router;
+

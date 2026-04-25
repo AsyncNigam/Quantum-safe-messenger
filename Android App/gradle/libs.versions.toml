@@ -30,6 +30,8 @@ kotlinxSerialization = "1.7.3"
 datastore = "1.2.1"
 biometric = "1.2.0-alpha05"
 cameraCore = "1.6.0"
+firebaseBom = "33.12.0"
+googleServices = "4.4.2"
 # supabase, ktor, credentials, and googleid versions removed — auth is now ZK fingerprint-based
 
 
@@ -75,6 +77,8 @@ androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref 
 androidx-hilt-compiler-work = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraCore" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 # Supabase and Ktor removed — no longer needed after ZK auth pivot
 
 [plugins]
@@ -84,3 +88,4 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroid" }
 protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }
+googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
