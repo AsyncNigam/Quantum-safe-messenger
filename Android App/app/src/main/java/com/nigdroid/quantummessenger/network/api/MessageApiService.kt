@@ -12,7 +12,7 @@ interface MessageApiService {
     /**
      * Sends a protobuf-serialized message payload.
      */
-    @POST("messages/send")
+    @POST("api/messages/send")
     suspend fun sendMessage(
         @Body payload: RequestBody
     ): Response<Unit>

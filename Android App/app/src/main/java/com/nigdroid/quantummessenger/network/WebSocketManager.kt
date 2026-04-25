@@ -1,5 +1,6 @@
 package com.nigdroid.quantummessenger.network
 
+import com.nigdroid.quantummessenger.util.Constants
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,8 +27,8 @@ sealed class SocketEvent {
 @Singleton
 class WebSocketManager @Inject constructor() {
 
-    // Updated to your computer's local IP
-    private val SERVER_URL = "http://192.168.1.2:3000"
+    // Using backend URL from Constants
+    private val SERVER_URL = Constants.WEBSOCKET_URL
 
     private var socket: Socket? = null
 

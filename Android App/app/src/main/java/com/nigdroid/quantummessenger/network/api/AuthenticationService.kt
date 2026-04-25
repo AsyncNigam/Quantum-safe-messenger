@@ -31,8 +31,8 @@ interface AuthenticationService {
         @Query("limit") limit: Int
     ): Response<KeySyncResponse>
 
-    /** POST /keys/upload — upload full hybrid key bundle (after registration) */
-    @POST("keys/upload")
+    /** POST /api/keys/upload — upload full hybrid key bundle (after registration) */
+    @POST("api/keys/upload")
     suspend fun uploadKeyBundle(
         @Header("Authorization") fingerprint: String,
         @Body request: KeyUploadRequest

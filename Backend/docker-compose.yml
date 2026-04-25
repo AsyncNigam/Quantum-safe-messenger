@@ -24,7 +24,7 @@ services:
     image: quantum-messenger:latest
     container_name: quantum-backend
     ports:
-      - "3000:3000"
+      - "8000:3000"
     environment:
       # Server
       PORT: 3000

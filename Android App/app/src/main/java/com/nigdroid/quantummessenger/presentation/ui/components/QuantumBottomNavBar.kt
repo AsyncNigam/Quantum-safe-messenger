@@ -1,5 +1,6 @@
 package com.nigdroid.quantummessenger.presentation.ui.components
 
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -141,12 +142,12 @@ private fun NavItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val iconColor by animateColorAsState(
+    val iconColor: Color by animateColorAsState(
         targetValue   = if (isSelected) QuantumColors.Primary else QuantumColors.TextTertiary,
         animationSpec = tween(250),
         label         = "iconColor"
     )
-    val labelAlpha by animateFloatAsState(
+    val labelAlpha: Float by animateFloatAsState(
         targetValue   = if (isSelected) 1f else 0.5f,
         animationSpec = tween(250),
         label         = "labelAlpha"
@@ -182,9 +183,11 @@ private fun NavItem(
 
         Text(
             text       = tab.label,
-            style      = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-            color      = iconColor.copy(alpha = labelAlpha),
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            style      = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 10.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            ),
+            color      = iconColor.copy(alpha = labelAlpha)
         )
     }
 }

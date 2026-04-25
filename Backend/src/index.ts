@@ -53,8 +53,8 @@ io.on('connection', (socket) => socketController.handleConnection(io, socket));
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 app.use('/health', healthRoutes);
-app.use('/auth',   authRoutes);   // ZK identity registration
-app.use('/keys',   keyRoutes);    // Post-quantum key bundles
+app.use('/api/auth',   authRoutes);   // ZK identity registration
+app.use('/api/keys',   keyRoutes);    // Post-quantum key bundles
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 

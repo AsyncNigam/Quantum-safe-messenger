@@ -28,7 +28,7 @@ function requireEnv(key: string): string {
 }
 
 export const appConfig: AppConfig = {
-  port: parseInt(process.env.PORT ?? '3000', 10),
+  port: parseInt(process.env.PORT ?? '8000', 10),
   clientOrigin: process.env.CLIENT_ORIGIN ?? '*',
 };
 
