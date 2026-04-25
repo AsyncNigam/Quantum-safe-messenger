@@ -38,9 +38,15 @@ class WebSocketManager @Inject constructor() {
     private val _events = MutableSharedFlow<SocketEvent>(extraBufferCapacity = 64)
     val events: SharedFlow<SocketEvent> = _events.asSharedFlow()
 
-    fun connect(jwtToken: String) {
+    /**
+     * Connect to the backend Socket.io server using the ZK fingerprint for auth.
+     * The server's socketAuthMiddleware reads `socket.handshake.auth.fingerprint`.
+     *
+     * @param fingerprint The user's 64-char hex textFingerprint from registration.
+     */
+    fun connect(fingerprint: String) {
         val options = IO.Options.builder()
-            .setAuth(mapOf("token" to jwtToken))  // matches socket.handshake.auth.token
+            .setAuth(mapOf("fingerprint" to fingerprint))
             .build()
 
         socket = IO.socket(SERVER_URL, options)

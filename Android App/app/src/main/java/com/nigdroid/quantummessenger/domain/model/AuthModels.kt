@@ -1,67 +1,54 @@
 package com.nigdroid.quantummessenger.domain.model
 
 /**
- * Domain models for authentication
+ * Domain models for Zero-Knowledge anonymous authentication.
+ * No PII (email, phone, name) is stored anywhere in this model.
  */
 
 /**
- * Generated identity containing cryptographic key material.
+ * Generated cryptographic identity.
  * All private keys are stored securely in Android Keystore.
- * This model only contains references and public key material.
+ * Only public key material and the derived fingerprint are kept here.
  */
 data class Identity(
-    val userId: String,
-    val identifier: String,             // Email or Phone Number
-    val mlKemPublicKey: ByteArray,      // ML-KEM public key (bytes)
-    val mlDsaPublicKey: ByteArray,      // ML-DSA signature verification key (bytes)
-    val x25519PublicKey: ByteArray,     // X25519 ephemeral key (bytes)
-    val ed25519PublicKey: ByteArray,    // Ed25519 signature key (bytes)
-    val mlDsaSignature: ByteArray = ByteArray(0), // Signature of the key bundle
-    val ed25519Signature: ByteArray = ByteArray(0), // Signature of the key bundle
+    /** SHA-256 fingerprint — the user's permanent anonymous identity */
+    val textFingerprint: String,
+    val mlKemPublicKey: ByteArray,      // ML-KEM-768 public key
+    val x25519PublicKey: ByteArray,     // X25519 DH key
     val createdAt: Long = System.currentTimeMillis(),
     val keyStoreAliasPrefix: String = "quantum_messenger_"
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Identity) return false
-        return userId == other.userId && identifier == other.identifier
+        return textFingerprint == other.textFingerprint
     }
 
-    override fun hashCode(): Int {
-        return 31 * userId.hashCode() + identifier.hashCode()
-    }
+    override fun hashCode(): Int = textFingerprint.hashCode()
 }
 
 /**
- * Request payload for authentication server registration
+ * Request payload sent to POST /auth/register
  */
 data class AuthRegisterRequest(
-    val identifier: String,             // Email or Phone Number
-    val mlKemPublicKey: String,         // Base64 encoded
-    val mlDsaPublicKey: String,         // Base64 encoded
-    val x25519PublicKey: String,        // Base64 encoded
-    val ed25519PublicKey: String,       // Base64 encoded
-    val deviceToken: String = "",       // Optional FCM token
-    val deviceName: String = ""         // Device identifier
+    val mlKemPublicKey: String,   // Base64-encoded
+    val x25519PublicKey: String   // Base64-encoded
 )
 
 /**
- * Response from authentication server
+ * Response from POST /auth/register
  */
 data class AuthRegisterResponse(
     val success: Boolean,
-    val userId: String,
-    val message: String,
-    val serverPublicKey: String?,       // Base64 encoded server's X25519 public key
-    val challengeNonce: String?         // For proof-of-identity
+    val textFingerprint: String
 )
 
 /**
- * Represents generated keypair (in-memory, for processing only)
+ * In-memory keypair (discarded after Keystore storage)
  */
 data class KeyPair(
     val publicKey: ByteArray,
-    val privateKey: ByteArray? = null   // Should be null after storing in Keystore
+    val privateKey: ByteArray? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -69,20 +56,14 @@ data class KeyPair(
         return publicKey.contentEquals(other.publicKey)
     }
 
-    override fun hashCode(): Int {
-        return publicKey.contentHashCode()
-    }
+    override fun hashCode(): Int = publicKey.contentHashCode()
 
-    /**
-     * Securely clear sensitive data
-     */
-    fun clear() {
-        privateKey?.fill(0)
-    }
+    /** Securely zero out sensitive data */
+    fun clear() { privateKey?.fill(0) }
 }
 
 /**
- * Result of identity generation workflow
+ * Result of the full identity generation + registration workflow
  */
 sealed class IdentityGenerationResult {
     data class Success(val identity: Identity) : IdentityGenerationResult()
@@ -91,11 +72,10 @@ sealed class IdentityGenerationResult {
 }
 
 /**
- * Result of authentication registration
+ * Result of registering identity with the backend
  */
 sealed class AuthenticationResult {
-    data class Success(val userId: String, val identity: Identity) : AuthenticationResult()
+    data class Success(val textFingerprint: String, val identity: Identity) : AuthenticationResult()
     data class Error(val exception: Exception, val message: String) : AuthenticationResult()
     object NetworkError : AuthenticationResult()
-    object InvalidInput : AuthenticationResult()
 }

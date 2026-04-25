@@ -33,8 +33,8 @@ export const appConfig: AppConfig = {
 };
 
 export const supabaseConfig: SupabaseConfig = {
-  url: requireEnv('SUPABASE_URL'),
-  anonKey: requireEnv('SUPABASE_ANON_KEY'),
+  url:            requireEnv('SUPABASE_URL'),
+  anonKey:        process.env.SUPABASE_ANON_KEY ?? '',  // No longer required — auth is ZK
   serviceRoleKey: requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
 };
 

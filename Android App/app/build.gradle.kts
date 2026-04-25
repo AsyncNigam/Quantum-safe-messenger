@@ -144,15 +144,9 @@ dependencies {
     ksp(libs.androidx.hilt.compiler.work)
     implementation(libs.androidx.biometric)
     implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
+    // Google Sign-In and Supabase Auth have been removed.
+    // Authentication is now handled via Zero-Knowledge cryptographic fingerprints.
+    // Retrofit, Tink, DataStore, Room, and other libs are retained.
 
-    // Supabase & Ktor
-    implementation(platform(libs.supabase.bom))
-    implementation(libs.supabase.auth)
-    implementation(libs.ktor.client.android)
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
+
 }

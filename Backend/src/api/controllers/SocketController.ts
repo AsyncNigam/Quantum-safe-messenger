@@ -4,8 +4,8 @@ import { MessageService } from '../../services/MessageService';
 export class SocketController {
   constructor(private readonly messageService: MessageService) {}
 
-  private async isUserConnected(io: SocketIOServer, userId: string): Promise<boolean> {
-    const sockets = await io.in(userId).fetchSockets();
+  private async isOnline(io: SocketIOServer, fingerprint: string): Promise<boolean> {
+    const sockets = await io.in(fingerprint).fetchSockets();
     return sockets.length > 0;
   }
 
@@ -13,26 +13,26 @@ export class SocketController {
    * Binds all socket event listeners.
    *
    * NOTE: By the time this runs, `socketAuthMiddleware` has already verified
-   * the Supabase JWT and attached `socket.data.user`. We trust that value
-   * completely — no need to re-validate the userId here.
+   * the fingerprint and attached `socket.data.fingerprint`. We trust that value
+   * completely — no need to re-validate here.
    */
   public handleConnection = (io: SocketIOServer, socket: Socket): void => {
-    // userId is guaranteed by socketAuthMiddleware — no query param fallback needed
-    const userId: string = socket.data.user.id;
+    // fingerprint is guaranteed by socketAuthMiddleware
+    const fingerprint: string = socket.data.fingerprint;
 
-    socket.join(userId);
-    console.log(`[Socket] Connected    | socket=${socket.id} | userId=${userId}`);
+    socket.join(fingerprint);
+    console.log(`[Socket] Connected    | socket=${socket.id} | fp=${fingerprint.slice(0, 12)}…`);
 
     // ── Drain offline queue on connect ──────────────────────────────────────
-    this.messageService.retrieveAndClearOfflineMessages(userId)
+    this.messageService.retrieveAndClearOfflineMessages(fingerprint)
       .then((buffers: Buffer[]) => {
         if (buffers.length > 0) {
-          console.log(`[Socket] Draining ${buffers.length} offline message(s) → ${userId}`);
+          console.log(`[Socket] Draining ${buffers.length} offline message(s) → fp=${fingerprint.slice(0, 12)}…`);
           buffers.forEach((buf) => socket.emit('receive_message', buf));
         }
       })
       .catch((err: Error) =>
-        console.error(`[Socket] Drain error | userId=${userId} |`, err.message),
+        console.error(`[Socket] Drain error | fp=${fingerprint.slice(0, 12)}… |`, err.message),
       );
 
     // ── send_message ────────────────────────────────────────────────────────
@@ -43,14 +43,14 @@ export class SocketController {
           return;
         }
 
-        const recipientOnline = await this.isUserConnected(io, to);
+        const recipientOnline = await this.isOnline(io, to);
 
         if (recipientOnline) {
           io.to(to).emit('receive_message', payload);
-          console.log(`[Socket] Delivered (online)  | from=${userId} | to=${to}`);
+          console.log(`[Socket] Delivered (online)  | from=fp:${fingerprint.slice(0, 8)} | to=fp:${to.slice(0, 8)}`);
         } else {
           await this.messageService.queueOfflineMessage(to, payload);
-          console.log(`[Socket] Queued   (offline)  | from=${userId} | to=${to}`);
+          console.log(`[Socket] Queued   (offline)  | from=fp:${fingerprint.slice(0, 8)} | to=fp:${to.slice(0, 8)}`);
         }
       } catch (err: unknown) {
         console.error(`[Socket] send_message error:`, (err as Error).message);
@@ -59,7 +59,7 @@ export class SocketController {
 
     // ── disconnect ──────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
-      console.log(`[Socket] Disconnected | socket=${socket.id} | userId=${userId}`);
+      console.log(`[Socket] Disconnected | socket=${socket.id} | fp=${fingerprint.slice(0, 12)}…`);
     });
   };
 }

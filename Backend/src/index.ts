@@ -10,7 +10,7 @@ import { appConfig }                                        from './config/env';
 import { pubClient, subClient }                              from './config/redis';
 import { errorHandler, generalLimiter, socketAuthMiddleware } from './api/middlewares';
 import { socketController }                                  from './api/controllers';
-import { keyRoutes, healthRoutes }                           from './api/routes';
+import { authRoutes, keyRoutes, healthRoutes }                from './api/routes';
 
 // ─── Express ──────────────────────────────────────────────────────────────────
 
@@ -44,7 +44,7 @@ const io = new SocketIOServer(httpServer, {
 // Horizontal scaling across instances via Redis pub/sub
 io.adapter(createAdapter(pubClient, subClient));
 
-// JWT authentication on every socket connection (before any event handler runs)
+// Fingerprint authentication on every socket connection (before any event handler runs)
 io.use(socketAuthMiddleware);
 
 // Delegate all connection/event logic to SocketController
@@ -53,7 +53,8 @@ io.on('connection', (socket) => socketController.handleConnection(io, socket));
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 app.use('/health', healthRoutes);
-app.use('/keys',   keyRoutes);
+app.use('/auth',   authRoutes);   // ZK identity registration
+app.use('/keys',   keyRoutes);    // Post-quantum key bundles
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 

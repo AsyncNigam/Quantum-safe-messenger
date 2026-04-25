@@ -1,46 +1,52 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../../config/supabase';
+import { userRepository } from '../../repositories';
 
+// Extend Express Request to carry the verified fingerprint
 declare global {
   namespace Express {
     interface Request {
-      user?: import('@supabase/supabase-js').User;
+      user?: { fingerprint: string };
     }
   }
 }
 
 /**
- * Validates the Supabase JWT provided in the Authorization header.
- * Attaches the authenticated user to the Request object.
+ * HTTP authentication middleware — Zero-Knowledge fingerprint model.
+ *
+ * Clients must send:
+ *   Authorization: Bearer <textFingerprint>
+ *
+ * The fingerprint is validated against the `users` table (via the admin client).
+ * No JWT, no OAuth, no external auth provider.
  */
 export const authMiddleware = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    console.log('[AUTH] Authorization header:', authHeader ? 'Present' : 'MISSING');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('[AUTH] ❌ Invalid/missing auth header');
       res.status(401).json({ error: 'Missing or invalid Authorization header' });
       return;
     }
 
-    const token = authHeader.split(' ')[1];
-    console.log('[AUTH] Token length:', token.length);
-    
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const fingerprint = authHeader.split(' ')[1];
 
-    if (error || !user) {
-      console.log('[AUTH] ❌ Token validation failed:', error?.message);
-      res.status(401).json({ error: 'Unauthorized', details: error?.message });
+    if (!fingerprint || fingerprint.length !== 64 || !/^[a-f0-9]+$/.test(fingerprint)) {
+      res.status(401).json({ error: 'Invalid fingerprint format' });
       return;
     }
 
-    console.log('[AUTH] ✅ User authenticated:', user.id);
-    req.user = user;
+    const user = await userRepository.findByFingerprint(fingerprint);
+
+    if (!user) {
+      res.status(401).json({ error: 'Unrecognised identity — please register first' });
+      return;
+    }
+
+    req.user = { fingerprint: user.fingerprint };
     next();
   } catch (err) {
     next(err);

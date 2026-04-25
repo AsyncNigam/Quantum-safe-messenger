@@ -18,31 +18,33 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class SessionManager @Inject constructor(
     private val context: Context
 ) {
-    private val IS_USER_REGISTERED = booleanPreferencesKey("is_user_registered")
-    private val AUTH_TOKEN = stringPreferencesKey("auth_token")
+    private val IS_USER_REGISTERED  = booleanPreferencesKey("is_user_registered")
+    private val TEXT_FINGERPRINT    = stringPreferencesKey("text_fingerprint")
+
+    // ── Reactive flows ─────────────────────────────────────────────────────────
 
     val isUserRegistered: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[IS_USER_REGISTERED] ?: false
-        }
+        .map { it[IS_USER_REGISTERED] ?: false }
 
-    val authToken: Flow<String?> = context.dataStore.data
-        .map { preferences ->
-            preferences[AUTH_TOKEN]
-        }
+    /**
+     * The user's permanent anonymous identity — a 64-char hex SHA-256 fingerprint.
+     * Used as the Bearer token for HTTP auth and the fingerprint for Socket.io auth.
+     */
+    val textFingerprint: Flow<String?> = context.dataStore.data
+        .map { it[TEXT_FINGERPRINT] }
+
+    // ── Mutators ───────────────────────────────────────────────────────────────
 
     suspend fun setUserRegistered(isRegistered: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[IS_USER_REGISTERED] = isRegistered
-        }
+        context.dataStore.edit { it[IS_USER_REGISTERED] = isRegistered }
     }
 
-    suspend fun setAuthToken(token: String?) {
-        context.dataStore.edit { preferences ->
-            if (token != null) {
-                preferences[AUTH_TOKEN] = token
+    suspend fun setTextFingerprint(fingerprint: String?) {
+        context.dataStore.edit { prefs ->
+            if (fingerprint != null) {
+                prefs[TEXT_FINGERPRINT] = fingerprint
             } else {
-                preferences.remove(AUTH_TOKEN)
+                prefs.remove(TEXT_FINGERPRINT)
             }
         }
     }

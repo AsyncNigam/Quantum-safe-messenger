@@ -1,6 +1,6 @@
 /**
  * Central export point for all API middlewares.
- * Simplifies imports in the main server and route files.
+ * authMiddleware and socketAuthMiddleware now use fingerprint-based ZK auth.
  */
 export * from './authMiddleware';
 export * from './socketAuthMiddleware';

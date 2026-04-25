@@ -8,26 +8,53 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface AuthenticationService {
+
+    /** GET /health — liveness check */
     @GET("health")
     suspend fun checkHealth(): Response<GenericResponse>
 
+    /**
+     * POST /auth/register
+     *
+     * Zero-Knowledge identity registration.
+     * Sends ML-KEM and X25519 public keys, receives a textFingerprint.
+     */
+    @POST("auth/register")
+    suspend fun register(
+        @Body request: RegisterRequest
+    ): Response<RegisterResponse>
+
+    /** GET /keys/sync — fetch paginated public key bundles */
     @GET("keys/sync")
     suspend fun syncKeys(
-        @Query("page") page: Int,
+        @Query("page")  page: Int,
         @Query("limit") limit: Int
     ): Response<KeySyncResponse>
 
+    /** POST /keys/upload — upload full hybrid key bundle (after registration) */
     @POST("keys/upload")
     suspend fun uploadKeyBundle(
-        @Header("Authorization") token: String,
+        @Header("Authorization") fingerprint: String,
         @Body request: KeyUploadRequest
     ): Response<GenericResponse>
 }
+
+// ── DTOs ──────────────────────────────────────────────────────────────────────
 
 data class GenericResponse(
     val status: String? = null,
     val success: Boolean? = null,
     val message: String? = null
+)
+
+data class RegisterRequest(
+    val mlKemPublicKey: String,   // Base64
+    val x25519PublicKey: String   // Base64
+)
+
+data class RegisterResponse(
+    val success: Boolean,
+    val textFingerprint: String
 )
 
 data class KeySyncResponse(
@@ -37,14 +64,13 @@ data class KeySyncResponse(
 )
 
 data class KeyBundleDto(
-    val userId: String,
+    val fingerprint: String,
     val x25519PublicKey: String,
     val mlKemPublicKey: String,
     val createdAt: String
 )
 
 data class KeyUploadRequest(
-    val userId: String,
     val x25519PublicKey: String,
     val mlKemPublicKey: String,
     val ed25519Signature: String,

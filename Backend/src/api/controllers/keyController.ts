@@ -11,23 +11,23 @@ export class KeyController {
    */
   public upload = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId = req.user?.id;
-      if (!userId) {
+      const fingerprint = req.user?.fingerprint;
+      if (!fingerprint) {
         res.status(401).json({ error: 'User context missing' });
         return;
       }
 
       // Explicitly extract fields to ignore malicious injection
       const bundle: IKeyBundle = {
-        userId,
+        fingerprint,
         x25519PublicKey: req.body.x25519PublicKey,
-        mlKemPublicKey: req.body.mlKemPublicKey,
+        mlKemPublicKey:  req.body.mlKemPublicKey,
         ed25519Signature: req.body.ed25519Signature,
-        mlDsaSignature: req.body.mlDsaSignature,
+        mlDsaSignature:   req.body.mlDsaSignature,
       };
 
       await this.keyRepo.uploadKeys(bundle);
-      
+
       res.status(201).json({ success: true, message: 'Keys uploaded successfully' });
     } catch (err) {
       next(err);

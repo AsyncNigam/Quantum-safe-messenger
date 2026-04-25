@@ -3,7 +3,6 @@ package com.nigdroid.quantummessenger.presentation.viewmodel.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
-import com.nigdroid.quantummessenger.domain.model.AuthenticationResult
 import com.nigdroid.quantummessenger.domain.model.Identity
 import com.nigdroid.quantummessenger.domain.model.IdentityGenerationResult
 import com.nigdroid.quantummessenger.domain.repository.AuthRepository
@@ -14,18 +13,35 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// ─── State machine ────────────────────────────────────────────────────────────
+
 sealed class AuthState {
+    /** Waiting for the user to tap "Generate Anonymous Identity" */
     object Idle : AuthState()
-    data class GeneratingKeys(val progress: Int = 0) : AuthState()
-    data class Uploading(val identity: Identity) : AuthState()
-    data class Success(val userId: String, val identity: Identity) : AuthState()
-    object Authenticating : AuthState()
-    data class Error(val message: String, val exception: Exception?, val step: ErrorStep = ErrorStep.UNKNOWN) : AuthState()
+
+    /** Generating ML-KEM keypair (step 1 of 3) */
+    object GeneratingMLKem : AuthState()
+
+    /** Generating X25519 keypair (step 2 of 3) */
+    object GeneratingX25519 : AuthState()
+
+    /** Registering identity with the backend (step 3 of 3) */
+    object Registering : AuthState()
+
+    /** Registration complete */
+    data class Success(val textFingerprint: String, val identity: Identity) : AuthState()
+
+    /** Something went wrong */
+    data class Error(
+        val message: String,
+        val exception: Exception? = null,
+        val step: ErrorStep = ErrorStep.UNKNOWN
+    ) : AuthState()
 }
 
-enum class ErrorStep {
-    VALIDATION, KEY_GENERATION, REGISTRATION, AUTHENTICATION, UNKNOWN
-}
+enum class ErrorStep { KEY_GENERATION, REGISTRATION, UNKNOWN }
+
+// ─── ViewModel ────────────────────────────────────────────────────────────────
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
@@ -36,61 +52,55 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    fun signInWithGoogle(idToken: String, email: String, nonce: String? = null) {
+    /**
+     * Starts the full Zero-Knowledge identity generation + registration flow.
+     * Drives the UI through each animated step.
+     */
+    fun generateIdentity() {
         viewModelScope.launch {
-            _authState.value = AuthState.Authenticating
-            val result = authRepository.signInWithGoogle(idToken, nonce)
-            
-            if (result.isSuccess) {
-                handleSuccessfulAuth(email)
-            } else {
+            try {
+                // Step 1
+                _authState.value = AuthState.GeneratingMLKem
+                kotlinx.coroutines.delay(900L)
+
+                // Step 2
+                _authState.value = AuthState.GeneratingX25519
+                kotlinx.coroutines.delay(700L)
+
+                // Step 3
+                _authState.value = AuthState.Registering
+
+                val result = authRepository.generateAndRegisterIdentity()
+
+                when (result) {
+                    is IdentityGenerationResult.Success -> {
+                        _authState.value = AuthState.Success(
+                            textFingerprint = result.identity.textFingerprint,
+                            identity        = result.identity
+                        )
+                    }
+                    is IdentityGenerationResult.Error -> {
+                        _authState.value = AuthState.Error(
+                            message   = result.message,
+                            exception = result.exception,
+                            step      = ErrorStep.REGISTRATION
+                        )
+                    }
+                    is IdentityGenerationResult.Cancelled -> {
+                        _authState.value = AuthState.Idle
+                    }
+                }
+            } catch (e: Exception) {
                 _authState.value = AuthState.Error(
-                    "Google Sign-In failed: ${result.exceptionOrNull()?.message}",
-                    result.exceptionOrNull() as? Exception,
-                    ErrorStep.AUTHENTICATION
+                    message   = "Unexpected error: ${e.message}",
+                    exception = e,
+                    step      = ErrorStep.UNKNOWN
                 )
             }
         }
     }
 
-    private suspend fun handleSuccessfulAuth(identifier: String) {
-        try {
-            // Get the actual Supabase User ID to ensure consistency with the backend RLS
-            val supabaseUserId = authRepository.getCurrentUserId() ?: "unknown_user"
-
-            _authState.value = AuthState.GeneratingKeys(progress = 0)
-            val generationResult = authRepository.generateIdentity(identifier, supabaseUserId)
-
-            when (generationResult) {
-                is IdentityGenerationResult.Success -> {
-                    val identity = generationResult.identity
-                    _authState.value = AuthState.Uploading(identity)
-
-                    val registerResult = authRepository.registerIdentity(identity)
-                    when (registerResult) {
-                        is AuthenticationResult.Success -> {
-                            sessionManager.setUserRegistered(true)
-                            _authState.value = AuthState.Success(registerResult.userId, registerResult.identity)
-                        }
-                        is AuthenticationResult.Error -> {
-                            _authState.value = AuthState.Error(registerResult.message, registerResult.exception, ErrorStep.REGISTRATION)
-                        }
-                        else -> {
-                            _authState.value = AuthState.Error("Registration failed", null, ErrorStep.REGISTRATION)
-                        }
-                    }
-                }
-                is IdentityGenerationResult.Error -> {
-                    _authState.value = AuthState.Error(generationResult.message, generationResult.exception, ErrorStep.KEY_GENERATION)
-                }
-                else -> _authState.value = AuthState.Idle
-            }
-        } catch (e: Exception) {
-            _authState.value = AuthState.Error("Unexpected error: ${e.message}", e, ErrorStep.UNKNOWN)
-        }
-    }
-
-    fun retryLogin() {
+    fun retry() {
         _authState.value = AuthState.Idle
     }
 }

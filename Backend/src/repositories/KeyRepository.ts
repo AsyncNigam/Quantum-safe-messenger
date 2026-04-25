@@ -45,20 +45,20 @@ export class KeyRepository {
   /**
    * Inserts or upserts a user's hybrid public keys.
    * Uses the admin client to bypass RLS policies.
+   * Keys are now keyed by the cryptographic fingerprint (ZK identity).
    */
   async uploadKeys(keyData: IKeyBundle): Promise<void> {
     const payload = {
-      user_id: keyData.userId,
+      user_id:   keyData.fingerprint,   // fingerprint is now the identity key
       algorithm: 'hybrid-pq',
-      key_data: JSON.stringify({
-        x25519PublicKey: keyData.x25519PublicKey,
-        mlKemPublicKey: keyData.mlKemPublicKey,
+      key_data:  JSON.stringify({
+        x25519PublicKey:  keyData.x25519PublicKey,
+        mlKemPublicKey:   keyData.mlKemPublicKey,
         ed25519Signature: keyData.ed25519Signature,
-        mlDsaSignature: keyData.mlDsaSignature,
+        mlDsaSignature:   keyData.mlDsaSignature,
       }),
     };
 
-    // Use admin client to bypass RLS and insert/update user's keys
     const { error } = await this.supabaseAdmin
       .from('public_keys')
       .upsert(payload, { onConflict: 'user_id' });
