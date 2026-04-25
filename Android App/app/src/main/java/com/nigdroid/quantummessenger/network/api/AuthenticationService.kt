@@ -19,13 +19,13 @@ interface AuthenticationService {
      * Zero-Knowledge identity registration.
      * Sends ML-KEM and X25519 public keys, receives a textFingerprint.
      */
-    @POST("auth/register")
+    @POST("api/auth/register")
     suspend fun register(
         @Body request: RegisterRequest
     ): Response<RegisterResponse>
 
     /** GET /keys/sync — fetch paginated public key bundles */
-    @GET("keys/sync")
+    @GET("api/keys/sync")
     suspend fun syncKeys(
         @Query("page")  page: Int,
         @Query("limit") limit: Int
@@ -44,7 +44,7 @@ interface AuthenticationService {
      * Contact discovery — fetch public keys for a given text fingerprint.
      * Requires Bearer auth.
      */
-    @GET("auth/lookup/{fingerprint}")
+    @GET("api/auth/lookup/{fingerprint}")
     suspend fun lookupUser(
         @Header("Authorization") auth: String,
         @retrofit2.http.Path("fingerprint") fingerprint: String
