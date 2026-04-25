@@ -119,7 +119,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-
+    implementation("androidx.lifecycle:lifecycle-process:2.10.0") // ProcessLifecycleOwner for lock-on-background
     implementation(libs.okhttp)
     implementation(libs.socketio.client)
     implementation(libs.retrofit)

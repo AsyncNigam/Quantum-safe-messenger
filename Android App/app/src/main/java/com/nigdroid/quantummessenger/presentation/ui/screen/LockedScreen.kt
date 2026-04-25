@@ -25,14 +25,20 @@ import com.nigdroid.quantummessenger.presentation.ui.background.AnimatedMeshGrad
 import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumColors
 import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumMessengerTheme
 import com.nigdroid.quantummessenger.presentation.ui.theme.glassmorphism
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Root composable
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-fun LockedScreen(onUnlockClick: () -> Unit) {
-    LockedScreenContent(onUnlockClick = onUnlockClick)
+fun LockedScreen(
+    onUnlockClick: () -> Unit,
+    errorMessage: String? = null
+) {
+    LockedScreenContent(onUnlockClick = onUnlockClick, errorMessage = errorMessage)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -40,7 +46,10 @@ fun LockedScreen(onUnlockClick: () -> Unit) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun LockedScreenContent(onUnlockClick: () -> Unit) {
+private fun LockedScreenContent(
+    onUnlockClick: () -> Unit,
+    errorMessage: String? = null
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -93,17 +102,40 @@ private fun LockedScreenContent(onUnlockClick: () -> Unit) {
                 }
             }
 
-            // ── Unlock button ─────────────────────────────────────────────────
+            // ── Bottom section — unlock + error ───────────────────────────────
             Column(
                 modifier            = Modifier.padding(bottom = 48.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // ── Error message (biometric failure / lockout) ────────────────
+                if (errorMessage != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .glassmorphism(cornerRadius = 12, overlayAlpha = 0.08f)
+                            .background(
+                                color = QuantumColors.Error.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clip(RoundedCornerShape(12.dp))
+                            .padding(14.dp)
+                    ) {
+                        Text(
+                            text      = errorMessage,
+                            style     = MaterialTheme.typography.bodySmall,
+                            color     = QuantumColors.Error,
+                            textAlign = TextAlign.Center,
+                            modifier  = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
                 // Biometric unlock button — large tap target
                 UnlockButton(onClick = onUnlockClick)
 
                 Text(
-                    text  = "Use biometric authentication\nto unlock your messages",
+                    text  = "Tap to unlock with biometrics",
                     style = MaterialTheme.typography.bodySmall,
                     color = QuantumColors.TextTertiary,
                     textAlign = TextAlign.Center
@@ -147,6 +179,14 @@ private fun LockOrb() {
         ),
         label = "orbRotation"
     )
+    val particleAngle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue  = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(8_000, easing = LinearEasing)
+        ),
+        label = "particleAngle"
+    )
 
     Box(
         contentAlignment = Alignment.Center,
@@ -171,6 +211,23 @@ private fun LockOrb() {
                     shape = CircleShape
                 )
         )
+
+        // Orbiting particles
+        Canvas(modifier = Modifier.size(180.dp)) {
+            val center = Offset(size.width / 2f, size.height / 2f)
+            val orbRadius = size.width / 2f * 0.78f
+            for (i in 0 until 6) {
+                val angle = (particleAngle + i * 60f) * (PI / 180f).toFloat()
+                val x = center.x + orbRadius * cos(angle)
+                val y = center.y + orbRadius * sin(angle)
+                val alpha = 0.35f + (i % 3) * 0.18f
+                drawCircle(
+                    color  = QuantumColors.Primary.copy(alpha = alpha),
+                    radius = (2f + (i % 2)).dp.toPx(),
+                    center = Offset(x, y)
+                )
+            }
+        }
 
         // Outer glow
         Box(
@@ -255,50 +312,78 @@ private fun UnlockButton(onClick: () -> Unit) {
         ),
         label = "shimmer"
     )
+    // Pulsing glow behind the button
+    val glowPulse by infiniteTransition.animateFloat(
+        initialValue = 0.85f,
+        targetValue  = 1.05f,
+        animationSpec = infiniteRepeatable(
+            tween(1_200, easing = FastOutSlowInEasing), RepeatMode.Reverse
+        ),
+        label = "glowPulse"
+    )
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(62.dp)
-            .glassmorphism(cornerRadius = 20, overlayAlpha = 0.12f, usePrimaryTint = true)
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        QuantumColors.Primary,
-                        QuantumColors.Accent.copy(alpha = 0.85f),
-                        QuantumColors.Primary
+    Box(contentAlignment = Alignment.Center) {
+        // Subtle glow behind button
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .height(68.dp)
+                .scale(glowPulse)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            QuantumColors.Primary.copy(alpha = 0.25f),
+                            Color.Transparent
+                        )
                     ),
-                    start = Offset(shimmer * 600f, 0f),
-                    end   = Offset(shimmer * 600f + 300f, 100f)
-                ),
-                shape = RoundedCornerShape(20.dp)
-            )
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            verticalAlignment     = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    shape = RoundedCornerShape(24.dp)
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(62.dp)
+                .glassmorphism(cornerRadius = 20, overlayAlpha = 0.12f, usePrimaryTint = true)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            QuantumColors.Primary,
+                            QuantumColors.Accent.copy(alpha = 0.85f),
+                            QuantumColors.Primary
+                        ),
+                        start = Offset(shimmer * 600f, 0f),
+                        end   = Offset(shimmer * 600f + 300f, 100f)
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .clip(RoundedCornerShape(20.dp))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector        = Icons.Default.Fingerprint,
-                contentDescription = null,
-                tint               = Color.White,
-                modifier           = Modifier.size(26.dp)
-            )
-            Text(
-                text       = "Unlock with Biometrics",
-                style      = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color      = Color.White
-            )
+            Row(
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector        = Icons.Default.Fingerprint,
+                    contentDescription = null,
+                    tint               = Color.White,
+                    modifier           = Modifier.size(26.dp)
+                )
+                Text(
+                    text       = "Tap to Unlock",
+                    style      = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color      = Color.White
+                )
+            }
         }
     }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Preview
+// Previews
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Locked Screen", widthDp = 390, heightDp = 844)
@@ -306,5 +391,16 @@ private fun UnlockButton(onClick: () -> Unit) {
 private fun PreviewLockedScreen() {
     QuantumMessengerTheme {
         LockedScreenContent(onUnlockClick = {})
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Locked — With Error", widthDp = 390, heightDp = 844)
+@Composable
+private fun PreviewLockedScreenError() {
+    QuantumMessengerTheme {
+        LockedScreenContent(
+            onUnlockClick = {},
+            errorMessage  = "Biometric authentication failed — too many attempts. Try again in 30 seconds."
+        )
     }
 }

@@ -29,9 +29,7 @@ securityCrypto = "1.1.0-alpha06"
 kotlinxSerialization = "1.7.3"
 datastore = "1.2.1"
 biometric = "1.2.0-alpha05"
-supabase = "3.5.0"
-ktor = "3.4.3"
-# credentials, googleid, supabase, and ktor removed — auth is now ZK fingerprint-based
+# supabase, ktor, credentials, and googleid versions removed — auth is now ZK fingerprint-based
 
 
 [libraries]
