@@ -9,4 +9,10 @@ object AuthRoute
 object HomeRoute
 
 @Serializable
+object AddContactRoute
+
+@Serializable
+object ProfileRoute
+
+@Serializable
 data class ChatRoute(val userId: String)

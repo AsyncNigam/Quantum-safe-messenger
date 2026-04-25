@@ -148,5 +148,8 @@ dependencies {
     // Authentication is now handled via Zero-Knowledge cryptographic fingerprints.
     // Retrofit, Tink, DataStore, Room, and other libs are retained.
 
+    // QR code generation (ZXing core — no camera/scanner, just encode)
+    implementation("com.google.zxing:core:3.5.3")
+
 
 }

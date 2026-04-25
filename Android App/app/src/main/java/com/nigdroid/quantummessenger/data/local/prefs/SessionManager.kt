@@ -20,6 +20,7 @@ class SessionManager @Inject constructor(
 ) {
     private val IS_USER_REGISTERED  = booleanPreferencesKey("is_user_registered")
     private val TEXT_FINGERPRINT    = stringPreferencesKey("text_fingerprint")
+    private val DISPLAY_NAME        = stringPreferencesKey("display_name")
 
     // ── Reactive flows ─────────────────────────────────────────────────────────
 
@@ -33,6 +34,10 @@ class SessionManager @Inject constructor(
     val textFingerprint: Flow<String?> = context.dataStore.data
         .map { it[TEXT_FINGERPRINT] }
 
+    /** Local display name — never sent to the server. Purely for the user's own reference. */
+    val displayName: Flow<String?> = context.dataStore.data
+        .map { it[DISPLAY_NAME] }
+
     // ── Mutators ───────────────────────────────────────────────────────────────
 
     suspend fun setUserRegistered(isRegistered: Boolean) {
@@ -45,6 +50,16 @@ class SessionManager @Inject constructor(
                 prefs[TEXT_FINGERPRINT] = fingerprint
             } else {
                 prefs.remove(TEXT_FINGERPRINT)
+            }
+        }
+    }
+
+    suspend fun setDisplayName(name: String?) {
+        context.dataStore.edit { prefs ->
+            if (name != null) {
+                prefs[DISPLAY_NAME] = name
+            } else {
+                prefs.remove(DISPLAY_NAME)
             }
         }
     }

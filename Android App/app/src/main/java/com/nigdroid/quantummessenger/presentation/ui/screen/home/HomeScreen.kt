@@ -74,10 +74,7 @@ private fun HomeScreenContent(
 
         Scaffold(
             containerColor = Color.Transparent,
-            topBar = { HomeTopBar() },
-            floatingActionButton = {
-                NewChatFab(onClick = onNewChatClick)
-            }
+            topBar = { HomeTopBar() }
         ) { padding ->
 
             AnimatedContent(
