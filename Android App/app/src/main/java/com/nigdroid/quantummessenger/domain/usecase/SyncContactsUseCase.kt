@@ -3,47 +3,53 @@ package com.nigdroid.quantummessenger.domain.usecase
 import android.util.Log
 import com.nigdroid.quantummessenger.data.local.ContactDao
 import com.nigdroid.quantummessenger.data.local.ContactEntity
-import com.nigdroid.quantummessenger.network.api.ContactApiService
+import com.nigdroid.quantummessenger.network.api.AuthenticationService
+import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
  * Use case to synchronize contacts from the remote server to the local database.
+ * Updated for ZK architecture — uses key sync endpoint instead of phone-based contacts.
  */
 class SyncContactsUseCase @Inject constructor(
-    private val contactApiService: ContactApiService,
-    private val contactDao: ContactDao
+    private val authService: AuthenticationService,
+    private val contactDao: ContactDao,
+    private val sessionManager: SessionManager
 ) {
     suspend operator fun invoke() = withContext(Dispatchers.IO) {
         try {
-            // In a production app, we would retrieve the lastSyncTimestamp from local storage
-            val lastSync = 0L 
-            val response = contactApiService.syncContacts(lastSync)
-            
+            val ownFingerprint = sessionManager.textFingerprint.firstOrNull()
+            if (ownFingerprint == null) {
+                Log.w("SyncContacts", "No fingerprint — user not registered")
+                return@withContext
+            }
+
+            val bearerToken = "Bearer $ownFingerprint"
+            val response = authService.syncKeys(page = 1, limit = 100)
+
             if (response.isSuccessful) {
-                val remoteContacts = response.body()?.contacts ?: emptyList()
-                val entities = remoteContacts.map { remote ->
-                    ContactEntity(
-                        userId = remote.userId,
-                        phoneNumber = remote.phoneNumber,
-                        displayName = remote.displayName,
-                        mlKemPublicKey = remote.mlKemPublicKey,
-                        mlDsaPublicKey = remote.mlDsaPublicKey,
-                        x25519PublicKey = remote.x25519PublicKey,
-                        ed25519PublicKey = remote.ed25519PublicKey,
-                        lastSeen = System.currentTimeMillis()
-                    )
-                }
+                val bundles = response.body()?.data ?: emptyList()
+                val entities = bundles
+                    .filter { it.fingerprint != ownFingerprint }
+                    .map { bundle ->
+                        ContactEntity(
+                            userId          = bundle.fingerprint,
+                            mlKemPublicKey  = bundle.mlKemPublicKey,
+                            x25519PublicKey = bundle.x25519PublicKey
+                        )
+                    }
                 if (entities.isNotEmpty()) {
                     contactDao.insertContacts(entities)
                 }
-                Log.d("SyncContactsUseCase", "Successfully synced ${entities.size} contacts")
+                Log.d("SyncContacts", "Synced ${entities.size} contacts")
             } else {
-                Log.e("SyncContactsUseCase", "Sync failed: ${response.errorBody()?.string()}")
+                Log.e("SyncContacts", "Sync failed: ${response.errorBody()?.string()}")
             }
         } catch (e: Exception) {
-            Log.e("SyncContactsUseCase", "Exception during contact sync", e)
+            Log.e("SyncContacts", "Exception during sync", e)
         }
     }
 }

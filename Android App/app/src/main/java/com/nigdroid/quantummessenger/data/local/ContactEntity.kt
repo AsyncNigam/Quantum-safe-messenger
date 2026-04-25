@@ -5,12 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "contacts")
 data class ContactEntity(
-    @PrimaryKey val userId: String,
-    val phoneNumber: String,
-    val displayName: String?,
+    @PrimaryKey val userId: String,       // = textFingerprint of the contact
+    val displayName: String? = null,
     val mlKemPublicKey: String,
-    val mlDsaPublicKey: String,
     val x25519PublicKey: String,
-    val ed25519PublicKey: String,
-    val lastSeen: Long = System.currentTimeMillis()
+    val addedAt: Long = System.currentTimeMillis()
 )

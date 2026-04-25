@@ -114,7 +114,13 @@ fun AppNavigation(
                 popEnterTransition = { fadeIn(tween(300)) },
                 popExitTransition  = { fadeOut(tween(200)) }
             ) {
-                AddContactScreen()
+                AddContactScreen(
+                    onContactAdded = { fingerprint ->
+                        navController.navigate(ChatRoute(fingerprint)) {
+                            popUpTo(HomeRoute)
+                        }
+                    }
+                )
             }
 
             // ── Profile ──────────────────────────────────────────────────

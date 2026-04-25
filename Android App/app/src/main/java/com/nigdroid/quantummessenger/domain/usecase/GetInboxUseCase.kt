@@ -31,7 +31,7 @@ class GetInboxUseCase @Inject constructor(
                 
                 InboxItem(
                     userId = otherUserId,
-                    displayName = contact?.displayName ?: contact?.phoneNumber ?: "Unknown",
+                    displayName = contact?.displayName ?: otherUserId.take(8) + "…",
                     lastMessage = lastMsg.content,
                     timestamp = lastMsg.timestamp,
                     unreadCount = unreadCount,

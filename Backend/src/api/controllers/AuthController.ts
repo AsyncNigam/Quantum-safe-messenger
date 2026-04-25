@@ -43,4 +43,43 @@ export class AuthController {
       next(err);
     }
   };
+
+  /**
+   * GET /auth/lookup/:fingerprint
+   *
+   * Contact discovery — returns the public key bundle for a given fingerprint.
+   * The requesting user must be authenticated (authMiddleware).
+   */
+  public lookup = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { fingerprint } = req.params;
+
+      if (!fingerprint || fingerprint.length !== 64 || !/^[a-f0-9]+$/.test(fingerprint)) {
+        res.status(400).json({ error: 'Invalid fingerprint format' });
+        return;
+      }
+
+      const user = await this.userRepo.findByFingerprint(fingerprint);
+
+      if (!user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+
+      console.log(`[Auth] 🔍 Lookup | fingerprint=${fingerprint.slice(0, 12)}…`);
+
+      res.status(200).json({
+        success: true,
+        fingerprint:     user.fingerprint,
+        mlKemPublicKey:  user.mlKemPublicKey,
+        x25519PublicKey: user.x25519PublicKey,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

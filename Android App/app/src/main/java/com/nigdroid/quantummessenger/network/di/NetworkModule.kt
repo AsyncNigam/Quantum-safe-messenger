@@ -1,7 +1,6 @@
 package com.nigdroid.quantummessenger.network.di
 
 import com.nigdroid.quantummessenger.network.WebSocketManager
-import com.nigdroid.quantummessenger.network.api.ContactApiService
 import com.nigdroid.quantummessenger.network.api.MessageApiService
 import com.nigdroid.quantummessenger.util.Constants
 import dagger.Module
@@ -16,6 +15,7 @@ import javax.inject.Singleton
 
 /**
  * Hilt module for providing network-related dependencies.
+ * ContactApiService removed — contact discovery now uses AuthenticationService.lookupUser()
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -43,12 +43,6 @@ object NetworkModule {
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideContactApiService(@Named("secureRetrofit") retrofit: Retrofit): ContactApiService {
-        return retrofit.create(ContactApiService::class.java)
     }
 
     @Provides

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authController } from '../controllers';
 import { validateRegister } from '../validators/registerValidator';
 import { uploadLimiter } from '../middlewares/rateLimiter';
+import { authMiddleware } from '../middlewares/authMiddleware';
 
 const router = Router();
 
@@ -10,17 +11,24 @@ const router = Router();
  *
  * Zero-Knowledge anonymous identity registration.
  * No Google, no OAuth, no email — purely cryptographic.
- *
- * Middleware chain:
- *   1. uploadLimiter    — max 10 registrations/min per IP (prevents floods)
- *   2. validateRegister — Zod validation of the key bundle
- *   3. authController.register — derives fingerprint and persists
  */
 router.post(
   '/register',
   uploadLimiter,
   validateRegister,
   authController.register,
+);
+
+/**
+ * GET /auth/lookup/:fingerprint
+ *
+ * Contact discovery — returns ML-KEM and X25519 public keys for
+ * a given text fingerprint. Requires the caller to be authenticated.
+ */
+router.get(
+  '/lookup/:fingerprint',
+  authMiddleware,
+  authController.lookup,
 );
 
 export default router;

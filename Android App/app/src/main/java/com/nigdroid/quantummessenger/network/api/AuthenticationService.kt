@@ -37,6 +37,18 @@ interface AuthenticationService {
         @Header("Authorization") fingerprint: String,
         @Body request: KeyUploadRequest
     ): Response<GenericResponse>
+
+    /**
+     * GET /auth/lookup/{fingerprint}
+     *
+     * Contact discovery — fetch public keys for a given text fingerprint.
+     * Requires Bearer auth.
+     */
+    @GET("auth/lookup/{fingerprint}")
+    suspend fun lookupUser(
+        @Header("Authorization") auth: String,
+        @retrofit2.http.Path("fingerprint") fingerprint: String
+    ): Response<LookupResponse>
 }
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────
@@ -75,4 +87,11 @@ data class KeyUploadRequest(
     val mlKemPublicKey: String,
     val ed25519Signature: String,
     val mlDsaSignature: String
+)
+
+data class LookupResponse(
+    val success: Boolean,
+    val fingerprint: String,
+    val mlKemPublicKey: String,
+    val x25519PublicKey: String
 )

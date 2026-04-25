@@ -9,7 +9,7 @@ import net.sqlcipher.database.SupportFactory
  */
 @Database(
     entities = [ChatMessageEntity::class, ContactEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class QuantumMessengerDatabase : RoomDatabase() {
