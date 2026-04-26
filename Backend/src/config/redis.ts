@@ -1,4 +1,4 @@
-import Redis from 'ioredis';
+import Redis, { RedisOptions } from 'ioredis';
 import { redisConfig } from './env';
 
 /**
@@ -15,14 +15,14 @@ import { redisConfig } from './env';
  * maxRetriesPerRequest is set to 3 so the server doesn't hang when Redis
  * is unavailable. lazyConnect prevents blocking startup if Redis is down.
  */
-const redisOptions: Redis.RedisOptions = {
+const redisOptions: RedisOptions = {
   maxRetriesPerRequest: 3,
   retryStrategy(times: number) {
-    if (times > 5) {
-      console.warn('[Redis] Giving up reconnection after 5 attempts.');
-      return null;            // stop retrying
+    if (times > 3) {
+      // Stop retrying — server runs fine without Redis (no offline queue)
+      return null;
     }
-    return Math.min(times * 200, 2000);
+    return Math.min(times * 300, 2000);
   },
   lazyConnect: true,
 };
@@ -34,9 +34,11 @@ export const storeClient = pubClient.duplicate();
 /** Whether Redis connected successfully */
 export let redisAvailable = false;
 
-pubClient.on('error',   (err: Error) => console.error('[Redis Pub]   Error:', err.message));
-subClient.on('error',   (err: Error) => console.error('[Redis Sub]   Error:', err.message));
-storeClient.on('error', (err: Error) => console.error('[Redis Store] Error:', err.message));
+// Suppress noisy error logs after initial failure — only log once per client
+let errorLogged = { pub: false, sub: false, store: false };
+pubClient.on('error',   () => { if (!errorLogged.pub)   { errorLogged.pub = true; } });
+subClient.on('error',   () => { if (!errorLogged.sub)   { errorLogged.sub = true; } });
+storeClient.on('error', () => { if (!errorLogged.store) { errorLogged.store = true; } });
 
 /**
  * Attempt to connect all Redis clients.
@@ -54,7 +56,8 @@ export async function connectRedis(): Promise<boolean> {
     return true;
   } catch (err) {
     redisAvailable = false;
-    console.warn('[Redis] ⚠️  Not available — running without Redis.', (err as Error).message);
+    console.warn('[Redis] ⚠️  Not available — offline message queue disabled.');
     return false;
   }
 }
+

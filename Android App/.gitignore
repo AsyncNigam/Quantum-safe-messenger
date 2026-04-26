@@ -17,3 +17,6 @@ local.properties
 # Secrets
 app/src/main/java/com/nigdroid/quantummessenger/util/Constants.kt
 app/google-services.json
+
+./IMPLEMENTATION_SUMMARY.kt
+./FINAL_COMPREHENSIVE_SUMMARY.kt

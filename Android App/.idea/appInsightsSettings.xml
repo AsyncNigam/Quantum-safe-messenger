@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.nigdroid.quantummessenger" />
+                  <option name="mobileSdkAppId" value="1:970568268245:android:6aaa4a2466703990d6255c" />
+                  <option name="projectId" value="quantumsafe-494220" />
+                  <option name="projectNumber" value="970568268245" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

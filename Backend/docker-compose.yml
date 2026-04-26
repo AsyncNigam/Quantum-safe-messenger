@@ -24,10 +24,10 @@ services:
     image: quantum-messenger:latest
     container_name: quantum-backend
     ports:
-      - "8000:3000"
+      - "8000:8000"
     environment:
       # Server
-      PORT: 3000
+      PORT: 8000
       NODE_ENV: production
       
       # Supabase (REPLACE WITH YOUR VALUES)

@@ -97,8 +97,14 @@ class WebSocketManager @Inject constructor() {
     }
 
     fun sendMessage(message: ProtoMessage) {
-        // Serialize to Protobuf bytes and emit to server (legacy)
-        socket?.emit("send_message", message.toByteArray())
+        // Build the envelope the backend expects: { to: fingerprint, payload: base64 }
+        val json = JSONObject().apply {
+            put("to", message.recipientId)
+            put("payload", android.util.Base64.encodeToString(
+                message.toByteArray(), android.util.Base64.NO_WRAP
+            ))
+        }
+        socket?.emit("send_message", json)
     }
 
     fun sendEncryptedMessage(envelope: EncryptedEnvelope) {
