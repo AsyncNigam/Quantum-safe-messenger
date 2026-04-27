@@ -3,100 +3,105 @@ package com.nigdroid.quantummessenger.presentation.ui.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Color Palette for Quantum Messenger
+ * Quantum Messenger — Autumn Dusk / Evening Glow Palette
  *
- * iPhone-inspired dark glass UI with rich purple/violet gradients.
- * Every color is intentional — production-grade palette.
+ * Direction: warm charcoal base, copper-amber primary, dusty mauve accent,
+ * sage teal for live states. Feels handcrafted, not AI-generated.
+ * Glassmorphism reads as frosted window at golden hour.
  */
 object QuantumColors {
 
     // ── Core Brand ──────────────────────────────────────────────
-    /** Deep electric violet — primary identity color */
-    val Primary        = Color(0xFF7C5CFC)
-    val PrimaryLight   = Color(0xFF9D82FF)
-    val PrimaryDark    = Color(0xFF5A3DD8)
+    /** Burnished copper-amber — primary identity */
+    val Primary        = Color(0xFFC87840)
+    val PrimaryLight   = Color(0xFFE09860)
+    val PrimaryDark    = Color(0xFF985820)
 
-    /** Neon magenta accent — call-to-action, highlights */
-    val Accent         = Color(0xFFE040FB)
-    val AccentSoft     = Color(0xFFCE93D8)
+    /** Dusty mauve — secondary accent, CTAs */
+    val Accent         = Color(0xFF9B6878)
+    val AccentSoft     = Color(0xFFC49AAA)
 
-    /** Cyan-teal for online indicators, delivery ticks */
-    val Teal           = Color(0xFF00E5FF)
-    val TealDark       = Color(0xFF00ACC1)
+    /** Sage teal — online indicators, delivery ticks */
+    val Teal           = Color(0xFF7AAA94)
+    val TealDark       = Color(0xFF5A8870)
 
     // ── Backgrounds ─────────────────────────────────────────────
-    /** True black — base canvas for the app */
-    val Background     = Color(0xFF08070E)
-    /** Card / modal surface — deep navy */
-    val Surface        = Color(0xFF110F1E)
-    /** Elevated surface — slightly lighter */
-    val SurfaceElevated = Color(0xFF1C1930)
+    /** Deep warm charcoal — true base */
+    val Background     = Color(0xFF0A0806)
+    /** Card / modal surface */
+    val Surface        = Color(0xFF130F0A)
+    /** Slightly elevated — bottom sheets, popovers */
+    val SurfaceElevated = Color(0xFF1D1610)
     /** Input fields */
-    val SurfaceInput   = Color(0xFF1A1826)
+    val SurfaceInput   = Color(0xFF1A1410)
 
     // ── Glass Overlays ──────────────────────────────────────────
-    val GlassWhite12   = Color(0x1FFFFFFF) // 12% white
-    val GlassWhite08   = Color(0x14FFFFFF) // 8%  white
-    val GlassWhite20   = Color(0x33FFFFFF) // 20% white
-    val GlassBorder    = Color(0x26FFFFFF) // subtle border
-    val GlassBorderBright = Color(0x40FFFFFF)
+    val GlassWhite12      = Color(0x1EFFFFFF)
+    val GlassWhite08      = Color(0x14FFFFFF)
+    val GlassWhite20      = Color(0x33FFFFFF)
+    val GlassBorder       = Color(0x22FFFFFF)
+    val GlassBorderBright = Color(0x3AFFFFFF)
+    /** Warm amber tint overlay — used on active/selected glass */
+    val GlassAmber06      = Color(0x10C87840)
 
     // ── Text ────────────────────────────────────────────────────
-    val TextPrimary    = Color(0xFFF0EEFF)
-    val TextSecondary  = Color(0xFFB0AACC)
-    val TextTertiary   = Color(0xFF6E697A)
-    val TextDisabled   = Color(0xFF3D3956)
+    val TextPrimary    = Color(0xFFEEE8DC)   // warm white
+    val TextSecondary  = Color(0xFFACA098)   // warm grey
+    val TextTertiary   = Color(0xFF706660)   // muted warm
+    val TextDisabled   = Color(0xFF3D3530)
 
     // ── Status ──────────────────────────────────────────────────
-    val Success        = Color(0xFF4DFFB4)
-    val Warning        = Color(0xFFFFD740)
-    val Error          = Color(0xFFFF6680)
+    val Success        = Color(0xFF6EDDA8)   // soft mint
+    val Warning        = Color(0xFFF0C060)   // warm amber
+    val Error          = Color(0xFFE86870)   // warm red
 
     // ── Message Bubbles ─────────────────────────────────────────
-    val BubbleOwn      = Color(0xFF4A3BA0)   // rich purple
-    val BubbleOther    = Color(0xFF1E1C33)    // dark glass
+    /** Own — deep copper warmth */
+    val BubbleOwn      = Color(0xFF5A3C22)
+    /** Other — cool-neutral dark glass */
+    val BubbleOther    = Color(0xFF1A1410)
 
-    // ── Legacy aliases (kept so build doesn't break) ────────────
-    val PrimaryBlue       = Primary
-    val PrimaryBlueLight  = PrimaryLight
-    val PrimaryBlueDark   = PrimaryDark
-    val SecondaryPurple   = Color(0xFF8E6FA8)
-    val SecondaryPurpleLight = Color(0xFFA98BC7)
-    val SecondaryPurpleDark  = Color(0xFF6F5387)
-    val AccentCyan        = Teal
-    val AccentCyanLight   = Color(0xFF4DD0E1)
-    val AccentCyanDark    = TealDark
-    val SurfaceLight      = Color(0xFFF5F7FA)
-    val SurfaceVariantLight = Color(0xFFEEF1F7)
-    val BackgroundLight   = Color(0xFFFAFBFC)
-    val OnSurfaceLight    = Color(0xFF1C1B1F)
-    val OnSurfaceVariantLight = Color(0xFF49454E)
-    val SurfaceDark       = Surface
-    val SurfaceVariantDark = SurfaceElevated
-    val BackgroundDark    = Background
-    val OnSurfaceDark     = TextPrimary
-    val OnSurfaceVariantDark = TextSecondary
-    val SuccessGreen      = Success
-    val WarningOrange     = Warning
-    val ErrorRed          = Error
-    val InfoBlue          = Color(0xFF2196F3)
-    val GlassOverlayLight = GlassWhite12
-    val GlassOverlayDark  = GlassWhite08
-    val GlassBorderLight  = GlassBorder
-    val GlassBorderDark   = GlassBorder
-    val MessageBubbleOwn  = BubbleOwn
-    val MessageBubbleOther = BubbleOther
+    // ── Legacy aliases — kept so build doesn't break ────────────
+    val PrimaryBlue            = Primary
+    val PrimaryBlueLight       = PrimaryLight
+    val PrimaryBlueDark        = PrimaryDark
+    val SecondaryPurple        = Accent
+    val SecondaryPurpleLight   = AccentSoft
+    val SecondaryPurpleDark    = Color(0xFF7A5060)
+    val AccentCyan             = Teal
+    val AccentCyanLight        = Color(0xFF9ACABB)
+    val AccentCyanDark         = TealDark
+    val SurfaceLight           = Color(0xFFF5F0EA)
+    val SurfaceVariantLight    = Color(0xFFEDE8E0)
+    val BackgroundLight        = Color(0xFFFAF7F2)
+    val OnSurfaceLight         = Color(0xFF1C1810)
+    val OnSurfaceVariantLight  = Color(0xFF49454A)
+    val SurfaceDark            = Surface
+    val SurfaceVariantDark     = SurfaceElevated
+    val BackgroundDark         = Background
+    val OnSurfaceDark          = TextPrimary
+    val OnSurfaceVariantDark   = TextSecondary
+    val SuccessGreen           = Success
+    val WarningOrange          = Warning
+    val ErrorRed               = Error
+    val InfoBlue               = Color(0xFF5A8AAA)
+    val GlassOverlayLight      = GlassWhite12
+    val GlassOverlayDark       = GlassWhite08
+    val GlassBorderLight       = GlassBorder
+    val GlassBorderDark        = GlassBorder
+    val MessageBubbleOwn       = BubbleOwn
+    val MessageBubbleOther     = BubbleOther
 }
 
 object SemanticColors {
-    val MessageOwn          = QuantumColors.Primary
-    val MessageOther        = QuantumColors.BubbleOther
-    val MessageTimestamp    = QuantumColors.TextTertiary
-    val ButtonBackground    = QuantumColors.Primary
+    val MessageOwn               = QuantumColors.Primary
+    val MessageOther             = QuantumColors.BubbleOther
+    val MessageTimestamp         = QuantumColors.TextTertiary
+    val ButtonBackground         = QuantumColors.Primary
     val ButtonBackgroundDisabled = QuantumColors.TextDisabled
-    val ButtonText          = QuantumColors.TextPrimary
-    val InputBackground     = QuantumColors.SurfaceInput
-    val InputBorder         = QuantumColors.GlassBorder
-    val InputText           = QuantumColors.TextPrimary
-    val InputPlaceholder    = QuantumColors.TextTertiary
+    val ButtonText               = QuantumColors.TextPrimary
+    val InputBackground          = QuantumColors.SurfaceInput
+    val InputBorder              = QuantumColors.GlassBorder
+    val InputText                = QuantumColors.TextPrimary
+    val InputPlaceholder         = QuantumColors.TextTertiary
 }

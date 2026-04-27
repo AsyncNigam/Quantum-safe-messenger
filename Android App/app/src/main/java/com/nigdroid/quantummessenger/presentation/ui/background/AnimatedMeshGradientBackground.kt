@@ -13,113 +13,122 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Animated Mesh Gradient Background — Quantum Messenger
+ * Animated Mesh Gradient Background — Autumn Dusk / Evening Glow
  *
- * Three layered animated "blobs" of colour painted on a deep-black canvas,
- * producing the premium iOS-style aurora/mesh gradient look.
+ * Three slow-moving warm blobs over a deep charcoal base.
+ * The effect reads like light through amber glass at golden hour —
+ * perceptible warmth, not a neon rave.
  *
- * Performance: uses Canvas + infinite-transition floats only — no bitmaps.
+ * Performance: Canvas + infinite-transition floats only, no bitmaps.
  */
 @Composable
 fun AnimatedMeshGradientBackground(
     modifier: Modifier = Modifier,
-    isDarkTheme: Boolean = true  // kept for API compat, always dark now
+    isDarkTheme: Boolean = true
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "meshBg")
+    val transition = rememberInfiniteTransition(label = "meshBg")
 
-    // Three independent phase animations at different speeds
-    val phase1 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue  = (2 * Math.PI).toFloat(),
+    // Three independent slow phases — deliberately unhurried
+    val phase1 by transition.animateFloat(
+        initialValue  = 0f,
+        targetValue   = (2 * Math.PI).toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 9_000, easing = LinearEasing)
+            animation = tween(durationMillis = 14_000, easing = LinearEasing)
         ),
         label = "phase1"
     )
-    val phase2 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue  = (2 * Math.PI).toFloat(),
+    val phase2 by transition.animateFloat(
+        initialValue  = 0f,
+        targetValue   = (2 * Math.PI).toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 13_000, easing = LinearEasing)
+            animation = tween(durationMillis = 19_000, easing = LinearEasing)
         ),
         label = "phase2"
     )
-    val phase3 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue  = (2 * Math.PI).toFloat(),
+    val phase3 by transition.animateFloat(
+        initialValue  = 0f,
+        targetValue   = (2 * Math.PI).toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 17_000, easing = LinearEasing)
+            animation = tween(durationMillis = 24_000, easing = LinearEasing)
         ),
         label = "phase3"
     )
 
-    Box(
-        modifier = modifier
-            .background(QuantumColors.Background)   // true black base
-    ) {
+    Box(modifier = modifier.background(QuantumColors.Background)) {
         Canvas(modifier = Modifier.matchParentSize()) {
             val w = size.width
             val h = size.height
 
-            // Blob 1 — Primary violet, top-right area
-            val blob1X = w * (0.6f + 0.25f * sin(phase1.toDouble()).toFloat())
-            val blob1Y = h * (0.25f + 0.20f * cos(phase1.toDouble()).toFloat())
+            // ── Blob 1 — Burnished amber, upper-right (the "sun remnant") ──
+            val b1x = w * (0.68f + 0.18f * sin(phase1.toDouble()).toFloat())
+            val b1y = h * (0.20f + 0.14f * cos(phase1.toDouble()).toFloat())
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        QuantumColors.Primary.copy(alpha = 0.55f),
-                        QuantumColors.PrimaryDark.copy(alpha = 0.20f),
+                        Color(0xFFC87840).copy(alpha = 0.38f),
+                        Color(0xFF985820).copy(alpha = 0.12f),
                         Color.Transparent
                     ),
-                    center = Offset(blob1X, blob1Y),
-                    radius = w * 0.65f
+                    center = Offset(b1x, b1y),
+                    radius = w * 0.58f
                 ),
-                center = Offset(blob1X, blob1Y),
-                radius = w * 0.65f
+                center = Offset(b1x, b1y),
+                radius = w * 0.58f
             )
 
-            // Blob 2 — Magenta/accent, bottom-left area
-            val blob2X = w * (0.25f + 0.20f * cos(phase2.toDouble()).toFloat())
-            val blob2Y = h * (0.70f + 0.18f * sin(phase2.toDouble()).toFloat())
+            // ── Blob 2 — Dusty rose-mauve, lower-left (dusk shadow) ─────────
+            val b2x = w * (0.22f + 0.16f * cos(phase2.toDouble()).toFloat())
+            val b2y = h * (0.72f + 0.14f * sin(phase2.toDouble()).toFloat())
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        QuantumColors.Accent.copy(alpha = 0.28f),
-                        QuantumColors.AccentSoft.copy(alpha = 0.10f),
+                        Color(0xFF9B6878).copy(alpha = 0.22f),
+                        Color(0xFF7A5060).copy(alpha = 0.08f),
                         Color.Transparent
                     ),
-                    center = Offset(blob2X, blob2Y),
-                    radius = w * 0.55f
+                    center = Offset(b2x, b2y),
+                    radius = w * 0.52f
                 ),
-                center = Offset(blob2X, blob2Y),
-                radius = w * 0.55f
+                center = Offset(b2x, b2y),
+                radius = w * 0.52f
             )
 
-            // Blob 3 — Cyan/teal, centre
-            val blob3X = w * (0.50f + 0.15f * sin((phase3 + 1f).toDouble()).toFloat())
-            val blob3Y = h * (0.45f + 0.15f * cos((phase3 * 0.7f).toDouble()).toFloat())
+            // ── Blob 3 — Warm gold haze, mid-screen (the lingering warmth) ──
+            val b3x = w * (0.48f + 0.12f * sin((phase3 + 0.8f).toDouble()).toFloat())
+            val b3y = h * (0.42f + 0.10f * cos((phase3 * 0.6f).toDouble()).toFloat())
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        QuantumColors.Teal.copy(alpha = 0.15f),
-                        QuantumColors.TealDark.copy(alpha = 0.06f),
+                        Color(0xFFD4984A).copy(alpha = 0.10f),
+                        Color(0xFF985820).copy(alpha = 0.04f),
                         Color.Transparent
                     ),
-                    center = Offset(blob3X, blob3Y),
-                    radius = w * 0.45f
+                    center = Offset(b3x, b3y),
+                    radius = w * 0.42f
                 ),
-                center = Offset(blob3X, blob3Y),
-                radius = w * 0.45f
+                center = Offset(b3x, b3y),
+                radius = w * 0.42f
             )
 
-            // ── Noise overlay (fine grain via small radial dots pattern) ────
-            // Light scanline-like vignette from top — keeps text readable
+            // ── Vignette — draws focus inward, keeps text readable ──────────
+            drawRect(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        Color.Black.copy(alpha = 0.55f)
+                    ),
+                    center = Offset(w / 2f, h / 2f),
+                    radius = w * 0.85f
+                )
+            )
+
+            // ── Subtle top-to-bottom gradient seal ──────────────────────────
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.Black.copy(alpha = 0.25f),
+                        Color.Black.copy(alpha = 0.18f),
                         Color.Transparent,
-                        Color.Black.copy(alpha = 0.40f)
+                        Color.Black.copy(alpha = 0.35f)
                     )
                 )
             )
@@ -128,10 +137,11 @@ fun AnimatedMeshGradientBackground(
 }
 
 /**
- * Advanced variant — alias kept for any callers that reference the old name.
+ * Alias kept for any callers that reference the old name.
  */
 @Composable
 fun AdvancedAnimatedMeshGradientBackground(
     modifier: Modifier = Modifier,
     isDarkTheme: Boolean = true
 ) = AnimatedMeshGradientBackground(modifier = modifier, isDarkTheme = isDarkTheme)
+
