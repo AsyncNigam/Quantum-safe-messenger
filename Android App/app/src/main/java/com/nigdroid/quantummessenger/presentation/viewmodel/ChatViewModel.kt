@@ -3,6 +3,7 @@ package com.nigdroid.quantummessenger.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nigdroid.quantummessenger.data.local.ContactDao
+import com.nigdroid.quantummessenger.network.WebSocketManager
 import com.nigdroid.quantummessenger.domain.model.ChatMessage
 import com.nigdroid.quantummessenger.domain.model.MessageType
 import com.nigdroid.quantummessenger.domain.usecase.GetChatHistoryUseCase
@@ -39,7 +40,8 @@ class ChatViewModel @Inject constructor(
     private val receiveMessageUseCase: ReceiveMessageUseCase,
     private val getChatHistoryUseCase: GetChatHistoryUseCase,
     private val sessionManager: SessionManager,
-    private val contactDao: ContactDao
+    private val contactDao: ContactDao,
+    private val webSocketManager: WebSocketManager
 ) : ViewModel() {
 
     // Private mutable state
@@ -75,6 +77,11 @@ class ChatViewModel @Inject constructor(
             // Look up contact display name
             val contact = contactDao.getContactById(recipientUserId)
             contactName = contact?.displayName
+
+            // Connect WebSocket with our fingerprint for auth
+            if (!webSocketManager.isConnected()) {
+                webSocketManager.connect(currentUserId)
+            }
 
             // Load chat history and observe for changes
             loadChatHistory()
