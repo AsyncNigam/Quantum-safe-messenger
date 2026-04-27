@@ -27,10 +27,13 @@ import com.nigdroid.quantummessenger.presentation.ui.screen.home.HomeScreen
 import com.nigdroid.quantummessenger.presentation.ui.screen.profile.ProfileScreen
 
 /**
- * AppNavigation — type-safe navigation with a floating glassmorphism bottom nav.
+ * AppNavigation — type-safe navigation with smooth spring-based transitions
+ * and a floating glassmorphism bottom nav bar.
  *
- * The bottom nav is shown on the three main tabs (Chats, AddContact, Profile)
- * and hidden on Auth and Chat screens.
+ * Transition philosophy:
+ *  - Tab switches: symmetric crossfade (fast, 260ms) — feels instant & clean
+ *  - Chat open/close: slide + fade with natural spring deceleration
+ *  - Auth → Home: longer crossfade (500ms) for a ceremonial first entry
  */
 @Composable
 fun AppNavigation(
@@ -41,21 +44,32 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    // Determine which tab is active (null if not on a tab screen)
     val currentTab = when {
-        currentDestination?.hasRoute<HomeRoute>() == true       -> BottomNavTab.Chats
+        currentDestination?.hasRoute<HomeRoute>()       == true -> BottomNavTab.Chats
         currentDestination?.hasRoute<AddContactRoute>() == true -> BottomNavTab.AddContact
-        currentDestination?.hasRoute<ProfileRoute>() == true    -> BottomNavTab.Profile
+        currentDestination?.hasRoute<ProfileRoute>()    == true -> BottomNavTab.Profile
         else -> null
     }
 
-    // Show bottom nav only on tab screens
     val showBottomNav = currentTab != null
 
     Scaffold(
         containerColor = Color.Transparent,
         bottomBar = {
-            if (showBottomNav) {
+            AnimatedVisibility(
+                visible = showBottomNav,
+                enter   = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec  = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness    = Spring.StiffnessMedium
+                    )
+                ) + fadeIn(tween(220)),
+                exit    = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(200)
+                ) + fadeOut(tween(160))
+            ) {
                 QuantumBottomNavBar(
                     currentTab    = currentTab ?: BottomNavTab.Chats,
                     onTabSelected = { tab ->
@@ -65,10 +79,9 @@ fun AppNavigation(
                             BottomNavTab.Profile    -> ProfileRoute
                         }
                         navController.navigate(route) {
-                            // Pop up to the start destination to avoid stacking
                             popUpTo(HomeRoute) { saveState = true }
                             launchSingleTop = true
-                            restoreState = true
+                            restoreState    = true
                         }
                     }
                 )
@@ -78,12 +91,23 @@ fun AppNavigation(
         NavHost(
             navController    = navController,
             startDestination = startDestination,
-            modifier         = modifier.padding(padding)
+            modifier         = modifier.padding(padding),
+            // FIXED: Default enter/exit for the host itself — prevents the
+            // initial "blink" some versions of NavHost show on first composition
+            enterTransition  = { fadeIn(tween(260)) },
+            exitTransition   = { fadeOut(tween(200)) },
+            popEnterTransition  = { fadeIn(tween(260)) },
+            popExitTransition   = { fadeOut(tween(200)) }
         ) {
-            // ── Auth Screen ──────────────────────────────────────────────
+
+            // ── Auth ─────────────────────────────────────────────────────────
             composable<AuthRoute>(
-                enterTransition = { fadeIn(tween(700)) },
-                exitTransition  = { fadeOut(tween(700)) }
+                enterTransition = { fadeIn(tween(500)) },
+                exitTransition  = {
+                    fadeOut(
+                        animationSpec = tween(400, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                    )
+                }
             ) {
                 AuthScreen(
                     onAuthSuccess = {
@@ -94,11 +118,12 @@ fun AppNavigation(
                 )
             }
 
-            // ── Home / Chats ─────────────────────────────────────────────
+            // ── Home / Chats ─────────────────────────────────────────────────
+            // Tab screens use symmetric crossfade — snappy & clean
             composable<HomeRoute>(
-                enterTransition    = { fadeIn(tween(300)) },
+                enterTransition    = { fadeIn(tween(260)) },
                 exitTransition     = { fadeOut(tween(200)) },
-                popEnterTransition = { fadeIn(tween(300)) },
+                popEnterTransition = { fadeIn(tween(260)) },
                 popExitTransition  = { fadeOut(tween(200)) }
             ) {
                 HomeScreen(
@@ -107,11 +132,11 @@ fun AppNavigation(
                 )
             }
 
-            // ── Add Contact ──────────────────────────────────────────────
+            // ── Add Contact ──────────────────────────────────────────────────
             composable<AddContactRoute>(
-                enterTransition    = { fadeIn(tween(300)) },
+                enterTransition    = { fadeIn(tween(260)) },
                 exitTransition     = { fadeOut(tween(200)) },
-                popEnterTransition = { fadeIn(tween(300)) },
+                popEnterTransition = { fadeIn(tween(260)) },
                 popExitTransition  = { fadeOut(tween(200)) }
             ) {
                 AddContactScreen(
@@ -123,23 +148,54 @@ fun AppNavigation(
                 )
             }
 
-            // ── Profile ──────────────────────────────────────────────────
+            // ── Profile ──────────────────────────────────────────────────────
             composable<ProfileRoute>(
-                enterTransition    = { fadeIn(tween(300)) },
+                enterTransition    = { fadeIn(tween(260)) },
                 exitTransition     = { fadeOut(tween(200)) },
-                popEnterTransition = { fadeIn(tween(300)) },
+                popEnterTransition = { fadeIn(tween(260)) },
                 popExitTransition  = { fadeOut(tween(200)) }
             ) {
                 ProfileScreen()
             }
 
-            // ── Chat Screen ──────────────────────────────────────────────
+            // ── Chat Screen ──────────────────────────────────────────────────
+            // Directional slide + fade with natural spring deceleration
             composable<ChatRoute>(
                 enterTransition = {
-                    slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(500)) + fadeIn()
+                    slideIntoContainer(
+                        towards       = AnimatedContentTransitionScope.SlideDirection.Start,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness    = Spring.StiffnessMediumLow
+                        )
+                    ) + fadeIn(tween(280))
                 },
                 exitTransition = {
-                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(500)) + fadeOut()
+                    slideOutOfContainer(
+                        towards       = AnimatedContentTransitionScope.SlideDirection.End,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness    = Spring.StiffnessMediumLow
+                        )
+                    ) + fadeOut(tween(220))
+                },
+                popEnterTransition = {
+                    slideIntoContainer(
+                        towards       = AnimatedContentTransitionScope.SlideDirection.End,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness    = Spring.StiffnessMediumLow
+                        )
+                    ) + fadeIn(tween(280))
+                },
+                popExitTransition = {
+                    slideOutOfContainer(
+                        towards       = AnimatedContentTransitionScope.SlideDirection.End,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness    = Spring.StiffnessMediumLow
+                        )
+                    ) + fadeOut(tween(220))
                 }
             ) { backStackEntry ->
                 val chatRoute: ChatRoute = backStackEntry.toRoute()

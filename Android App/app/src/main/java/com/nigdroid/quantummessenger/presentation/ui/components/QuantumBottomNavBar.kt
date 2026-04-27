@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,18 +14,16 @@ import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.PersonAddAlt
 import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,9 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumColors
 import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumMessengerTheme
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Tab model
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Tab model ───────────────────────────────────────────────────────────────
 
 enum class BottomNavTab(
     val label: String,
@@ -48,7 +45,7 @@ enum class BottomNavTab(
         unselectedIcon = Icons.Outlined.ChatBubbleOutline
     ),
     AddContact(
-        label          = "Add Contact",
+        label          = "Add",
         selectedIcon   = Icons.Filled.PersonAdd,
         unselectedIcon = Icons.Outlined.PersonAddAlt
     ),
@@ -59,150 +56,179 @@ enum class BottomNavTab(
     )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Bottom Navigation Bar — frosted glass, floating
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Bottom Nav Bar ───────────────────────────────────────────────────────────
 
 @Composable
 fun QuantumBottomNavBar(
     currentTab: BottomNavTab,
     onTabSelected: (BottomNavTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isDark: Boolean = isSystemInDarkTheme()
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .padding(horizontal = 20.dp, vertical = 14.dp)
             .navigationBarsPadding()
     ) {
-        // ── Frosted glass container ──────────────────────────────────────────
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(68.dp)
-                .clip(RoundedCornerShape(22.dp))
-                // Layered glass effect
+                .height(56.dp)
+                .clip(RoundedCornerShape(28.dp))
                 .drawBehind {
-                    // Base dark glass
+                    // Warm tinted glass base
                     drawRoundRect(
-                        color       = Color(0xCC0D0B18),
-                        cornerRadius = CornerRadius(22.dp.toPx())
+                        color = if (isDark)
+                            Color(0xFFBF7030).copy(alpha = 0.08f)   // amber-tinted glass for dark
+                        else
+                            Color(0xFFC05878).copy(alpha = 0.10f),  // rose-tinted glass for light
+                        cornerRadius = CornerRadius(28.dp.toPx())
                     )
-                    // Top highlight edge
+                    // Glass border
                     drawRoundRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.08f),
-                                Color.Transparent
-                            ),
-                            startY = 0f,
-                            endY   = size.height * 0.4f
-                        ),
-                        cornerRadius = CornerRadius(22.dp.toPx())
-                    )
-                    // Border glow
-                    drawRoundRect(
-                        color       = Color.White.copy(alpha = 0.10f),
-                        cornerRadius = CornerRadius(22.dp.toPx()),
-                        style       = androidx.compose.ui.graphics.drawscope.Stroke(
-                            width = 1.dp.toPx()
-                        )
+                        color = if (isDark)
+                            Color(0xFFD4904A).copy(alpha = 0.18f)   // amber border
+                        else
+                            Color(0xFFC05878).copy(alpha = 0.22f),  // rose border
+                        cornerRadius = CornerRadius(28.dp.toPx()),
+                        style = Stroke(width = 0.8.dp.toPx())
                     )
                 }
-                .blur(0.5.dp)
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment     = Alignment.CenterVertically
         ) {
-            Row(
-                modifier            = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
-                BottomNavTab.entries.forEach { tab ->
-                    NavItem(
-                        tab        = tab,
-                        isSelected = tab == currentTab,
-                        onClick    = { onTabSelected(tab) },
-                        modifier   = Modifier.weight(1f)
-                    )
-                }
+            BottomNavTab.entries.forEach { tab ->
+                NavItem(
+                    tab        = tab,
+                    isSelected = tab == currentTab,
+                    isDark     = isDark,
+                    onClick    = { onTabSelected(tab) },
+                    modifier   = Modifier.weight(1f)
+                )
             }
         }
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Individual nav item
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Individual nav item ──────────────────────────────────────────────────────
 
 @Composable
 private fun NavItem(
     tab: BottomNavTab,
     isSelected: Boolean,
+    isDark: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val iconColor: Color by animateColorAsState(
-        targetValue   = if (isSelected) QuantumColors.Primary else QuantumColors.TextTertiary,
-        animationSpec = tween(250),
-        label         = "iconColor"
-    )
-    val labelAlpha: Float by animateFloatAsState(
-        targetValue   = if (isSelected) 1f else 0.5f,
-        animationSpec = tween(250),
-        label         = "labelAlpha"
+    val activeIconColor = if (isDark) Color(0xFFBF7030) else Color(0xFFC05878)
+    val inactiveIconColor = if (isDark)
+        Color(0xFFAA9880).copy(alpha = 0.40f)
+    else
+        Color(0xFF281418).copy(alpha = 0.30f)
+
+    val iconColor by animateColorAsState(
+        targetValue   = if (isSelected) activeIconColor else inactiveIconColor,
+        // FIXED: Use spring instead of tween — prevents color flash/flip
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness    = Spring.StiffnessMedium
+        ),
+        label = "iconColor"
     )
 
-    Column(
+    val pillAlpha by animateFloatAsState(
+        targetValue   = if (isSelected) 1f else 0f,
+        // FIXED: spring prevents the abrupt jump that caused the "flip" feel
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness    = Spring.StiffnessMedium
+        ),
+        label = "pillAlpha"
+    )
+
+    Box(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+            .padding(vertical = 6.dp),
+        contentAlignment = Alignment.Center
     ) {
-        // ── Active indicator pill ────────────────────────────────────────────
-        Box(contentAlignment = Alignment.Center) {
-            if (isSelected) {
-                Box(
-                    modifier = Modifier
-                        .size(width = 48.dp, height = 28.dp)
-                        .background(
-                            color = QuantumColors.Primary.copy(alpha = 0.18f),
-                            shape = RoundedCornerShape(14.dp)
-                        )
-                )
-            }
-            Icon(
-                imageVector        = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
-                contentDescription = tab.label,
-                tint               = iconColor,
-                modifier           = Modifier.size(22.dp)
+        // Active pill background — animates smoothly in/out
+        if (pillAlpha > 0f) {
+            Box(
+                modifier = Modifier
+                    .height(38.dp)
+                    .fillMaxWidth(0.88f)
+                    .background(
+                        color = activeIconColor.copy(alpha = 0.15f * pillAlpha),
+                        shape = RoundedCornerShape(20.dp)
+                    )
             )
         }
 
-        Text(
-            text       = tab.label,
-            style      = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-            ),
-            color      = iconColor.copy(alpha = labelAlpha)
-        )
+        Row(
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        ) {
+            // FIXED: Icon switching without graphicsLayer scale to prevent flip.
+            // Using Crossfade ensures no mirroring artifact on PersonAdd icon.
+            Crossfade(
+                targetState   = isSelected,
+                animationSpec = tween(200),
+                label         = "iconSwitch_${tab.name}"
+            ) { selected ->
+                Icon(
+                    imageVector        = if (selected) tab.selectedIcon else tab.unselectedIcon,
+                    contentDescription = tab.label,
+                    tint               = iconColor,
+                    modifier           = Modifier.size(20.dp)
+                )
+            }
+
+            // Sliding label — only visible when selected
+            AnimatedVisibility(
+                visible = isSelected,
+                enter   = expandHorizontally(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness    = Spring.StiffnessMedium
+                    )
+                ) + fadeIn(tween(200, delayMillis = 60)),
+                exit    = shrinkHorizontally(
+                    animationSpec = tween(200, easing = FastOutSlowInEasing)
+                ) + fadeOut(tween(140))
+            ) {
+                Text(
+                    text  = tab.label,
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontSize   = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color    = activeIconColor,
+                    modifier = Modifier.padding(start = 6.dp)
+                )
+            }
+        }
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Preview
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Preview ──────────────────────────────────────────────────────────────────
 
-@Preview(backgroundColor = 0xFF08070E, showBackground = true, widthDp = 390)
+@Preview(backgroundColor = 0xFF0E0A04, showBackground = true, widthDp = 390, name = "Dark")
 @Composable
-private fun PreviewBottomNav() {
-    QuantumMessengerTheme {
-        QuantumBottomNavBar(
-            currentTab    = BottomNavTab.Chats,
-            onTabSelected = {}
-        )
+fun PreviewDark() {
+    QuantumMessengerTheme(darkTheme = true) {
+        QuantumBottomNavBar(currentTab = BottomNavTab.Chats, onTabSelected = {}, isDark = true)
+    }
+}
+
+@Preview(backgroundColor = 0xFFF0D4CC, showBackground = true, widthDp = 390, name = "Light")
+@Composable
+fun PreviewLight() {
+    QuantumMessengerTheme(darkTheme = false) {
+        QuantumBottomNavBar(currentTab = BottomNavTab.Chats, onTabSelected = {}, isDark = false)
     }
 }

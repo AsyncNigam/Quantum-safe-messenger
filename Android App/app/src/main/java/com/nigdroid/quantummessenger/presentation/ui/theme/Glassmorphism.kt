@@ -4,25 +4,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Glassmorphism — Autumn Dusk flavour.
+ * Glassmorphism — dual-mode
+ *
+ * DARK  → Autumn Dusk: amber-tinted frosted glass
+ * LIGHT → Blush Petal: rose-tinted frosted glass, white card feel
  *
  * Three-layer system:
- *  1. Warm tinted overlay — depth without neon
- *  2. Fine 1px gradient border — top-bright to bottom-gone
- *  3. Inner highlight — the frosted-glass "lip" at the top edge
- *
- * The amber tint in usePrimaryTint mode reads like candlelight through
- * smoked glass, not the generic purple glow of AI-generated UIs.
+ *  1. Warm tinted overlay (depth without neon)
+ *  2. Fine 1px gradient border (top-bright → bottom-gone)
+ *  3. Inner frosted-glass "lip" at the top edge
  */
 fun Modifier.glassmorphism(
     blurRadius: Float = 20f,
@@ -35,20 +33,27 @@ fun Modifier.glassmorphism(
     val cr = cornerRadius.dp.toPx()
     val bw = borderWidth.toPx()
 
+    val isDark = QuantumColors.Background.red < 0.10f   // runtime dark detection
+
     // ── 1. Frosted overlay ───────────────────────────────────────────────────
-    val overlayBrush = if (usePrimaryTint) {
-        // Warm amber radial — feels like candlelight warmth
-        Brush.radialGradient(
+    val overlayBrush = when {
+        usePrimaryTint && isDark -> Brush.radialGradient(
             colors = listOf(
-                QuantumColors.Primary.copy(alpha = overlayAlpha * 1.4f),
-                QuantumColors.PrimaryDark.copy(alpha = overlayAlpha * 0.35f),
+                Color(0xFFC87840).copy(alpha = overlayAlpha * 1.4f),
+                Color(0xFF985820).copy(alpha = overlayAlpha * 0.30f),
             ),
             center = Offset(size.width * 0.35f, size.height * 0.25f),
             radius = size.maxDimension * 0.75f
         )
-    } else {
-        // Neutral cool-warm: slightly warm white tint from top
-        Brush.linearGradient(
+        usePrimaryTint -> Brush.radialGradient(
+            colors = listOf(
+                Color(0xFFBF6B8A).copy(alpha = overlayAlpha * 1.3f),
+                Color(0xFF954E6A).copy(alpha = overlayAlpha * 0.25f),
+            ),
+            center = Offset(size.width * 0.35f, size.height * 0.25f),
+            radius = size.maxDimension * 0.75f
+        )
+        isDark -> Brush.linearGradient(
             colors = listOf(
                 Color.White.copy(alpha = overlayAlpha * 1.1f),
                 Color.White.copy(alpha = overlayAlpha * 0.25f),
@@ -56,103 +61,114 @@ fun Modifier.glassmorphism(
             start = Offset(0f, 0f),
             end   = Offset(size.width * 0.4f, size.height)
         )
+        else -> Brush.linearGradient(
+            // Light mode: warm white — reads as a lifted card
+            colors = listOf(
+                Color.White.copy(alpha = overlayAlpha * 1.6f),
+                Color.White.copy(alpha = overlayAlpha * 0.60f),
+            ),
+            start = Offset(0f, 0f),
+            end   = Offset(size.width * 0.3f, size.height)
+        )
     }
-    drawRoundRect(
-        brush        = overlayBrush,
-        cornerRadius = CornerRadius(cr, cr),
-        size         = size
-    )
+    drawRoundRect(brush = overlayBrush, cornerRadius = CornerRadius(cr), size = size)
 
-    // ── 2. Outer border — top-left bright → bottom-right gone ───────────────
+    // ── 2. Outer border ──────────────────────────────────────────────────────
+    val borderAlphaTop = if (isDark) 0.28f else 0.55f
+    val borderAlphaBot = if (isDark) 0.06f else 0.14f
     drawRoundRect(
         brush = Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.28f),
-                Color.White.copy(alpha = 0.06f),
+                Color.White.copy(alpha = borderAlphaTop),
+                Color.White.copy(alpha = borderAlphaBot),
             ),
             start = Offset(0f, 0f),
             end   = Offset(size.width, size.height)
         ),
-        cornerRadius = CornerRadius(cr, cr),
+        cornerRadius = CornerRadius(cr),
         size         = size,
         style        = Stroke(width = bw)
     )
 
-    // ── 3. Inner "frosted lip" — top edge highlight ──────────────────────────
+    // ── 3. Inner top-edge highlight ──────────────────────────────────────────
     val inset = bw * 2.5f
+    val lipAlpha = if (isDark) 0.09f else 0.18f
     drawRoundRect(
         brush = Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.09f),
-                Color.Transparent
-            ),
+            colors = listOf(Color.White.copy(alpha = lipAlpha), Color.Transparent),
             startY = inset,
             endY   = inset + size.height * 0.28f
         ),
         topLeft      = Offset(inset, inset),
         size         = Size(size.width - inset * 2f, size.height * 0.30f),
-        cornerRadius = CornerRadius(cr - inset, cr - inset)
+        cornerRadius = CornerRadius(cr - inset)
     )
 }
 
 /**
- * Own message bubble — warm copper gradient with translucent top edge.
- * Reads as a lit amber stone, not a purple AI blob.
+ * Own message bubble — warm copper dark / soft blush light.
  */
 fun Modifier.glassmorphismBubbleOwn(): Modifier = this.drawBehind {
-    val cr = 18.dp.toPx()
-    // Base fill: warm copper to dark copper
+    val cr   = 18.dp.toPx()
+    val dark = QuantumColors.Background.red < 0.10f
+
     drawRoundRect(
-        brush = Brush.linearGradient(
+        brush = if (dark) Brush.linearGradient(
             colors = listOf(
-                QuantumColors.Primary.copy(alpha = 0.60f),
-                QuantumColors.PrimaryDark.copy(alpha = 0.75f),
+                Color(0xFFC87840).copy(alpha = 0.60f),
+                Color(0xFF985820).copy(alpha = 0.75f),
+            ),
+            start = Offset(0f, 0f),
+            end   = Offset(size.width, size.height)
+        ) else Brush.linearGradient(
+            colors = listOf(
+                Color(0xFFE8A0B8).copy(alpha = 0.70f),
+                Color(0xFFBF6B8A).copy(alpha = 0.55f),
             ),
             start = Offset(0f, 0f),
             end   = Offset(size.width, size.height)
         ),
-        cornerRadius = CornerRadius(cr, cr)
+        cornerRadius = CornerRadius(cr)
     )
-    // Top-edge gleam
+    // Top gleam
     drawRoundRect(
         brush = Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.16f),
-                Color.Transparent
-            ),
-            startY = 0f,
-            endY   = size.height * 0.35f
+            colors = listOf(Color.White.copy(alpha = if (dark) 0.16f else 0.30f), Color.Transparent),
+            startY = 0f, endY = size.height * 0.35f
         ),
-        cornerRadius = CornerRadius(cr, cr)
+        cornerRadius = CornerRadius(cr)
     )
-    // Outer border
+    // Border
     drawRoundRect(
-        color        = Color.White.copy(alpha = 0.14f),
-        cornerRadius = CornerRadius(cr, cr),
+        color        = Color.White.copy(alpha = if (dark) 0.14f else 0.40f),
+        cornerRadius = CornerRadius(cr),
         style        = Stroke(width = 1.dp.toPx())
     )
 }
 
 /**
- * Other-person bubble — cool dark glass, barely tinted.
- * Quiet contrast against the warm own-bubble.
+ * Other-person bubble — cool dark glass / lavender-white light.
  */
 fun Modifier.glassmorphismBubbleOther(): Modifier = this.drawBehind {
-    val cr = 18.dp.toPx()
+    val cr   = 18.dp.toPx()
+    val dark = QuantumColors.Background.red < 0.10f
+
     drawRoundRect(
-        brush = Brush.linearGradient(
+        brush = if (dark) Brush.linearGradient(
+            colors = listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.03f)),
+            start = Offset(0f, 0f), end = Offset(size.width, size.height)
+        ) else Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.08f),
-                Color.White.copy(alpha = 0.03f),
+                Color(0xFFEEEAF4).copy(alpha = 0.85f),
+                Color(0xFFF4F0F8).copy(alpha = 0.70f),
             ),
-            start = Offset(0f, 0f),
-            end   = Offset(size.width, size.height)
+            start = Offset(0f, 0f), end = Offset(size.width, size.height)
         ),
-        cornerRadius = CornerRadius(cr, cr)
+        cornerRadius = CornerRadius(cr)
     )
     drawRoundRect(
-        color        = Color.White.copy(alpha = 0.10f),
-        cornerRadius = CornerRadius(cr, cr),
-        style        = Stroke(width = 0.8.dp.toPx())
+        color        = Color.White.copy(alpha = if (dark) 0.10f else 0.55f),
+        cornerRadius = CornerRadius(cr),
+        style        = Stroke(width = if (dark) 0.8.dp.toPx() else 1.dp.toPx())
     )
 }
