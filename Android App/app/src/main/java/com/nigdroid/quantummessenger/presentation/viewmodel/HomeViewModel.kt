@@ -7,7 +7,9 @@ import com.nigdroid.quantummessenger.data.local.ContactDao
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import com.nigdroid.quantummessenger.domain.model.InboxItem
 import com.nigdroid.quantummessenger.domain.usecase.GetInboxUseCase
+import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SyncContactsUseCase
+import com.nigdroid.quantummessenger.network.WebSocketManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -22,7 +24,9 @@ class HomeViewModel @Inject constructor(
     private val syncContactsUseCase: SyncContactsUseCase,
     private val chatMessageDao: ChatMessageDao,
     private val sessionManager: SessionManager,
-    private val contactDao: ContactDao
+    private val contactDao: ContactDao,
+    private val webSocketManager: WebSocketManager,
+    private val receiveMessageUseCase: ReceiveMessageUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -48,6 +52,14 @@ class HomeViewModel @Inject constructor(
                 _uiState.value = HomeUiState.Error("Not registered — please restart the app.")
                 return@launch
             }
+
+            // Connect WebSocket so we appear online to the server
+            if (!webSocketManager.isConnected()) {
+                webSocketManager.connect(currentUserId!!)
+            }
+
+            // Start listening for incoming messages globally
+            observeIncomingMessages()
 
             // Combine inbox items, contacts, and search query into a single flow
             combine(
@@ -101,6 +113,18 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = currentUserId ?: return@launch
             chatMessageDao.deleteConversation(userId, otherUserId)
+        }
+    }
+
+    /**
+     * Observes incoming messages from WebSocket and saves them to Room DB.
+     * This runs as long as the HomeViewModel is alive (i.e. user is in the app).
+     * Messages saved to DB will auto-update the inbox via Room's Flow queries.
+     */
+    private fun observeIncomingMessages() {
+        viewModelScope.launch {
+            receiveMessageUseCase()
+                .collect { /* Results auto-saved to Room → inbox flow updates */ }
         }
     }
 }
