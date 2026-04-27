@@ -83,6 +83,7 @@ private fun HomeScreenContent(
 
         Scaffold(
             containerColor = Color.Transparent,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 HomeTopBar(
                     onSearchClick = { showSearch = !showSearch },

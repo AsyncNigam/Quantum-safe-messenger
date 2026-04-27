@@ -52,7 +52,7 @@ object DatabaseModule {
             ByteArray(32) { 0x00 }
         }
 
-        val factory = SupportFactory(passphrase)
+        val factory = SupportFactory(passphrase, null, false)
 
         return Room.databaseBuilder(
             context,
