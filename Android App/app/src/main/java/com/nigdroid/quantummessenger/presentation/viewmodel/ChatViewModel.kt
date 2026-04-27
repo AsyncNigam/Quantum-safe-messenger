@@ -84,10 +84,9 @@ class ChatViewModel @Inject constructor(
             }
 
             // Load chat history and observe for changes
+            // (Incoming messages are handled globally by HomeViewModel,
+            //  which saves them to Room. This Flow auto-updates when Room changes.)
             loadChatHistory()
-
-            // Observe incoming messages from WebSocket
-            observeIncomingMessages()
         }
     }
 

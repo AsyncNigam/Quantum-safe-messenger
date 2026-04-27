@@ -25,7 +25,7 @@ class AddContactUseCase @Inject constructor(
         object SelfAdd : Result()
     }
 
-    suspend operator fun invoke(targetFingerprint: String): Result = withContext(Dispatchers.IO) {
+    suspend operator fun invoke(targetFingerprint: String, displayName: String? = null): Result = withContext(Dispatchers.IO) {
         try {
             val cleaned = targetFingerprint.trim().lowercase()
 
@@ -61,9 +61,10 @@ class AddContactUseCase @Inject constructor(
 
             val body = response.body() ?: return@withContext Result.Error("Empty response from server.")
 
-            // Save to local Room database
+            // Save to local Room database with display name
             val contact = ContactEntity(
                 userId         = body.fingerprint,
+                displayName    = displayName?.takeIf { it.isNotBlank() },
                 mlKemPublicKey = body.mlKemPublicKey,
                 x25519PublicKey = body.x25519PublicKey
             )

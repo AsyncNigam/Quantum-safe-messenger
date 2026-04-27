@@ -61,6 +61,9 @@ fun AddContactScreen(
     var hasCameraPermission by remember { mutableStateOf(false) }
     var showManualInput by remember { mutableStateOf(false) }
     var manualFingerprint by remember { mutableStateOf("") }
+    var contactName by remember { mutableStateOf("") }
+    var pendingQrFingerprint by remember { mutableStateOf<String?>(null) }
+    var qrNameInput by remember { mutableStateOf("") }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -89,11 +92,54 @@ fun AddContactScreen(
         }
     }
 
+    // Name prompt dialog after QR scan
+    if (pendingQrFingerprint != null) {
+        AlertDialog(
+            onDismissRequest = { pendingQrFingerprint = null },
+            title = { Text("Name this contact", color = QuantumColors.TextPrimary) },
+            text = {
+                Column {
+                    Text(
+                        "Scanned: ${pendingQrFingerprint!!.take(12)}…",
+                        color = QuantumColors.TextTertiary,
+                        fontSize = 12.sp
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = qrNameInput,
+                        onValueChange = { qrNameInput = it },
+                        label = { Text("Contact name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.addContact(pendingQrFingerprint!!, qrNameInput)
+                    pendingQrFingerprint = null
+                    qrNameInput = ""
+                }) { Text("Add") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    viewModel.addContact(pendingQrFingerprint!!)
+                    pendingQrFingerprint = null
+                    qrNameInput = ""
+                }) { Text("Skip") }
+            },
+            containerColor = Color(0xFF1A1728),
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         // ── Camera viewfinder ────────────────────────────────────────
         if (hasCameraPermission && !showManualInput) {
             QrScannerCamera(
-                onQrScanned = { fingerprint -> viewModel.addContact(fingerprint) }
+                onQrScanned = { fingerprint ->
+                    pendingQrFingerprint = fingerprint
+                }
             )
         }
 
@@ -115,7 +161,9 @@ fun AddContactScreen(
                 ManualInputSection(
                     fingerprint = manualFingerprint,
                     onFingerprintChange = { manualFingerprint = it },
-                    onSubmit = { viewModel.addContact(manualFingerprint) },
+                    contactName = contactName,
+                    onContactNameChange = { contactName = it },
+                    onSubmit = { viewModel.addContact(manualFingerprint, contactName) },
                     isLoading = uiState is AddContactUiState.Loading,
                     noCameraPermission = !hasCameraPermission
                 )
@@ -349,6 +397,8 @@ private fun ScannerTopBar(showManualInput: Boolean, onToggleMode: () -> Unit) {
 private fun ManualInputSection(
     fingerprint: String,
     onFingerprintChange: (String) -> Unit,
+    contactName: String = "",
+    onContactNameChange: (String) -> Unit = {},
     onSubmit: () -> Unit,
     isLoading: Boolean,
     noCameraPermission: Boolean
@@ -392,6 +442,26 @@ private fun ManualInputSection(
                 Text("Ask your contact to share their 64-character Text Fingerprint from their Profile screen.",
                     style = MaterialTheme.typography.bodySmall, color = QuantumColors.TextTertiary)
 
+                // Contact name field
+                OutlinedTextField(
+                    value = contactName,
+                    onValueChange = onContactNameChange,
+                    label = { Text("Contact Name", color = QuantumColors.TextTertiary) },
+                    placeholder = { Text("e.g. John", color = QuantumColors.TextTertiary) },
+                    singleLine = true,
+                    leadingIcon = { Icon(Icons.Default.Person, null, tint = QuantumColors.TextTertiary, modifier = Modifier.size(18.dp)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = QuantumColors.Primary,
+                        unfocusedBorderColor = QuantumColors.GlassBorder,
+                        cursorColor = QuantumColors.Primary,
+                        focusedTextColor = QuantumColors.TextPrimary,
+                        unfocusedTextColor = QuantumColors.TextPrimary
+                    )
+                )
+
+                // Fingerprint field
                 OutlinedTextField(
                     value = fingerprint,
                     onValueChange = { if (it.length <= 64) onFingerprintChange(it.lowercase()) },

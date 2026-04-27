@@ -31,7 +31,7 @@ class AddContactViewModel @Inject constructor(
     private var lastScannedFingerprint: String? = null
     private var lastScanTime = 0L
 
-    fun addContact(fingerprint: String) {
+    fun addContact(fingerprint: String, displayName: String? = null) {
         val now = System.currentTimeMillis()
         if (fingerprint == lastScannedFingerprint && now - lastScanTime < 2000) return
         lastScannedFingerprint = fingerprint
@@ -39,7 +39,7 @@ class AddContactViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.value = AddContactUiState.Loading
-            _uiState.value = when (val result = addContactUseCase(fingerprint)) {
+            _uiState.value = when (val result = addContactUseCase(fingerprint, displayName)) {
                 is AddContactUseCase.Result.Success       -> AddContactUiState.Success(result.fingerprint)
                 is AddContactUseCase.Result.AlreadyExists -> AddContactUiState.AlreadyExists(result.fingerprint)
                 is AddContactUseCase.Result.Error         -> AddContactUiState.Error(result.message)
