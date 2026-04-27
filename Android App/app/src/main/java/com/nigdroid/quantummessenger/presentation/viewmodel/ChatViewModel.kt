@@ -2,6 +2,7 @@ package com.nigdroid.quantummessenger.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nigdroid.quantummessenger.data.local.ContactDao
 import com.nigdroid.quantummessenger.domain.model.ChatMessage
 import com.nigdroid.quantummessenger.domain.model.MessageType
 import com.nigdroid.quantummessenger.domain.usecase.GetChatHistoryUseCase
@@ -37,7 +38,8 @@ class ChatViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val receiveMessageUseCase: ReceiveMessageUseCase,
     private val getChatHistoryUseCase: GetChatHistoryUseCase,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val contactDao: ContactDao
 ) : ViewModel() {
 
     // Private mutable state
@@ -49,27 +51,30 @@ class ChatViewModel @Inject constructor(
     // Current user and recipient IDs
     private var currentUserId: String = ""
     private var recipientUserId: String = ""
+    private var contactName: String? = null
 
     /**
      * Initializes the ViewModel with the recipient and starts observing messages.
-     * The current user's ID is loaded from SessionManager (real fingerprint).
+     * The current user's ID is ALWAYS loaded from SessionManager (real fingerprint).
      *
-     * @param userId The ID of the current user (optional — auto-loaded from session)
+     * @param userId Ignored — kept for API compat but SessionManager is the source of truth
      * @param participantId The ID of the user to chat with
      */
     fun initialize(userId: String, participantId: String) {
         recipientUserId = participantId
 
         viewModelScope.launch {
-            // Use provided userId, or fall back to SessionManager fingerprint
-            currentUserId = userId.ifBlank {
-                sessionManager.textFingerprint.firstOrNull() ?: ""
-            }
+            // ALWAYS load from SessionManager — never trust the parameter
+            currentUserId = sessionManager.textFingerprint.firstOrNull() ?: ""
 
             if (currentUserId.isBlank()) {
                 _uiState.value = ChatUiState.Error("Not registered — please restart the app.")
                 return@launch
             }
+
+            // Look up contact display name
+            val contact = contactDao.getContactById(recipientUserId)
+            contactName = contact?.displayName
 
             // Load chat history and observe for changes
             loadChatHistory()
@@ -100,14 +105,12 @@ class ChatViewModel @Inject constructor(
                     .collect { messages ->
                         // Update UI with loaded messages
                         _uiState.update { currentState ->
-                            if (currentState is ChatUiState.Loading) {
-                                ChatUiState.Success(messages = messages)
-                            } else {
-                                ChatUiState.Success(
-                                    messages = messages,
-                                    isSending = (currentState as? ChatUiState.Success)?.isSending ?: false
-                                )
-                            }
+                            ChatUiState.Success(
+                                messages = messages,
+                                isSending = (currentState as? ChatUiState.Success)?.isSending ?: false,
+                                currentUserId = currentUserId,
+                                contactName = contactName
+                            )
                         }
                     }
             } catch (e: Exception) {

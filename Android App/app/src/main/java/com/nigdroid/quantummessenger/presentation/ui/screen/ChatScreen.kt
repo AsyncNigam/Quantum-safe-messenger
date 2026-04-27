@@ -52,7 +52,6 @@ import java.util.*
 
 @Composable
 fun ChatScreen(
-    currentUserId : String       = "current_user",
     participantId : String       = "participant_user",
     onBack        : () -> Unit   = {},
     viewModel     : ChatViewModel = hiltViewModel()
@@ -63,7 +62,7 @@ fun ChatScreen(
     val lazyListState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
-        viewModel.initialize(currentUserId, participantId)
+        viewModel.initialize("", participantId)
     }
 
     LaunchedEffect(uiState) {
@@ -72,6 +71,9 @@ fun ChatScreen(
             if (count > 0) lazyListState.animateScrollToItem(count - 1)
         }
     }
+
+    // currentUserId is loaded from SessionManager inside ChatViewModel
+    val currentUserId = (uiState as? ChatUiState.Success)?.currentUserId ?: ""
 
     ChatScreenContent(
         uiState       = uiState,
@@ -122,9 +124,11 @@ private fun ChatScreenContent(
                 .imePadding()
         ) {
             // ── Header ───────────────────────────────────────────────────────
+            val contactName = (uiState as? ChatUiState.Success)?.contactName
             ChatHeader(
-                participantInitial = participantId.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
-                participantName    = "Secure Chat",
+                participantInitial = (contactName?.firstOrNull() ?: participantId.firstOrNull())
+                    ?.uppercaseChar()?.toString() ?: "?",
+                participantName    = contactName ?: participantId.take(12) + "…",
                 onBack             = onBack
             )
 

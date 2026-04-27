@@ -19,7 +19,9 @@ sealed class ChatUiState {
      */
     data class Success(
         val messages: List<ChatMessage> = emptyList(),
-        val isSending: Boolean = false
+        val isSending: Boolean = false,
+        val currentUserId: String = "",
+        val contactName: String? = null
     ) : ChatUiState()
 
     /**

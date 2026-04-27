@@ -3,7 +3,9 @@ package com.nigdroid.quantummessenger.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nigdroid.quantummessenger.data.local.ChatMessageDao
+import com.nigdroid.quantummessenger.data.local.ContactDao
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
+import com.nigdroid.quantummessenger.domain.model.InboxItem
 import com.nigdroid.quantummessenger.domain.usecase.GetInboxUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SyncContactsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +21,8 @@ class HomeViewModel @Inject constructor(
     private val getInboxUseCase: GetInboxUseCase,
     private val syncContactsUseCase: SyncContactsUseCase,
     private val chatMessageDao: ChatMessageDao,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val contactDao: ContactDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -27,6 +30,9 @@ class HomeViewModel @Inject constructor(
 
     /** The real user fingerprint — loaded from SessionManager. */
     private var currentUserId: String? = null
+
+    /** Current search query. */
+    private val _searchQuery = MutableStateFlow("")
 
     init {
         loadUserAndObserveInbox()
@@ -43,13 +49,40 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
 
-            getInboxUseCase(currentUserId!!)
-                .catch { e ->
-                    _uiState.value = HomeUiState.Error(e.message ?: "Unknown error")
+            // Combine inbox items, contacts, and search query into a single flow
+            combine(
+                getInboxUseCase(currentUserId!!),
+                contactDao.getAllContacts(),
+                _searchQuery
+            ) { inboxItems, allContacts, query ->
+                // Find contacts that have NO conversation yet
+                val inboxUserIds = inboxItems.map { it.userId }.toSet()
+                val contactsWithoutChat = allContacts.filter { it.userId !in inboxUserIds }
+
+                // Apply search filter
+                val filteredInbox = if (query.isBlank()) inboxItems
+                else inboxItems.filter { item ->
+                    (item.displayName?.contains(query, ignoreCase = true) == true) ||
+                    item.userId.contains(query, ignoreCase = true)
                 }
-                .collect { items ->
-                    _uiState.value = HomeUiState.Success(items)
+                val filteredContacts = if (query.isBlank()) contactsWithoutChat
+                else contactsWithoutChat.filter { contact ->
+                    (contact.displayName?.contains(query, ignoreCase = true) == true) ||
+                    contact.userId.contains(query, ignoreCase = true)
                 }
+
+                HomeUiState.Success(
+                    inboxItems = filteredInbox,
+                    contacts = filteredContacts,
+                    searchQuery = query
+                )
+            }
+            .catch { e ->
+                _uiState.value = HomeUiState.Error(e.message ?: "Unknown error")
+            }
+            .collect { state ->
+                _uiState.value = state
+            }
         }
     }
 
@@ -60,6 +93,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
     fun deleteConversation(otherUserId: String) {
         viewModelScope.launch {
             val userId = currentUserId ?: return@launch
@@ -67,3 +104,4 @@ class HomeViewModel @Inject constructor(
         }
     }
 }
+

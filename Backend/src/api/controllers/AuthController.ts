@@ -99,11 +99,16 @@ export class AuthController {
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const fingerprint = (req as any).fingerprint as string;
+      const fingerprint = req.user?.fingerprint;
       const { fcmToken } = req.body;
 
       if (!fcmToken || typeof fcmToken !== 'string' || fcmToken.length < 10) {
         res.status(400).json({ error: 'Invalid FCM token' });
+        return;
+      }
+
+      if (!fingerprint) {
+        res.status(401).json({ error: 'Authentication required' });
         return;
       }
 

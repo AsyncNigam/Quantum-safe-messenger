@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shield
@@ -27,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.nigdroid.quantummessenger.data.local.ContactEntity
 import com.nigdroid.quantummessenger.domain.model.InboxItem
 import com.nigdroid.quantummessenger.presentation.ui.background.AnimatedMeshGradientBackground
 import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumColors
@@ -52,7 +54,8 @@ fun HomeScreen(
         uiState        = uiState,
         onChatClick    = onChatClick,
         onNewChatClick = onNewChatClick,
-        onRetry        = { viewModel.syncContacts() }
+        onRetry        = { viewModel.syncContacts() },
+        onSearchQuery  = { viewModel.updateSearchQuery(it) }
     )
 }
 
@@ -66,39 +69,84 @@ private fun HomeScreenContent(
     uiState: HomeUiState,
     onChatClick: (String) -> Unit,
     onNewChatClick: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onSearchQuery: (String) -> Unit = {}
 ) {
+    var showSearch by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
+
     Box(modifier = Modifier.fillMaxSize()) {
 
         AnimatedMeshGradientBackground(modifier = Modifier.fillMaxSize())
 
         Scaffold(
             containerColor = Color.Transparent,
-            topBar = { HomeTopBar() }
+            topBar = {
+                HomeTopBar(
+                    onSearchClick = { showSearch = !showSearch },
+                    onMenuClick   = { showMenu = !showMenu },
+                    showMenu      = showMenu,
+                    onDismissMenu = { showMenu = false },
+                    onNewChatClick = onNewChatClick
+                )
+            }
         ) { padding ->
 
-            AnimatedContent(
-                targetState   = uiState,
-                transitionSpec = {
-                    fadeIn(tween(350)) togetherWith fadeOut(tween(200))
-                },
-                label = "homeStateAnim",
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-            ) { state ->
-                when (state) {
-                    is HomeUiState.Loading -> HomeLoadingState()
-                    is HomeUiState.Error   -> HomeErrorState(state.message, onRetry)
-                    is HomeUiState.Success -> {
-                        if (state.inboxItems.isEmpty()) {
-                            HomeEmptyState(onNewChatClick)
-                        } else {
-                            HomeConversationList(state.inboxItems, onChatClick)
+            ) {
+                // ── Search bar ──────────────────────────────────────────
+                AnimatedVisibility(
+                    visible = showSearch,
+                    enter   = fadeIn() + expandVertically(),
+                    exit    = fadeOut() + shrinkVertically()
+                ) {
+                    val query = (uiState as? HomeUiState.Success)?.searchQuery ?: ""
+                    SearchBar(
+                        query    = query,
+                        onQuery  = onSearchQuery,
+                        onClose  = { showSearch = false; onSearchQuery("") }
+                    )
+                }
+
+                // ── Main content ────────────────────────────────────────
+                AnimatedContent(
+                    targetState   = uiState,
+                    transitionSpec = {
+                        fadeIn(tween(350)) togetherWith fadeOut(tween(200))
+                    },
+                    label    = "homeStateAnim",
+                    modifier = Modifier.weight(1f)
+                ) { state ->
+                    when (state) {
+                        is HomeUiState.Loading -> HomeLoadingState()
+                        is HomeUiState.Error   -> HomeErrorState(state.message, onRetry)
+                        is HomeUiState.Success -> {
+                            if (state.inboxItems.isEmpty() && state.contacts.isEmpty()) {
+                                HomeEmptyState(onNewChatClick)
+                            } else {
+                                HomeConversationList(
+                                    inboxItems  = state.inboxItems,
+                                    contacts    = state.contacts,
+                                    onChatClick = onChatClick
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+
+        // ── FAB ─────────────────────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .navigationBarsPadding()
+                .padding(end = 20.dp, bottom = 90.dp)
+        ) {
+            NewChatFab(onClick = onNewChatClick)
         }
     }
 }
@@ -109,7 +157,13 @@ private fun HomeScreenContent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeTopBar() {
+private fun HomeTopBar(
+    onSearchClick: () -> Unit = {},
+    onMenuClick: () -> Unit = {},
+    showMenu: Boolean = false,
+    onDismissMenu: () -> Unit = {},
+    onNewChatClick: () -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -121,7 +175,6 @@ private fun HomeTopBar() {
             verticalAlignment   = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // ── Logo + title ─────────────────────────────────────────────────
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -139,67 +192,77 @@ private fun HomeTopBar() {
                         .clip(RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector        = Icons.Default.Shield,
-                        contentDescription = null,
-                        tint               = Color.White,
-                        modifier           = Modifier.size(20.dp)
-                    )
+                    Icon(Icons.Default.Shield, null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text(
-                        text       = "Quantum",
-                        style      = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color      = QuantumColors.TextPrimary
-                    )
-                    Text(
-                        text  = "Messenger",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = QuantumColors.Primary
-                    )
+                    Text("Quantum", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = QuantumColors.TextPrimary)
+                    Text("Messenger", style = MaterialTheme.typography.labelSmall, color = QuantumColors.Primary)
                 }
             }
-
-            // ── Action icons ─────────────────────────────────────────────────
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                TopBarIconButton(
-                    icon        = Icons.Default.Search,
-                    description = "Search"
-                )
-                TopBarIconButton(
-                    icon        = Icons.Default.MoreVert,
-                    description = "Menu"
-                )
+                TopBarIconButton(Icons.Default.Search, "Search", onSearchClick)
+                Box {
+                    TopBarIconButton(Icons.Default.MoreVert, "Menu", onMenuClick)
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = onDismissMenu,
+                        containerColor = Color(0xEE1A1728),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("New Chat", color = QuantumColors.TextPrimary) },
+                            onClick = { onDismissMenu(); onNewChatClick() },
+                            leadingIcon = { Icon(Icons.Default.Add, null, tint = QuantumColors.Primary) }
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun TopBarIconButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    description: String,
-    onClick: () -> Unit = {}
-) {
-    IconButton(
-        onClick   = onClick,
-        modifier  = Modifier
-            .size(40.dp)
-            .glassmorphism(cornerRadius = 12, overlayAlpha = 0.10f)
-            .background(
-                color = QuantumColors.GlassWhite08,
-                shape = RoundedCornerShape(12.dp)
+private fun SearchBar(query: String, onQuery: (String) -> Unit, onClose: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .glassmorphism(cornerRadius = 16, overlayAlpha = 0.10f)
+            .background(QuantumColors.GlassWhite08, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Default.Search, null, tint = QuantumColors.TextTertiary, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        TextField(
+            value = query, onValueChange = onQuery,
+            placeholder = { Text("Search contacts…", color = QuantumColors.TextTertiary) },
+            singleLine = true, modifier = Modifier.weight(1f),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = QuantumColors.TextPrimary),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = QuantumColors.Primary
             )
+        )
+        IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
+            Icon(Icons.Default.Close, "Close", tint = QuantumColors.TextSecondary, modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+@Composable
+private fun TopBarIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, onClick: () -> Unit = {}) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.size(40.dp)
+            .glassmorphism(cornerRadius = 12, overlayAlpha = 0.10f)
+            .background(color = QuantumColors.GlassWhite08, shape = RoundedCornerShape(12.dp))
             .clip(RoundedCornerShape(12.dp))
     ) {
-        Icon(
-            imageVector        = icon,
-            contentDescription = description,
-            tint               = QuantumColors.TextSecondary,
-            modifier           = Modifier.size(20.dp)
-        )
+        Icon(icon, description, tint = QuantumColors.TextSecondary, modifier = Modifier.size(20.dp))
     }
 }
 
@@ -244,7 +307,8 @@ private fun NewChatFab(onClick: () -> Unit) {
 
 @Composable
 private fun HomeConversationList(
-    items: List<InboxItem>,
+    inboxItems: List<InboxItem>,
+    contacts: List<ContactEntity>,
     onChatClick: (String) -> Unit
 ) {
     LazyColumn(
@@ -257,22 +321,111 @@ private fun HomeConversationList(
         ),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // ── Section label ────────────────────────────────────────────────────
-        item {
-            Text(
-                text     = "Chats",
-                style    = MaterialTheme.typography.titleLarge,
-                color    = QuantumColors.TextPrimary,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
-            )
+        // ── Conversations section ─────────────────────────────────────────
+        if (inboxItems.isNotEmpty()) {
+            item {
+                Text(
+                    text     = "Chats",
+                    style    = MaterialTheme.typography.titleLarge,
+                    color    = QuantumColors.TextPrimary,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+                )
+            }
+            items(inboxItems, key = { it.userId }) { item ->
+                AnimatedVisibility(
+                    visible = true,
+                    enter   = fadeIn() + slideInVertically(initialOffsetY = { 20 })
+                ) {
+                    InboxListItem(item = item, onClick = { onChatClick(item.userId) })
+                }
+            }
         }
 
-        items(items, key = { it.userId }) { item ->
-            AnimatedVisibility(
-                visible = true,
-                enter   = fadeIn() + slideInVertically(initialOffsetY = { 20 })
+        // ── Contacts without conversations ────────────────────────────────
+        if (contacts.isNotEmpty()) {
+            item {
+                Text(
+                    text     = "Contacts",
+                    style    = MaterialTheme.typography.titleLarge,
+                    color    = QuantumColors.TextPrimary,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+                )
+            }
+            items(contacts, key = { "contact_${it.userId}" }) { contact ->
+                AnimatedVisibility(
+                    visible = true,
+                    enter   = fadeIn() + slideInVertically(initialOffsetY = { 20 })
+                ) {
+                    ContactListItem(
+                        contact = contact,
+                        onClick = { onChatClick(contact.userId) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Contact item card (no messages yet)
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun ContactListItem(contact: ContactEntity, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .glassmorphism(cornerRadius = 20, overlayAlpha = 0.12f)
+            .background(
+                color = QuantumColors.GlassWhite08,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Avatar
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                QuantumColors.Accent.copy(alpha = 0.6f),
+                                QuantumColors.Primary.copy(alpha = 0.4f)
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+                    .clip(CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                InboxListItem(item = item, onClick = { onChatClick(item.userId) })
+                Text(
+                    text       = contact.displayName?.firstOrNull()?.toString()?.uppercase()
+                                 ?: contact.userId.firstOrNull()?.toString()?.uppercase() ?: "?",
+                    color      = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize   = 20.sp
+                )
+            }
+
+            Spacer(Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text      = contact.displayName ?: contact.userId.take(12) + "…",
+                    style     = MaterialTheme.typography.titleMedium,
+                    color     = QuantumColors.TextPrimary,
+                    maxLines  = 1,
+                    overflow  = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text  = "Tap to start chatting",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = QuantumColors.TextTertiary
+                )
             }
         }
     }
