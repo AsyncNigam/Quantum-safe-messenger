@@ -48,7 +48,10 @@ npm-debug.log*
 npm-error.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
+# ─── Documentation & Instruction Files ──────────────────────────────────────
+
+**/*.md
+!README.mdlerna-debug.log*
 .pnpm-debug.log*
 
 # ─── Testing & Coverage ─────────────────────────────────────────────────────
