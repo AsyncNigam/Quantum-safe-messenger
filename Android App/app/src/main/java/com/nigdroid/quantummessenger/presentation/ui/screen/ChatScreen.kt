@@ -111,17 +111,14 @@ private fun ChatScreenContent(
     onRetry       : () -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
+        modifier = Modifier.fillMaxSize()
     ) {
         AnimatedMeshGradientBackground(modifier = Modifier.fillMaxSize())
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .imePadding()
+                .imePadding() // Use imePadding on the main container to shift contents correctly
         ) {
             // ── Header ───────────────────────────────────────────────────────
             val contactName = (uiState as? ChatUiState.Success)?.contactName
@@ -133,24 +130,26 @@ private fun ChatScreenContent(
             )
 
             // ── Content ──────────────────────────────────────────────────────
-            AnimatedContent(
-                targetState   = uiState,
-                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(150)) },
-                label         = "chatStateAnim",
-                modifier      = Modifier.weight(1f)
-            ) { state ->
-                when (state) {
-                    is ChatUiState.Loading -> ChatLoadingState()
-                    is ChatUiState.Error   -> ChatErrorState(state.message, onRetry)
-                    is ChatUiState.Success -> {
-                        if (state.messages.isEmpty()) {
-                            ChatEmptyState()
-                        } else {
-                            ChatMessageList(
-                                messages      = state.messages,
-                                currentUserId = currentUserId,
-                                lazyListState = lazyListState
-                            )
+            Box(modifier = Modifier.weight(1f)) {
+                AnimatedContent(
+                    targetState   = uiState,
+                    transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(150)) },
+                    label         = "chatStateAnim",
+                    modifier      = Modifier.fillMaxSize()
+                ) { state ->
+                    when (state) {
+                        is ChatUiState.Loading -> ChatLoadingState()
+                        is ChatUiState.Error   -> ChatErrorState(state.message, onRetry)
+                        is ChatUiState.Success -> {
+                            if (state.messages.isEmpty()) {
+                                ChatEmptyState()
+                            } else {
+                                ChatMessageList(
+                                    messages      = state.messages,
+                                    currentUserId = currentUserId,
+                                    lazyListState = lazyListState
+                                )
+                            }
                         }
                     }
                 }
@@ -178,17 +177,14 @@ private fun ChatHeader(
     participantName    : String,
     onBack             : () -> Unit
 ) {
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .glassmorphism(cornerRadius = 0, overlayAlpha = 0.10f)
             .background(QuantumColors.GlassWhite08)
-            .padding(horizontal = 8.dp, vertical = 10.dp)
+            .statusBarsPadding() // Fixed header at top
+            .padding(start = 8.dp, end = 8.dp, top = 2.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier          = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
             // Back button
             IconButton(
                 onClick  = onBack,
@@ -250,14 +246,38 @@ private fun ChatHeader(
             }
 
             // Options
-            IconButton(onClick = {}) {
-                Icon(
-                    imageVector        = Icons.Default.MoreVert,
-                    contentDescription = "Options",
-                    tint               = QuantumColors.TextSecondary
-                )
+            var showMenu by remember { mutableStateOf(false) }
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        imageVector        = Icons.Default.MoreVert,
+                        contentDescription = "Options",
+                        tint               = QuantumColors.TextSecondary
+                    )
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                    containerColor = QuantumColors.Surface,
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Search", color = QuantumColors.TextPrimary) },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.MoreVert, null, tint = QuantumColors.Primary) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Mute Notifications", color = QuantumColors.TextPrimary) },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.AccessTime, null, tint = QuantumColors.Primary) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Clear Chat", color = QuantumColors.TextPrimary) },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.ErrorOutline, null, tint = QuantumColors.Error) }
+                    )
+                }
             }
-        }
     }
 }
 
@@ -440,8 +460,8 @@ private fun ChatInputBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .glassmorphism(cornerRadius = 0, overlayAlpha = 0.08f)
             .background(QuantumColors.GlassWhite08)
+            .navigationBarsPadding() // Keep input bar above system nav
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment     = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -544,13 +564,13 @@ private fun ChatEmptyState() {
         Text("🔐", fontSize = 52.sp)
         Spacer(Modifier.height(16.dp))
         Text(
-            text  = "Post-quantum secured",
+            text  = "Quantum Safe",
             style = MaterialTheme.typography.titleMedium,
             color = QuantumColors.TextPrimary
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text      = "Send the first message.\nYour conversation is encrypted.",
+            text      = "Send the first message.\nYour conversation is fully encrypted.",
             style     = MaterialTheme.typography.bodyMedium,
             color     = QuantumColors.TextTertiary,
             textAlign = TextAlign.Center

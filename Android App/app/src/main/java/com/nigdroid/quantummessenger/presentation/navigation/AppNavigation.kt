@@ -199,7 +199,10 @@ fun AppNavigation(
                 }
             ) { backStackEntry ->
                 val chatRoute: ChatRoute = backStackEntry.toRoute()
-                ChatScreen(participantId = chatRoute.userId)
+                ChatScreen(
+                    participantId = chatRoute.userId,
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

@@ -110,7 +110,13 @@ fun AddContactScreen(
                         onValueChange = { qrNameInput = it },
                         label = { Text("Contact name") },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = QuantumColors.TextPrimary,
+                            unfocusedTextColor = QuantumColors.TextPrimary,
+                            focusedBorderColor = QuantumColors.Primary,
+                            unfocusedBorderColor = QuantumColors.GlassBorder
+                        )
                     )
                 }
             },
@@ -119,16 +125,16 @@ fun AddContactScreen(
                     viewModel.addContact(pendingQrFingerprint!!, qrNameInput)
                     pendingQrFingerprint = null
                     qrNameInput = ""
-                }) { Text("Add") }
+                }) { Text("Add", color = QuantumColors.Primary) }
             },
             dismissButton = {
                 TextButton(onClick = {
                     viewModel.addContact(pendingQrFingerprint!!)
                     pendingQrFingerprint = null
                     qrNameInput = ""
-                }) { Text("Skip") }
+                }) { Text("Skip", color = QuantumColors.TextSecondary) }
             },
-            containerColor = Color(0xFF1A1728),
+            containerColor = QuantumColors.Surface,
             shape = RoundedCornerShape(20.dp)
         )
     }
@@ -148,25 +154,27 @@ fun AddContactScreen(
             ScannerOverlay()
         }
 
-        // ── Top bar ──────────────────────────────────────────────────
-        Column(
-            modifier = Modifier.fillMaxSize().statusBarsPadding()
-        ) {
-            ScannerTopBar(
-                showManualInput = showManualInput,
-                onToggleMode = { showManualInput = !showManualInput }
-            )
-
-            if (showManualInput || !hasCameraPermission) {
-                ManualInputSection(
-                    fingerprint = manualFingerprint,
-                    onFingerprintChange = { manualFingerprint = it },
-                    contactName = contactName,
-                    onContactNameChange = { contactName = it },
-                    onSubmit = { viewModel.addContact(manualFingerprint, contactName) },
-                    isLoading = uiState is AddContactUiState.Loading,
-                    noCameraPermission = !hasCameraPermission
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                ScannerTopBar(
+                    showManualInput = showManualInput,
+                    onToggleMode = { showManualInput = !showManualInput }
                 )
+            }
+        ) { padding ->
+            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+                if (showManualInput || !hasCameraPermission) {
+                    ManualInputSection(
+                        fingerprint = manualFingerprint,
+                        onFingerprintChange = { manualFingerprint = it },
+                        contactName = contactName,
+                        onContactNameChange = { contactName = it },
+                        onSubmit = { viewModel.addContact(manualFingerprint, contactName) },
+                        isLoading = uiState is AddContactUiState.Loading,
+                        noCameraPermission = !hasCameraPermission
+                    )
+                }
             }
         }
 
@@ -288,6 +296,7 @@ private fun QrScannerCamera(onQrScanned: (String) -> Unit) {
 
 @Composable
 private fun ScannerOverlay() {
+    val isDark = isSystemInDarkTheme()
     val inf = rememberInfiniteTransition(label = "reticle")
     val scanLine by inf.animateFloat(
         0f, 1f,
@@ -321,7 +330,8 @@ private fun ScannerOverlay() {
             )
             fillType = PathFillType.EvenOdd
         }
-        drawPath(path, Color.Black.copy(alpha = 0.65f))
+        val overlayColor = if (isDark) Color.Black.copy(alpha = 0.65f) else Color.White.copy(alpha = 0.35f)
+        drawPath(path, overlayColor)
 
         // Corner brackets
         val cornerColor = QuantumColors.Primary.copy(alpha = cornerAlpha)
@@ -361,16 +371,21 @@ private fun ScannerOverlay() {
 @Composable
 private fun ScannerTopBar(showManualInput: Boolean, onToggleMode: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(QuantumColors.GlassWhite08)
+            .statusBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 0.dp)
+            .height(64.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
             Text("Add Contact", style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.ExtraBold, color = Color.White)
+                fontWeight = FontWeight.ExtraBold, color = QuantumColors.TextPrimary)
             Text(
                 if (showManualInput) "Enter fingerprint manually" else "Point camera at a QR code",
-                style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.7f)
+                style = MaterialTheme.typography.bodySmall, color = QuantumColors.TextSecondary
             )
         }
         IconButton(
@@ -382,7 +397,7 @@ private fun ScannerTopBar(showManualInput: Boolean, onToggleMode: () -> Unit) {
         ) {
             Icon(
                 if (showManualInput) Icons.Default.CameraAlt else Icons.Default.Keyboard,
-                contentDescription = "Toggle mode", tint = Color.White,
+                contentDescription = "Toggle mode", tint = QuantumColors.TextPrimary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -530,7 +545,7 @@ private fun StatusCard(uiState: AddContactUiState, onDismiss: () -> Unit) {
         Box(
             Modifier.fillMaxWidth()
                 .glassmorphism(cornerRadius = 16, overlayAlpha = 0.15f)
-                .background(Color(0xDD0D0B18), RoundedCornerShape(16.dp))
+                .background(QuantumColors.Surface.copy(alpha = 0.85f), RoundedCornerShape(16.dp))
                 .clip(RoundedCornerShape(16.dp))
                 .clickable { if (uiState !is AddContactUiState.Loading) onDismiss() }
                 .padding(16.dp)
@@ -542,7 +557,7 @@ private fun StatusCard(uiState: AddContactUiState, onDismiss: () -> Unit) {
                     Icon(icon, null, tint = color, modifier = Modifier.size(20.dp))
                 }
                 Spacer(Modifier.width(12.dp))
-                Text(message, style = MaterialTheme.typography.bodyMedium, color = Color.White,
+                Text(message, style = MaterialTheme.typography.bodyMedium, color = QuantumColors.TextPrimary,
                     modifier = Modifier.weight(1f))
                 if (uiState !is AddContactUiState.Loading) {
                     Icon(Icons.Default.Close, "Dismiss", tint = QuantumColors.TextTertiary,

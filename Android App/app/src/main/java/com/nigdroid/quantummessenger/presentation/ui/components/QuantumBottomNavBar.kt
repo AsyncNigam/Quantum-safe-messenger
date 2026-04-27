@@ -47,7 +47,7 @@ enum class BottomNavTab(
     AddContact(
         label          = "Add",
         selectedIcon   = Icons.Filled.PersonAdd,
-        unselectedIcon = Icons.Outlined.PersonAddAlt
+        unselectedIcon = Icons.Filled.PersonAdd
     ),
     Profile(
         label          = "Profile",
@@ -130,20 +130,18 @@ private fun NavItem(
 
     val iconColor by animateColorAsState(
         targetValue   = if (isSelected) activeIconColor else inactiveIconColor,
-        // FIXED: Use spring instead of tween — prevents color flash/flip
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness    = Spring.StiffnessMedium
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness    = Spring.StiffnessLow
         ),
         label = "iconColor"
     )
 
     val pillAlpha by animateFloatAsState(
         targetValue   = if (isSelected) 1f else 0f,
-        // FIXED: spring prevents the abrupt jump that caused the "flip" feel
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness    = Spring.StiffnessMedium
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness    = Spring.StiffnessLow
         ),
         label = "pillAlpha"
     )
@@ -160,9 +158,9 @@ private fun NavItem(
             Box(
                 modifier = Modifier
                     .height(38.dp)
-                    .fillMaxWidth(0.88f)
+                    .fillMaxWidth(0.92f)
                     .background(
-                        color = activeIconColor.copy(alpha = 0.15f * pillAlpha),
+                        color = activeIconColor.copy(alpha = 0.12f * pillAlpha),
                         shape = RoundedCornerShape(20.dp)
                     )
             )
@@ -171,35 +169,29 @@ private fun NavItem(
         Row(
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 4.dp)
+            modifier = Modifier.padding(horizontal = 8.dp)
         ) {
-            // FIXED: Icon switching without graphicsLayer scale to prevent flip.
-            // Using Crossfade ensures no mirroring artifact on PersonAdd icon.
-            Crossfade(
-                targetState   = isSelected,
-                animationSpec = tween(200),
-                label         = "iconSwitch_${tab.name}"
-            ) { selected ->
-                Icon(
-                    imageVector        = if (selected) tab.selectedIcon else tab.unselectedIcon,
-                    contentDescription = tab.label,
-                    tint               = iconColor,
-                    modifier           = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                imageVector        = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
+                contentDescription = tab.label,
+                tint               = iconColor,
+                modifier           = Modifier.size(22.dp)
+            )
 
-            // Sliding label — only visible when selected
+            // Smoother label animation using width weight or AnimatedContent instead of expandHorizontally
             AnimatedVisibility(
                 visible = isSelected,
-                enter   = expandHorizontally(
+                enter   = fadeIn(animationSpec = tween(300)) + expandHorizontally(
+                    expandFrom = Alignment.Start,
                     animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness    = Spring.StiffnessMedium
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness    = Spring.StiffnessLow
                     )
-                ) + fadeIn(tween(200, delayMillis = 60)),
-                exit    = shrinkHorizontally(
-                    animationSpec = tween(200, easing = FastOutSlowInEasing)
-                ) + fadeOut(tween(140))
+                ),
+                exit    = fadeOut(animationSpec = tween(200)) + shrinkHorizontally(
+                    shrinkTowards = Alignment.Start,
+                    animationSpec = tween(250)
+                )
             ) {
                 Text(
                     text  = tab.label,
@@ -208,7 +200,8 @@ private fun NavItem(
                         fontWeight = FontWeight.SemiBold
                     ),
                     color    = activeIconColor,
-                    modifier = Modifier.padding(start = 6.dp)
+                    modifier = Modifier.padding(start = 8.dp),
+                    maxLines = 1
                 )
             }
         }

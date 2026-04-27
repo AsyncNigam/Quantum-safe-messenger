@@ -69,10 +69,7 @@ private fun AuthScreenContent(
     onRetry: () -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
+        modifier = Modifier.fillMaxSize()
     ) {
         // ── Aurora / mesh gradient background ───────────────────────────────
         AnimatedMeshGradientBackground(modifier = Modifier.fillMaxSize())
@@ -81,18 +78,20 @@ private fun AuthScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
                 .padding(horizontal = 28.dp),
             verticalArrangement   = Arrangement.SpaceBetween,
             horizontalAlignment   = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(0.dp))
+            Spacer(Modifier.height(4.dp))
 
             // ── Hero section ─────────────────────────────────────────────────
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 QuantumOrb()
-                Spacer(Modifier.height(36.dp))
+                Spacer(Modifier.height(32.dp))
                 Text(
-                    text       = "Quantum Messenger",
+                    text       = "Quantum Safe",
                     style      = MaterialTheme.typography.headlineLarge,
                     color      = QuantumColors.TextPrimary,
                     fontWeight = FontWeight.ExtraBold,

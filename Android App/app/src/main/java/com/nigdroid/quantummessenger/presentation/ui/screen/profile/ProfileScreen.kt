@@ -53,59 +53,79 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedMeshGradientBackground(modifier = Modifier.fillMaxSize())
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 120.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(Modifier.height(16.dp))
-            // ── Header ───────────────────────────────────────────────
-            Text("Identity", style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold, color = QuantumColors.TextPrimary)
-            Spacer(Modifier.height(4.dp))
-            Text("Your Zero-Knowledge profile", style = MaterialTheme.typography.bodyMedium,
-                color = QuantumColors.TextTertiary)
-            Spacer(Modifier.height(28.dp))
-
-            // ── Avatar orb ───────────────────────────────────────────
-            ProfileAvatar(displayName = displayName)
-            Spacer(Modifier.height(24.dp))
-
-            // ── Display Name ─────────────────────────────────────────
-            DisplayNameCard(
-                displayName = displayName,
-                nameInput = nameInput,
-                isEditing = isEditing,
-                onNameChange = { nameInput = it },
-                onSave = { viewModel.saveDisplayName(nameInput) },
-                onEdit = { viewModel.startEditing() },
-                onCancel = {
-                    nameInput = displayName ?: ""
-                    viewModel.cancelEditing()
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(QuantumColors.GlassWhite08)
+                        .statusBarsPadding()
+                        .padding(horizontal = 24.dp, vertical = 0.dp)
+                        .height(64.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = "Identity",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = QuantumColors.TextPrimary
+                    )
                 }
-            )
-            Spacer(Modifier.height(16.dp))
-
-            // ── QR Code ──────────────────────────────────────────────
-            if (fingerprint != null) {
-                QrCodeCard(fingerprint = fingerprint!!)
-                Spacer(Modifier.height(16.dp))
             }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Your Zero-Knowledge profile",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = QuantumColors.TextTertiary
+                )
+                Spacer(Modifier.height(28.dp))
 
-            // ── Public Keys ──────────────────────────────────────────
-            PublicKeysCard(
-                fingerprint = fingerprint ?: "Not registered",
-                mlKemKey    = mlKemKey,
-                x25519Key   = x25519Key
-            )
-            Spacer(Modifier.height(16.dp))
+                // ── Avatar orb ───────────────────────────────────────────
+                ProfileAvatar(displayName = displayName)
+                Spacer(Modifier.height(24.dp))
 
-            // ── About PQC Card ───────────────────────────────────────
-            AboutPqcCard(onClick = { showAboutSheet = true })
+                // ── Display Name ─────────────────────────────────────────
+                DisplayNameCard(
+                    displayName = displayName,
+                    nameInput = nameInput,
+                    isEditing = isEditing,
+                    onNameChange = { nameInput = it },
+                    onSave = { viewModel.saveDisplayName(nameInput) },
+                    onEdit = { viewModel.startEditing() },
+                    onCancel = {
+                        nameInput = displayName ?: ""
+                        viewModel.cancelEditing()
+                    }
+                )
+                Spacer(Modifier.height(16.dp))
+
+                // ── QR Code ──────────────────────────────────────────────
+                if (fingerprint != null) {
+                    QrCodeCard(fingerprint = fingerprint!!)
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                // ── Public Keys ──────────────────────────────────────────
+                PublicKeysCard(
+                    fingerprint = fingerprint ?: "Not registered",
+                    mlKemKey    = mlKemKey,
+                    x25519Key   = x25519Key
+                )
+                Spacer(Modifier.height(16.dp))
+
+                // ── About PQC Card ───────────────────────────────────────
+                AboutPqcCard(onClick = { showAboutSheet = true })
+            }
         }
     }
 
@@ -361,7 +381,7 @@ private fun KeyRow(label: String, value: String, ctx: Context) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// About PQC Card (tap → bottom sheet)
+// About Quantum Safe Card (tap → bottom sheet)
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
@@ -388,9 +408,9 @@ private fun AboutPqcCard(onClick: () -> Unit) {
             }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
-                Text("About PQC Chat", style = MaterialTheme.typography.titleSmall,
+                Text("About Quantum Safe", style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold, color = QuantumColors.TextPrimary)
-                Text("Post-quantum encryption details", style = MaterialTheme.typography.bodySmall,
+                Text("Quantum safe encryption details", style = MaterialTheme.typography.bodySmall,
                     color = QuantumColors.TextTertiary)
             }
             Icon(Icons.Default.ChevronRight, null, tint = QuantumColors.TextTertiary)
@@ -409,7 +429,7 @@ private fun AboutPqcBottomSheet(onDismiss: () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState       = sheetState,
-        containerColor   = Color(0xFF110F1E),
+        containerColor   = QuantumColors.Surface,
         shape            = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         dragHandle       = {
             Box(Modifier.padding(top = 12.dp, bottom = 8.dp)

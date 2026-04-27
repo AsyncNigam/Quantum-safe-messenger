@@ -22,12 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.nigdroid.quantummessenger.R
 import com.nigdroid.quantummessenger.data.local.ContactEntity
 import com.nigdroid.quantummessenger.domain.model.InboxItem
 import com.nigdroid.quantummessenger.presentation.ui.background.AnimatedMeshGradientBackground
@@ -144,7 +146,7 @@ private fun HomeScreenContent(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
-                .padding(end = 20.dp, bottom = 90.dp)
+                .padding(end = 20.dp, bottom = 24.dp)
         ) {
             NewChatFab(onClick = onNewChatClick)
         }
@@ -164,41 +166,31 @@ private fun HomeTopBar(
     onDismissMenu: () -> Unit = {},
     onNewChatClick: () -> Unit = {}
 ) {
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(QuantumColors.GlassWhite08)
             .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .padding(start = 20.dp, end = 20.dp, top = 2.dp, bottom = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
-            modifier            = Modifier.fillMaxWidth(),
-            verticalAlignment   = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
+        Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = R.drawable.qlogo),
+                    contentDescription = "Logo",
                     modifier = Modifier
-                        .size(38.dp)
-                        .glassmorphism(cornerRadius = 12, overlayAlpha = 0.15f, usePrimaryTint = true)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    QuantumColors.Primary.copy(alpha = 0.7f),
-                                    QuantumColors.Accent.copy(alpha  = 0.5f)
-                                )
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Shield, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                }
-                Spacer(Modifier.width(12.dp))
-                Column {
-                    Text("Quantum", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = QuantumColors.TextPrimary)
-                    Text("Messenger", style = MaterialTheme.typography.labelSmall, color = QuantumColors.Primary)
-                }
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                )
+                Spacer(Modifier.width(14.dp))
+                Text(
+                    text = "Quantum Safe",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = QuantumColors.TextPrimary,
+                    letterSpacing = 0.5.sp
+                )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TopBarIconButton(Icons.Default.Search, "Search", onSearchClick)
@@ -207,7 +199,7 @@ private fun HomeTopBar(
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = onDismissMenu,
-                        containerColor = Color(0xEE1A1728),
+                        containerColor = QuantumColors.Surface,
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         DropdownMenuItem(
@@ -219,7 +211,6 @@ private fun HomeTopBar(
                 }
             }
         }
-    }
 }
 
 @Composable
@@ -326,9 +317,9 @@ private fun HomeConversationList(
             item {
                 Text(
                     text     = "Chats",
-                    style    = MaterialTheme.typography.titleLarge,
-                    color    = QuantumColors.TextPrimary,
-                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+                    style    = MaterialTheme.typography.titleSmall,
+                    color    = QuantumColors.TextTertiary,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
                 )
             }
             items(inboxItems, key = { it.userId }) { item ->
@@ -498,7 +489,8 @@ fun InboxListItem(
                 ) {
                     Text(
                         text      = item.displayName ?: "Unknown",
-                        style     = MaterialTheme.typography.titleMedium,
+                        style     = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
                         color     = QuantumColors.TextPrimary,
                         maxLines  = 1,
                         overflow  = TextOverflow.Ellipsis,
@@ -510,13 +502,13 @@ fun InboxListItem(
                         color = QuantumColors.TextTertiary
                     )
                 }
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(2.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text     = item.lastMessage,
-                        style    = MaterialTheme.typography.bodyMedium,
+                        style    = MaterialTheme.typography.bodySmall,
                         color    = if (item.unreadCount > 0) QuantumColors.TextSecondary
                                    else QuantumColors.TextTertiary,
                         maxLines = 1,
@@ -587,7 +579,7 @@ private fun HomeEmptyState(onNewChatClick: (() -> Unit)? = null) {
         )
         Spacer(Modifier.height(10.dp))
         Text(
-            text      = "Tap + to start your first\npost-quantum encrypted conversation.",
+            text      = "Tap + to start your first\nQuantum Safe conversation.",
             style     = MaterialTheme.typography.bodyMedium,
             color     = QuantumColors.TextTertiary,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center

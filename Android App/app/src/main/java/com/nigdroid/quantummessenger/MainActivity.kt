@@ -1,6 +1,7 @@
 package com.nigdroid.quantummessenger
 
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
@@ -8,22 +9,31 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.navigation.compose.rememberNavController
 import com.nigdroid.quantummessenger.presentation.navigation.AppNavigation
 import com.nigdroid.quantummessenger.presentation.navigation.AuthRoute
+import com.nigdroid.quantummessenger.presentation.navigation.HomeRoute
 import com.nigdroid.quantummessenger.presentation.ui.screen.LockedScreen
 import com.nigdroid.quantummessenger.presentation.ui.screen.VaultCompromisedScreen
+import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumColors
 import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumMessengerTheme
 import com.nigdroid.quantummessenger.presentation.viewmodel.LockState
 import com.nigdroid.quantummessenger.presentation.viewmodel.MainViewModel
@@ -72,6 +82,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        // Disable screenshots and screen recording
+//        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE,
+//            WindowManager.LayoutParams.FLAG_SECURE)
+
         enableEdgeToEdge()
 
         // Register process-level lifecycle observer (survives config changes)
@@ -94,69 +108,47 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    // ── Screen stack ──────────────────────────────────────────
-                    AnimatedContent(
-                        targetState   = lockState,
-                        transitionSpec = {
-                            fadeIn(tween(300)) togetherWith fadeOut(tween(200))
-                        },
-                        label = "lockStateTransition"
-                    ) { state ->
-                        when (state) {
-                            is LockState.Locked -> {
-                                LockedScreen(
-                                    onUnlockClick = { triggerBiometricUnlock() }
-                                )
-                            }
+                    // ── Screen stack with Blur overlay ───────────────────────────
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        val isLocked = lockState != LockState.Unlocked && lockState != LockState.WipeComplete
 
-                            is LockState.BiometricError -> {
-                                LockedScreen(
-                                    onUnlockClick = {
-                                        viewModel.retryBiometric()
-                                        triggerBiometricUnlock()
-                                    },
-                                    errorMessage = state.message
-                                )
+                        if (startDestination != null || lockState is LockState.WipeComplete) {
+                            val navController = rememberNavController()
+                            AppNavigation(
+                                navController    = navController,
+                                startDestination = if (lockState is LockState.WipeComplete) AuthRoute else (startDestination ?: HomeRoute),
+                                modifier         = Modifier.blur(if (isLocked) 25.dp else 0.dp)
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = QuantumColors.Primary)
                             }
+                        }
 
-                            is LockState.VaultCompromised -> {
-                                VaultCompromisedScreen(
-                                    onWipeAndReRegister = { viewModel.executeVaultWipe() },
-                                    isWiping = false
-                                )
-                            }
-
-                            is LockState.Wiping -> {
-                                VaultCompromisedScreen(
-                                    onWipeAndReRegister = {},
-                                    isWiping = true
-                                )
-                            }
-
-                            is LockState.WipeComplete -> {
-                                // After wipe, show AuthScreen for re-registration
-                                val navController = rememberNavController()
-                                AppNavigation(
-                                    navController    = navController,
-                                    startDestination = AuthRoute
-                                )
-                            }
-
-                            is LockState.Unlocked -> {
-                                if (startDestination != null) {
-                                    val navController = rememberNavController()
-                                    AppNavigation(
-                                        navController    = navController,
-                                        startDestination = startDestination!!
+                        // Authentication Overlay (LockedScreen)
+                        if (isLocked) {
+                            when (lockState) {
+                                is LockState.VaultCompromised, is LockState.Wiping -> {
+                                    VaultCompromisedScreen(
+                                        onWipeAndReRegister = { viewModel.executeVaultWipe() },
+                                        isWiping = lockState is LockState.Wiping
                                     )
-                                } else {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator()
-                                    }
                                 }
+                                is LockState.Locked -> {
+                                    LockedScreen(
+                                        onUnlockClick = { triggerBiometricUnlock() }
+                                    )
+                                }
+                                is LockState.BiometricError -> {
+                                    LockedScreen(
+                                        onUnlockClick = { triggerBiometricUnlock() },
+                                        errorMessage = (lockState as LockState.BiometricError).message
+                                    )
+                                }
+                                else -> {}
                             }
                         }
                     }
@@ -164,6 +156,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    // Removed AuthenticationDialog (reverting to LockedScreen)
 
     override fun onDestroy() {
         super.onDestroy()
@@ -175,7 +169,7 @@ class MainActivity : AppCompatActivity() {
     private fun triggerBiometricUnlock() {
         biometricPromptManager.showBiometricPrompt(
             activity = this,
-            title    = "Unlock Quantum Messenger",
+            title    = "Unlock Quantum Safe",
             subtitle = "Use your biometric to access your secure vault",
             onResult = { result ->
                 when (result) {

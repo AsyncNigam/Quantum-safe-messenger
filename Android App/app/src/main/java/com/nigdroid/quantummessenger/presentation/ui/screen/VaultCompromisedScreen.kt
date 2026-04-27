@@ -37,21 +37,20 @@ fun VaultCompromisedScreen(
     isWiping: Boolean = false
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
+        modifier = Modifier.fillMaxSize()
     ) {
         AnimatedMeshGradientBackground(modifier = Modifier.fillMaxSize())
 
         Column(
             modifier            = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Spacer(Modifier.height(0.dp))
+            Spacer(Modifier.height(12.dp))
 
             // ── Centre warning ─────────────────────────────────────────────
             Column(

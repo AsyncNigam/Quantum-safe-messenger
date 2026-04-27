@@ -16,11 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.nigdroid.quantummessenger.R
 import com.nigdroid.quantummessenger.presentation.ui.background.AnimatedMeshGradientBackground
 import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumColors
 import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumMessengerTheme
@@ -51,21 +53,20 @@ private fun LockedScreenContent(
     errorMessage: String? = null
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
+        modifier = Modifier.fillMaxSize()
     ) {
         AnimatedMeshGradientBackground(modifier = Modifier.fillMaxSize())
 
         Column(
             modifier            = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Spacer(Modifier.height(0.dp))
+            Spacer(Modifier.height(4.dp))
 
             // ── Centre section ────────────────────────────────────────────────
             Column(
@@ -79,16 +80,16 @@ private fun LockedScreenContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text       = "Quantum Messenger",
+                        text       = "Quantum Safe",
                         style      = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.ExtraBold,
                         color      = QuantumColors.TextPrimary,
                         textAlign  = TextAlign.Center
                     )
                     Text(
-                        text      = "Encrypted & Locked",
+                        text      = "Authentication is required to access Quantum Safe app",
                         style     = MaterialTheme.typography.bodyLarge,
-                        color     = QuantumColors.TextTertiary,
+                        color     = QuantumColors.TextSecondary,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -263,11 +264,10 @@ private fun LockOrb() {
                 .clip(CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector        = Icons.Default.Lock,
-                contentDescription = "Locked",
-                tint               = Color.White,
-                modifier           = Modifier.size(52.dp)
+            Image(
+                painter            = painterResource(id = R.drawable.qlogo),
+                contentDescription = "App Logo",
+                modifier           = Modifier.size(72.dp)
             )
         }
     }
