@@ -66,7 +66,7 @@ private fun LockedScreenContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(16.dp))
 
             // ── Centre section ────────────────────────────────────────────────
             Column(

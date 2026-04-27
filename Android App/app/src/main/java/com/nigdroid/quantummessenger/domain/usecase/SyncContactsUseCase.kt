@@ -33,13 +33,21 @@ class SyncContactsUseCase @Inject constructor(
             if (response.isSuccessful) {
                 val bundles = response.body()?.data ?: emptyList()
                 val entities = bundles
-                    .filter { it.fingerprint != ownFingerprint }
-                    .map { bundle ->
-                        ContactEntity(
-                            userId          = bundle.fingerprint,
-                            mlKemPublicKey  = bundle.mlKemPublicKey,
-                            x25519PublicKey = bundle.x25519PublicKey
-                        )
+                    .filter { it.fingerprint != null && it.fingerprint != ownFingerprint }
+                    .mapNotNull { bundle ->
+                        val fp = bundle.fingerprint
+                        val ml = bundle.mlKemPublicKey
+                        val x2 = bundle.x25519PublicKey
+                        
+                        if (fp != null && ml != null && x2 != null) {
+                            ContactEntity(
+                                userId          = fp,
+                                mlKemPublicKey  = ml,
+                                x25519PublicKey = x2
+                            )
+                        } else {
+                            null
+                        }
                     }
                 if (entities.isNotEmpty()) {
                     contactDao.insertContacts(entities)

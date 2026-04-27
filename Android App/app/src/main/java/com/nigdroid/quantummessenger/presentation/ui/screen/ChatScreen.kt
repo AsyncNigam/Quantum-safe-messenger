@@ -177,14 +177,18 @@ private fun ChatHeader(
     participantName    : String,
     onBack             : () -> Unit
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(QuantumColors.GlassWhite08)
-            .statusBarsPadding() // Fixed header at top
-            .padding(start = 8.dp, end = 8.dp, top = 2.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
+        Spacer(Modifier.statusBarsPadding())
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             // Back button
             IconButton(
                 onClick  = onBack,
@@ -278,6 +282,7 @@ private fun ChatHeader(
                     )
                 }
             }
+        }
     }
 }
 

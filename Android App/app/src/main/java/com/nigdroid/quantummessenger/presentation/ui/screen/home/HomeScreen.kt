@@ -83,7 +83,7 @@ private fun HomeScreenContent(
 
         Scaffold(
             containerColor = Color.Transparent,
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = WindowInsets(0.dp),
             topBar = {
                 HomeTopBar(
                     onSearchClick = { showSearch = !showSearch },
@@ -167,16 +167,20 @@ private fun HomeTopBar(
     onDismissMenu: () -> Unit = {},
     onNewChatClick: () -> Unit = {}
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(QuantumColors.GlassWhite08)
-            .statusBarsPadding()
-            .padding(start = 20.dp, end = 20.dp, top = 2.dp, bottom = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Spacer(Modifier.statusBarsPadding())
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
                     painter = painterResource(id = R.drawable.qlogo),
                     contentDescription = "Logo",
@@ -212,6 +216,7 @@ private fun HomeTopBar(
                 }
             }
         }
+    }
 }
 
 @Composable

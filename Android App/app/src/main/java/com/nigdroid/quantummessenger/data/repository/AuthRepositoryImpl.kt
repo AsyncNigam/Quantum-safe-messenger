@@ -64,7 +64,15 @@ class AuthRepositoryImpl @Inject constructor(
                     )
                 }
 
-                val fingerprint = response.body()!!.textFingerprint
+                val body = response.body()!!
+                val fingerprint = body.textFingerprint
+
+                if (fingerprint == null) {
+                    return@withContext IdentityGenerationResult.Error(
+                        exception = Exception("Server response missing fingerprint"),
+                        message   = "Server response missing fingerprint"
+                    )
+                }
 
                 // Step 3: Build the local Identity object
                 val identity = Identity(

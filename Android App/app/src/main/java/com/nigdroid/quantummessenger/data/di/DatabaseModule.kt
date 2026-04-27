@@ -1,9 +1,8 @@
 package com.nigdroid.quantummessenger.data.di
 
 import android.content.Context
-import android.security.keystore.KeyPermanentlyInvalidatedException
-import android.security.keystore.UserNotAuthenticatedException
 import androidx.room.Room
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.nigdroid.quantummessenger.data.crypto.CryptoManager
 import com.nigdroid.quantummessenger.data.local.ChatMessageDao
 import com.nigdroid.quantummessenger.data.local.ContactDao
@@ -20,16 +19,45 @@ import javax.inject.Singleton
 /**
  * Hilt module for providing database-related dependencies.
  *
- * The SQLCipher passphrase is derived from the CryptoManager master key.
- * Since the master key is now biometric-bound (15s auth window), the database
- * can only be opened AFTER the user has successfully authenticated via biometrics.
+ * The SQLCipher passphrase is derived from the CryptoManager using a
+ * non-auth-bound Keystore key — this means the passphrase is ALWAYS
+ * accessible (no biometric timing window required).
  *
- * The 15-second auth validity window covers the time from biometric success
- * to database initialization (which is lazy via Hilt's singleton scope).
+ * The biometric gate at the app level (LockedScreen) protects runtime
+ * access; the DB passphrase key only protects data-at-rest on disk.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+
+    /**
+     * A reusable factory wrapper that creates a fresh [SupportFactory] (with a fresh
+     * clone of the passphrase) every time Room needs to open or reopen the database.
+     *
+     * **Why this is needed:**
+     * SQLCipher's [SupportFactory] zeros out the passphrase byte array after the
+     * first database open — even when `clearPassphrase = false` (a known issue in
+     * SQLCipher 4.5.x). When Room later closes and reopens the database (e.g. after
+     * process death / app restart), it reuses the same [SupportFactory] instance
+     * whose internal passphrase is now all zeros, causing the
+     * "passphrase appears to be cleared" IllegalStateException.
+     *
+     * By wrapping in our own Factory, we guarantee a fresh passphrase copy on every
+     * `create()` call, making the database resilient to Room's open/close lifecycle.
+     */
+    private class ReusableSupportFactory(
+        private val passphrase: ByteArray
+    ) : SupportSQLiteOpenHelper.Factory {
+        override fun create(
+            configuration: SupportSQLiteOpenHelper.Configuration
+        ): SupportSQLiteOpenHelper {
+            // Provide a fresh SupportFactory + fresh passphrase clone each time
+            // Room needs to open the database. The clone is consumed (and possibly
+            // zeroed) by SupportFactory, but our cached `passphrase` stays intact.
+            return SupportFactory(passphrase.clone(), null, false)
+                .create(configuration)
+        }
+    }
 
     @Provides
     @Singleton
@@ -37,29 +65,17 @@ object DatabaseModule {
         @ApplicationContext context: Context,
         cryptoManager: CryptoManager
     ): QuantumMessengerDatabase {
-        // Get the passphrase for SQLCipher
-        // This runs within the biometric auth window (15s after unlock)
-        val passphrase = try {
-            runBlocking { cryptoManager.getDatabasePassphrase() }
-        } catch (e: UserNotAuthenticatedException) {
-            // Should not happen — biometric gate runs before DB access
-            // Fall back: generate a non-auth-bound temporary passphrase
-            android.util.Log.e("DatabaseModule", "Auth required — DB opened before biometric: ${e.message}")
-            ByteArray(32) { 0x00 }
-        } catch (e: KeyPermanentlyInvalidatedException) {
-            // Key invalidated — VaultWipeManager will handle this
-            android.util.Log.e("DatabaseModule", "KPIE — key invalidated: ${e.message}")
-            ByteArray(32) { 0x00 }
-        }
-
-        val factory = SupportFactory(passphrase, null, false)
+        // Get the passphrase for SQLCipher.
+        // This now uses a non-auth-bound Keystore key, so it NEVER throws
+        // UserNotAuthenticatedException or requires a biometric timing window.
+        val passphrase = runBlocking { cryptoManager.getDatabasePassphrase() }
 
         return Room.databaseBuilder(
             context,
             QuantumMessengerDatabase::class.java,
             QuantumMessengerDatabase.DATABASE_NAME
         )
-            .openHelperFactory(factory)
+            .openHelperFactory(ReusableSupportFactory(passphrase))
             .fallbackToDestructiveMigration()
             .build()
     }

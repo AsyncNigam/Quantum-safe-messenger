@@ -78,7 +78,7 @@ data class RegisterRequest(
 
 data class RegisterResponse(
     val success: Boolean,
-    val textFingerprint: String
+    val textFingerprint: String?
 )
 
 data class KeySyncResponse(
@@ -88,10 +88,10 @@ data class KeySyncResponse(
 )
 
 data class KeyBundleDto(
-    val fingerprint: String,
-    val x25519PublicKey: String,
-    val mlKemPublicKey: String,
-    val createdAt: String
+    val fingerprint: String?,
+    val x25519PublicKey: String?,
+    val mlKemPublicKey: String?,
+    val createdAt: String?
 )
 
 data class KeyUploadRequest(
@@ -103,9 +103,9 @@ data class KeyUploadRequest(
 
 data class LookupResponse(
     val success: Boolean,
-    val fingerprint: String,
-    val mlKemPublicKey: String,
-    val x25519PublicKey: String
+    val fingerprint: String?,
+    val mlKemPublicKey: String?,
+    val x25519PublicKey: String?
 )
 
 data class FcmTokenRequest(

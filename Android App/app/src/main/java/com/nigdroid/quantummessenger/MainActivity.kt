@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    // ── Screen stack with Blur overlay ───────────────────────────
+                    // ── Screen stack ─────────────────────────────────────────────
                     Box(modifier = Modifier.fillMaxSize()) {
                         val isLocked = lockState != LockState.Unlocked && lockState != LockState.WipeComplete
 
@@ -116,8 +116,7 @@ class MainActivity : AppCompatActivity() {
                             val navController = rememberNavController()
                             AppNavigation(
                                 navController    = navController,
-                                startDestination = if (lockState is LockState.WipeComplete) AuthRoute else (startDestination ?: HomeRoute),
-                                modifier         = Modifier.blur(if (isLocked) 25.dp else 0.dp)
+                                startDestination = if (lockState is LockState.WipeComplete) AuthRoute else (startDestination ?: HomeRoute)
                             )
                         } else {
                             Box(
@@ -130,6 +129,13 @@ class MainActivity : AppCompatActivity() {
 
                         // Authentication Overlay (LockedScreen)
                         if (isLocked) {
+                            // Semi-transparent background to hide the UI beneath efficiently
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.98f))
+                            )
+
                             when (lockState) {
                                 is LockState.VaultCompromised, is LockState.Wiping -> {
                                     VaultCompromisedScreen(

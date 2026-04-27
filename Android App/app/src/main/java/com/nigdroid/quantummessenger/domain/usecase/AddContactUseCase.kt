@@ -61,12 +61,16 @@ class AddContactUseCase @Inject constructor(
 
             val body = response.body() ?: return@withContext Result.Error("Empty response from server.")
 
+            val fingerprint = body.fingerprint ?: return@withContext Result.Error("Response missing fingerprint.")
+            val mlKem = body.mlKemPublicKey ?: return@withContext Result.Error("Response missing ML-KEM key.")
+            val x25519 = body.x25519PublicKey ?: return@withContext Result.Error("Response missing X25519 key.")
+
             // Save to local Room database with display name
             val contact = ContactEntity(
-                userId         = body.fingerprint,
+                userId         = fingerprint,
                 displayName    = displayName?.takeIf { it.isNotBlank() },
-                mlKemPublicKey = body.mlKemPublicKey,
-                x25519PublicKey = body.x25519PublicKey
+                mlKemPublicKey = mlKem,
+                x25519PublicKey = x25519
             )
             contactDao.insertContact(contact)
 

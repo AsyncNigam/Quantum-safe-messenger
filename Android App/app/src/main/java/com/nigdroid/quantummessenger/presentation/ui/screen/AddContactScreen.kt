@@ -156,7 +156,7 @@ fun AddContactScreen(
 
         Scaffold(
             containerColor = Color.Transparent,
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = WindowInsets(0.dp),
             topBar = {
                 ScannerTopBar(
                     showManualInput = showManualInput,
@@ -214,7 +214,7 @@ private fun QrScannerCamera(onQrScanned: (String) -> Unit) {
         factory = { ctx ->
             val previewView = PreviewView(ctx).apply {
                 scaleType = PreviewView.ScaleType.FILL_CENTER
-                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                implementationMode = PreviewView.ImplementationMode.PERFORMANCE
             }
 
             val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
@@ -371,36 +371,41 @@ private fun ScannerOverlay() {
 
 @Composable
 private fun ScannerTopBar(showManualInput: Boolean, onToggleMode: () -> Unit) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(QuantumColors.GlassWhite08)
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 0.dp)
-            .height(64.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column {
-            Text("Add Contact", style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.ExtraBold, color = QuantumColors.TextPrimary)
-            Text(
-                if (showManualInput) "Enter fingerprint manually" else "Point camera at a QR code",
-                style = MaterialTheme.typography.bodySmall, color = QuantumColors.TextSecondary
-            )
-        }
-        IconButton(
-            onClick = onToggleMode,
-            modifier = Modifier.size(44.dp)
-                .glassmorphism(cornerRadius = 14, overlayAlpha = 0.15f)
-                .background(QuantumColors.GlassWhite12, RoundedCornerShape(14.dp))
-                .clip(RoundedCornerShape(14.dp))
+        Spacer(Modifier.statusBarsPadding())
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .height(64.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(
-                if (showManualInput) Icons.Default.CameraAlt else Icons.Default.Keyboard,
-                contentDescription = "Toggle mode", tint = QuantumColors.TextPrimary,
-                modifier = Modifier.size(20.dp)
-            )
+            Column {
+                Text("Add Contact", style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold, color = QuantumColors.TextPrimary)
+                Text(
+                    if (showManualInput) "Enter fingerprint manually" else "Point camera at a QR code",
+                    style = MaterialTheme.typography.bodySmall, color = QuantumColors.TextSecondary
+                )
+            }
+            IconButton(
+                onClick = onToggleMode,
+                modifier = Modifier.size(44.dp)
+                    .glassmorphism(cornerRadius = 14, overlayAlpha = 0.15f)
+                    .background(QuantumColors.GlassWhite12, RoundedCornerShape(14.dp))
+                    .clip(RoundedCornerShape(14.dp))
+            ) {
+                Icon(
+                    if (showManualInput) Icons.Default.CameraAlt else Icons.Default.Keyboard,
+                    contentDescription = "Toggle mode", tint = QuantumColors.TextPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }

@@ -55,23 +55,28 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
 
         Scaffold(
             containerColor = Color.Transparent,
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = WindowInsets(0.dp),
             topBar = {
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(QuantumColors.GlassWhite08)
-                        .statusBarsPadding()
-                        .padding(horizontal = 24.dp, vertical = 0.dp)
-                        .height(64.dp),
-                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(
-                        text = "Identity",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = QuantumColors.TextPrimary
-                    )
+                    Spacer(Modifier.statusBarsPadding())
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .height(64.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Text(
+                            text = "Identity",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = QuantumColors.TextPrimary
+                        )
+                    }
                 }
             }
         ) { padding ->
@@ -276,19 +281,29 @@ private fun QrCodeCard(fingerprint: String) {
             .clip(RoundedCornerShape(20.dp))
             .padding(20.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth(), // ← add this
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.QrCode2, null, tint = QuantumColors.Primary, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Identity QR Code", style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold, color = QuantumColors.TextPrimary)
             }
-            Text("Others can scan this to add you as a contact.",
-                style = MaterialTheme.typography.bodySmall, color = QuantumColors.TextTertiary)
+            Text(
+                text = "Others can scan this to add you as a contact.",
+                style = MaterialTheme.typography.bodySmall,
+                color = QuantumColors.TextTertiary,
+                textAlign = TextAlign.Center, // ← center the subtitle too
+                modifier = Modifier.fillMaxWidth()
+            )
             if (qrBitmap != null) {
                 Box(
-                    Modifier.size(200.dp)
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally) // ← explicit centering
+                        .size(200.dp)
                         .background(Color.White, RoundedCornerShape(12.dp))
                         .clip(RoundedCornerShape(12.dp))
                         .padding(8.dp),
@@ -439,7 +454,11 @@ private fun AboutPqcBottomSheet(onDismiss: () -> Unit) {
         }
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp).padding(bottom = 40.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 28.dp)
+                .padding(bottom = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
@@ -455,7 +474,7 @@ private fun AboutPqcBottomSheet(onDismiss: () -> Unit) {
                 Icon(Icons.Default.Security, null, tint = Color.White, modifier = Modifier.size(32.dp))
             }
 
-            Text("Post-Quantum Encryption", style = MaterialTheme.typography.headlineSmall,
+            Text("Quantum Safe", style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold, color = QuantumColors.TextPrimary,
                 textAlign = TextAlign.Center)
 
