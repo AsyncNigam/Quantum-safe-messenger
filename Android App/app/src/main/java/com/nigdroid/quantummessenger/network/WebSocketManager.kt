@@ -70,12 +70,36 @@ class WebSocketManager @Inject constructor() {
                 _events.tryEmit(SocketEvent.Error(error))
             }
 
-            // Incoming message from server → parse Protobuf bytes (legacy)
+            // Incoming message from server → JSON envelope { from, payload, sentAt }
+            // The payload field is a base64-encoded protobuf that was sent by the other client.
             on("receive_message") { args ->
                 try {
-                    val bytes = args[0] as ByteArray
-                    val message = ProtoMessage.parseFrom(bytes)
-                    _events.tryEmit(SocketEvent.MessageReceived(message))
+                    val raw = args[0]
+                    when (raw) {
+                        is ByteArray -> {
+                            // Legacy: raw protobuf bytes (shouldn't happen with current backend)
+                            val message = ProtoMessage.parseFrom(raw)
+                            _events.tryEmit(SocketEvent.MessageReceived(message))
+                        }
+                        is JSONObject -> {
+                            // Current format: JSON envelope from SocketController
+                            val payloadB64 = raw.getString("payload")
+                            val payloadBytes = android.util.Base64.decode(payloadB64, android.util.Base64.NO_WRAP)
+                            val message = ProtoMessage.parseFrom(payloadBytes)
+                            _events.tryEmit(SocketEvent.MessageReceived(message))
+                        }
+                        is String -> {
+                            // String JSON (from offline queue drain — stored as JSON.stringify)
+                            val json = JSONObject(raw)
+                            val payloadB64 = json.getString("payload")
+                            val payloadBytes = android.util.Base64.decode(payloadB64, android.util.Base64.NO_WRAP)
+                            val message = ProtoMessage.parseFrom(payloadBytes)
+                            _events.tryEmit(SocketEvent.MessageReceived(message))
+                        }
+                        else -> {
+                            _events.tryEmit(SocketEvent.Error("Unknown message format: ${raw?.javaClass?.name}"))
+                        }
+                    }
                 } catch (e: Exception) {
                     _events.tryEmit(SocketEvent.Error("Parse error: ${e.message}"))
                 }
