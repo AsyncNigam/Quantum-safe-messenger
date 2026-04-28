@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import com.nigdroid.quantummessenger.data.security.VaultWipeManager
 import com.nigdroid.quantummessenger.domain.repository.AuthRepository
+import com.nigdroid.quantummessenger.network.WebSocketManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +26,8 @@ sealed class AccountActionState {
 class ProfileViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val authRepository: AuthRepository,
-    private val vaultWipeManager: VaultWipeManager
+    private val vaultWipeManager: VaultWipeManager,
+    private val webSocketManager: WebSocketManager
 ) : ViewModel() {
 
     private val _fingerprint = MutableStateFlow<String?>(null)
@@ -110,6 +112,7 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _accountAction.value = AccountActionState.Loading
             try {
+                webSocketManager.disconnect()
                 sessionManager.setUserRegistered(false)
                 _accountAction.value = AccountActionState.Success
             } catch (e: Exception) {
