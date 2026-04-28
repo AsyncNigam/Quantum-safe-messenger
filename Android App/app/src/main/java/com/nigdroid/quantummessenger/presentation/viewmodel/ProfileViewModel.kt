@@ -100,15 +100,17 @@ class ProfileViewModel @Inject constructor(
     // ── Logout ───────────────────────────────────────────────────────────────
 
     /**
-     * Logout — wipe all local data (keys, DB, session).
-     * Does NOT delete the account on the backend; the identity remains active.
-     * After this, the app navigates to AuthScreen for fresh registration.
+     * Logout — clears the registration flag so the app shows the AuthScreen.
+     * Does NOT wipe local data (keys, messages, contacts, database remain intact).
+     * Does NOT delete the account on the backend.
+     * The user can log back in by tapping "Generate Identity" again,
+     * which will detect existing keys and re-authenticate with the same fingerprint.
      */
     fun logout() {
         viewModelScope.launch {
             _accountAction.value = AccountActionState.Loading
             try {
-                vaultWipeManager.executeZeroTrustWipe()
+                sessionManager.setUserRegistered(false)
                 _accountAction.value = AccountActionState.Success
             } catch (e: Exception) {
                 _accountAction.value = AccountActionState.Error(

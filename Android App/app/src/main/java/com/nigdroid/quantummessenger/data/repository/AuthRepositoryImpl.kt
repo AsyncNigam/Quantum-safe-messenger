@@ -28,30 +28,48 @@ class AuthRepositoryImpl @Inject constructor(
 
     /**
      * Full ZK registration flow:
-     *  1. Generate ML-KEM + X25519 keypairs (on device, in Keystore)
-     *  2. POST the Base64 public keys to /auth/register
-     *  3. Receive the textFingerprint from the server
-     *  4. Persist the fingerprint in encrypted DataStore
-     *  5. Mark the user as registered
+     *  1. Check if keys already exist in DataStore (logout scenario)
+     *  2. If not, generate ML-KEM + X25519 keypairs (on device, in Keystore)
+     *  3. POST the Base64 public keys to /auth/register (idempotent)
+     *  4. Receive the textFingerprint from the server
+     *  5. Persist the fingerprint in encrypted DataStore
+     *  6. Mark the user as registered
      */
     override suspend fun generateAndRegisterIdentity(): IdentityGenerationResult =
         withContext(Dispatchers.IO) {
-            // Step 1: Generate keys
-            val keysResult = generateIdentityUseCase()
-            if (keysResult.isFailure) {
-                return@withContext IdentityGenerationResult.Error(
-                    exception = keysResult.exceptionOrNull() as? Exception
-                        ?: Exception("Key generation failed"),
-                    message   = keysResult.exceptionOrNull()?.message ?: "Key generation failed"
-                )
+            // Step 1: Check if we already have keys (user logged out, not deleted)
+            val existingMlKem   = sessionManager.mlKemPublicKey.firstOrNull()
+            val existingX25519  = sessionManager.x25519PublicKey.firstOrNull()
+
+            val mlKemB64: String
+            val x25519B64: String
+            val mlKemBytes: ByteArray
+            val x25519Bytes: ByteArray
+
+            if (existingMlKem != null && existingX25519 != null) {
+                // Re-login: reuse existing keys
+                mlKemB64    = existingMlKem
+                x25519B64   = existingX25519
+                mlKemBytes  = Base64.decode(existingMlKem, Base64.NO_WRAP)
+                x25519Bytes = Base64.decode(existingX25519, Base64.NO_WRAP)
+            } else {
+                // Fresh registration: generate new keys
+                val keysResult = generateIdentityUseCase()
+                if (keysResult.isFailure) {
+                    return@withContext IdentityGenerationResult.Error(
+                        exception = keysResult.exceptionOrNull() as? Exception
+                            ?: Exception("Key generation failed"),
+                        message   = keysResult.exceptionOrNull()?.message ?: "Key generation failed"
+                    )
+                }
+                val keys = keysResult.getOrThrow()
+                mlKemBytes  = keys.mlKemPublicKey
+                x25519Bytes = keys.x25519PublicKey
+                mlKemB64    = Base64.encodeToString(mlKemBytes, Base64.NO_WRAP)
+                x25519B64   = Base64.encodeToString(x25519Bytes, Base64.NO_WRAP)
             }
 
-            val keys = keysResult.getOrThrow()
-
-            // Step 2: Encode and register with backend
-            val mlKemB64   = Base64.encodeToString(keys.mlKemPublicKey,  Base64.NO_WRAP)
-            val x25519B64  = Base64.encodeToString(keys.x25519PublicKey, Base64.NO_WRAP)
-
+            // Step 2: Register with backend (idempotent upsert — safe to call again)
             try {
                 val response = authService.register(
                     RegisterRequest(
@@ -80,8 +98,8 @@ class AuthRepositoryImpl @Inject constructor(
                 // Step 3: Build the local Identity object
                 val identity = Identity(
                     textFingerprint  = fingerprint,
-                    mlKemPublicKey   = keys.mlKemPublicKey,
-                    x25519PublicKey  = keys.x25519PublicKey
+                    mlKemPublicKey   = mlKemBytes,
+                    x25519PublicKey  = x25519Bytes
                 )
 
                 // Step 4: Persist fingerprint and public keys in encrypted DataStore

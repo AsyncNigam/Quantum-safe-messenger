@@ -181,10 +181,9 @@ fun ProfileScreen(
     if (showLogoutDialog) {
         ConfirmationDialog(
             title = "Logout",
-            message = "This will erase all local data (keys, messages, contacts) " +
-                    "from this device. Your identity stays active on the server " +
-                    "but you won\u2019t be able to receive messages.\n\n" +
-                    "You will need to generate a new identity on next launch.",
+            message = "You will be logged out and taken to the registration screen.\n\n" +
+                    "Your keys, messages and contacts will stay on this device. " +
+                    "Tap \u201cGenerate Identity\u201d to log back into the same account.",
             confirmText = "Logout",
             confirmColor = QuantumColors.Warning,
             icon = Icons.AutoMirrored.Filled.Logout,
