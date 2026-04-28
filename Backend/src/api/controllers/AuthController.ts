@@ -161,6 +161,10 @@ export class AuthController {
 
       await this.userRepo.softDeleteUser(fingerprint);
 
+      try {
+        await this.fcmService.removeToken(fingerprint);
+      } catch (_) {}
+
       console.log(`[Auth] 🗑️ Account deleted | fingerprint=${fingerprint.slice(0, 12)}…`);
 
       res.status(200).json({

@@ -389,12 +389,30 @@ private fun ChatScreenContent(
 
             // ── Input bar (always visible) ───────────────────────────────────
             val isSending = (uiState as? ChatUiState.Success)?.isSending ?: false
-            ChatInputBar(
-                messageInput  = messageInput,
-                onInputChange = onInputChange,
-                onSend        = onSend,
-                isSending     = isSending
-            )
+            val recipientDeleted = (uiState as? ChatUiState.Success)?.recipientDeleted ?: false
+            if (recipientDeleted) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF2D1B1B))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "⚠️ This account has been deleted",
+                        color = Color(0xFFFF6B6B),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                }
+            } else {
+                ChatInputBar(
+                    messageInput  = messageInput,
+                    onInputChange = onInputChange,
+                    onSend        = onSend,
+                    isSending     = isSending
+                )
+            }
         }
     }
 }

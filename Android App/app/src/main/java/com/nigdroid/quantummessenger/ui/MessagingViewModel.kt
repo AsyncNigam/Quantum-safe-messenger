@@ -148,6 +148,8 @@ class MessagingViewModel @Inject constructor(
                     is SocketEvent.EncryptedMessageReceived -> {
                         handleIncomingEncryptedMessage(event.envelope)
                     }
+
+                    is SocketEvent.UserDeleted -> { }
                 }
             }
         }

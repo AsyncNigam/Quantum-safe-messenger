@@ -53,13 +53,11 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
 
-            // Connect WebSocket so we appear online to the server
+            observeIncomingMessages()
+
             if (!webSocketManager.isConnected()) {
                 webSocketManager.connect(currentUserId!!)
             }
-
-            // Start listening for incoming messages globally
-            observeIncomingMessages()
 
             // Combine inbox items, contacts, and search query into a single flow
             combine(

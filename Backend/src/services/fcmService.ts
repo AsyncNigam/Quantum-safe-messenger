@@ -105,7 +105,7 @@ export class FcmService {
   /**
    * Remove a stale FCM token.
    */
-  private async removeToken(fingerprint: string): Promise<void> {
+  async removeToken(fingerprint: string): Promise<void> {
     await this.db
       .from('fcm_tokens')
       .delete()

@@ -87,10 +87,8 @@ class ChatViewModel @Inject constructor(
                 webSocketManager.connect(currentUserId)
             }
 
-            // Load chat history and observe for changes
-            // (Incoming messages are handled globally by HomeViewModel,
-            //  which saves them to Room. This Flow auto-updates when Room changes.)
             loadChatHistory()
+            observeDeletedEvents()
         }
     }
 
@@ -127,6 +125,22 @@ class ChatViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update {
                     ChatUiState.Error("Unexpected error: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun observeDeletedEvents() {
+        viewModelScope.launch {
+            webSocketManager.events.collect { event ->
+                if (event is com.nigdroid.quantummessenger.network.SocketEvent.UserDeleted &&
+                    event.fingerprint == recipientUserId) {
+                    _uiState.update { current ->
+                        when (current) {
+                            is ChatUiState.Success -> current.copy(recipientDeleted = true)
+                            else -> current
+                        }
+                    }
                 }
             }
         }

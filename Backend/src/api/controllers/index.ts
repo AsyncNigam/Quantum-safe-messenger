@@ -12,7 +12,7 @@ export const authController = new AuthController(userRepository, fcmService);
 export const keyController = new KeyController(keyRepository);
 
 /** Singleton SocketController — receives shared MessageService and FcmService */
-export const socketController = new SocketController(messageService, fcmService);
+export const socketController = new SocketController(messageService, fcmService, userRepository);
 
 // Export classes for type safety in other files
 export * from './AuthController';

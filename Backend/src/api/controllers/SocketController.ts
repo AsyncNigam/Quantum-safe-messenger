@@ -1,12 +1,14 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { MessageService } from '../../services/MessageService';
 import { FcmService } from '../../services/fcmService';
+import { UserRepository } from '../../repositories/UserRepository';
 import { redisAvailable } from '../../config/redis';
 
 export class SocketController {
   constructor(
     private readonly messageService: MessageService,
     private readonly fcmService: FcmService,
+    private readonly userRepo: UserRepository,
   ) {}
 
   private async isOnline(io: SocketIOServer, fingerprint: string): Promise<boolean> {
@@ -64,6 +66,16 @@ export class SocketController {
 
         if (!payload) {
           console.warn(`[Socket] Invalid send_message — missing 'payload' | socket=${socket.id}`);
+          return;
+        }
+
+        const recipient = await this.userRepo.findByFingerprint(to);
+        if (!recipient) {
+          socket.emit('user_not_found', { fingerprint: to });
+          return;
+        }
+        if (recipient.deletedAt) {
+          socket.emit('user_deleted', { fingerprint: to });
           return;
         }
 

@@ -19,6 +19,7 @@ import javax.inject.Singleton
 sealed class SocketEvent {
     data class MessageReceived(val message: ProtoMessage) : SocketEvent()
     data class EncryptedMessageReceived(val envelope: EncryptedEnvelope) : SocketEvent()
+    data class UserDeleted(val fingerprint: String) : SocketEvent()
     data object Connected : SocketEvent()
     data object Disconnected : SocketEvent()
     data class Error(val error: String) : SocketEvent()
@@ -118,6 +119,14 @@ class WebSocketManager @Inject constructor() {
                 } catch (e: Exception) {
                     _events.tryEmit(SocketEvent.Error("Encrypted message parse error: ${e.message}"))
                 }
+            }
+
+            on("user_deleted") { args ->
+                try {
+                    val json = args[0] as JSONObject
+                    val fp = json.getString("fingerprint")
+                    _events.tryEmit(SocketEvent.UserDeleted(fp))
+                } catch (_: Exception) {}
             }
 
             connect()

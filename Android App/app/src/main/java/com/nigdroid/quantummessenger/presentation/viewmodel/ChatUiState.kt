@@ -23,7 +23,8 @@ sealed class ChatUiState {
         val isSending: Boolean = false,
         val currentUserId: String = "",
         val contactName: String? = null,
-        val isContactSaved: Boolean = false
+        val isContactSaved: Boolean = false,
+        val recipientDeleted: Boolean = false
     ) : ChatUiState()
 
     /**
