@@ -8,4 +8,6 @@ export interface IUser {
   mlKemPublicKey: string;   // Base64
   x25519PublicKey: string;  // Base64
   createdAt?: string;
+  /** ISO timestamp when the account was soft-deleted, null if active */
+  deletedAt?: string | null;
 }

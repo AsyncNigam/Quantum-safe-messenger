@@ -9,7 +9,9 @@ import com.nigdroid.quantummessenger.domain.usecase.GenerateIdentityUseCase
 import com.nigdroid.quantummessenger.network.api.AuthenticationService
 import com.nigdroid.quantummessenger.network.api.RegisterRequest
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
+import com.nigdroid.quantummessenger.data.security.VaultWipeManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import com.nigdroid.quantummessenger.network.fcm.FcmTokenManager
 import javax.inject.Inject
@@ -20,7 +22,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val authService: AuthenticationService,
     private val generateIdentityUseCase: GenerateIdentityUseCase,
     private val sessionManager: SessionManager,
-    private val fcmTokenManager: FcmTokenManager
+    private val fcmTokenManager: FcmTokenManager,
+    private val vaultWipeManager: VaultWipeManager
 ) : AuthRepository {
 
     /**
@@ -117,4 +120,33 @@ class AuthRepositoryImpl @Inject constructor(
             sessionManager.setUserRegistered(false)
         }
     }
+
+    /**
+     * Delete the account on the backend (soft-delete), then wipe all local data.
+     *
+     * @return true if the backend confirmed deletion, false on network/server error
+     */
+    override suspend fun deleteAccount(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            // Get the current fingerprint for the Bearer token
+            val fingerprint = sessionManager.textFingerprint.firstOrNull()
+                ?: return@withContext false
+
+            val response = authService.deleteAccount("Bearer $fingerprint")
+
+            if (!response.isSuccessful) {
+                android.util.Log.e("AuthRepo", "Delete account failed: HTTP ${response.code()}")
+                return@withContext false
+            }
+
+            // Backend confirmed deletion — now wipe all local data
+            vaultWipeManager.executeZeroTrustWipe()
+
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("AuthRepo", "Delete account error: ${e.message}")
+            false
+        }
+    }
 }
+

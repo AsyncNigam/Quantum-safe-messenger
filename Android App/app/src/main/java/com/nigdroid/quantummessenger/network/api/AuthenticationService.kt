@@ -2,6 +2,7 @@ package com.nigdroid.quantummessenger.network.api
 
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -61,6 +62,19 @@ interface AuthenticationService {
         @Header("Authorization") auth: String,
         @Body request: FcmTokenRequest
     ): Response<GenericResponse>
+
+    /**
+     * DELETE /api/auth/account
+     *
+     * Soft-delete the authenticated user's account.
+     * Wipes public keys from backend but keeps the fingerprint row
+     * so contacts can detect "Deleted Account".
+     * Requires Bearer auth.
+     */
+    @DELETE("api/auth/account")
+    suspend fun deleteAccount(
+        @Header("Authorization") auth: String
+    ): Response<GenericResponse>
 }
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────
@@ -105,7 +119,9 @@ data class LookupResponse(
     val success: Boolean,
     val fingerprint: String?,
     val mlKemPublicKey: String?,
-    val x25519PublicKey: String?
+    val x25519PublicKey: String?,
+    val deleted: Boolean? = false,
+    val deletedAt: String? = null
 )
 
 data class FcmTokenRequest(

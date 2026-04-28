@@ -74,13 +74,26 @@ export class AuthController {
         return;
       }
 
+      // If the account is soft-deleted, return a slim response with the deleted flag
+      if (user.deletedAt) {
+        console.log(`[Auth] 🔍 Lookup (deleted) | fingerprint=${fingerprint.slice(0, 12)}…`);
+        res.status(200).json({
+          success:     true,
+          fingerprint: user.fingerprint,
+          deleted:     true,
+          deletedAt:   user.deletedAt,
+        });
+        return;
+      }
+
       console.log(`[Auth] 🔍 Lookup | fingerprint=${fingerprint.slice(0, 12)}…`);
 
       res.status(200).json({
-        success: true,
+        success:         true,
         fingerprint:     user.fingerprint,
         mlKemPublicKey:  user.mlKemPublicKey,
         x25519PublicKey: user.x25519PublicKey,
+        deleted:         false,
       });
     } catch (err) {
       next(err);
@@ -119,6 +132,40 @@ export class AuthController {
       res.status(200).json({
         success: true,
         message: 'FCM token registered',
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  /**
+   * DELETE /auth/account
+   *
+   * Soft-delete the authenticated user's account.
+   * Wipes public keys from the database but keeps the fingerprint row
+   * so that contacts can detect the user as "Deleted Account".
+   * Requires Bearer auth.
+   */
+  public deleteAccount = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const fingerprint = req.user?.fingerprint;
+
+      if (!fingerprint) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+      }
+
+      await this.userRepo.softDeleteUser(fingerprint);
+
+      console.log(`[Auth] 🗑️ Account deleted | fingerprint=${fingerprint.slice(0, 12)}…`);
+
+      res.status(200).json({
+        success: true,
+        message: 'Account deleted successfully',
       });
     } catch (err) {
       next(err);

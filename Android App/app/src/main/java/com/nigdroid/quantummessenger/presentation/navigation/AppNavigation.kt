@@ -140,7 +140,13 @@ fun AppNavigation(
                 popEnterTransition = { fadeIn(tween(260)) },
                 popExitTransition  = { fadeOut(tween(200)) }
             ) {
-                ProfileScreen()
+                ProfileScreen(
+                    onAccountCleared = {
+                        navController.navigate(AuthRoute) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable<ChatRoute>(

@@ -33,4 +33,12 @@ interface AuthRepository {
      * Wipe all local identity data (factory reset).
      */
     suspend fun clearIdentity()
+
+    /**
+     * Delete the user's account on the backend (soft-delete),
+     * then wipe all local identity data.
+     *
+     * @return true if backend deletion succeeded, false on error
+     */
+    suspend fun deleteAccount(): Boolean
 }

@@ -43,5 +43,19 @@ router.post(
   authController.registerFcmToken,
 );
 
+/**
+ * DELETE /auth/account
+ *
+ * Soft-delete the authenticated user's account.
+ * Wipes public keys but keeps the fingerprint row
+ * so contacts can detect "Deleted Account".
+ * Requires Bearer auth.
+ */
+router.delete(
+  '/account',
+  authMiddleware,
+  authController.deleteAccount,
+);
+
 export default router;
 
