@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.nigdroid.quantummessenger.data.local.ChatMessageDao
 import com.nigdroid.quantummessenger.data.local.ContactDao
 import com.nigdroid.quantummessenger.network.WebSocketManager
+import com.nigdroid.quantummessenger.network.notification.NotificationSoundManager
 import com.nigdroid.quantummessenger.domain.model.ChatMessage
 import com.nigdroid.quantummessenger.domain.model.MessageType
 import com.nigdroid.quantummessenger.domain.usecase.GetChatHistoryUseCase
@@ -12,14 +13,10 @@ import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageResult
 import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SendMessageUseCase
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
+import com.nigdroid.quantummessenger.network.SocketEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -43,20 +40,19 @@ class ChatViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val contactDao: ContactDao,
     private val chatMessageDao: ChatMessageDao,
-    private val webSocketManager: WebSocketManager
+    private val webSocketManager: WebSocketManager,
+    private val notificationSoundManager: NotificationSoundManager
 ) : ViewModel() {
 
-    // Private mutable state
     private val _uiState = MutableStateFlow<ChatUiState>(ChatUiState.Loading)
 
-    // Public immutable state for UI consumption
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
-    // Current user and recipient IDs
     private var currentUserId: String = ""
     private var recipientUserId: String = ""
     private var contactName: String? = null
     private var isContactSaved: Boolean = false
+    private var isNotificationsMuted: Boolean = false
 
     /**
      * Initializes the ViewModel with the recipient and starts observing messages.
@@ -111,14 +107,14 @@ class ChatViewModel @Inject constructor(
                         }
                     }
                     .collect { messages ->
-                        // Update UI with loaded messages
                         _uiState.update { currentState ->
                             ChatUiState.Success(
                                 messages = messages,
                                 isSending = (currentState as? ChatUiState.Success)?.isSending ?: false,
                                 currentUserId = currentUserId,
                                 contactName = contactName,
-                                isContactSaved = isContactSaved
+                                isContactSaved = isContactSaved,
+                                isNotificationsMuted = isNotificationsMuted
                             )
                         }
                     }
@@ -133,7 +129,7 @@ class ChatViewModel @Inject constructor(
     private fun observeDeletedEvents() {
         viewModelScope.launch {
             webSocketManager.events.collect { event ->
-                if (event is com.nigdroid.quantummessenger.network.SocketEvent.UserDeleted &&
+                if (event is SocketEvent.UserDeleted &&
                     event.fingerprint == recipientUserId) {
                     _uiState.update { current ->
                         when (current) {
@@ -156,11 +152,11 @@ class ChatViewModel @Inject constructor(
                 .collect { result ->
                     when (result) {
                         is ReceiveMessageResult.Success -> {
-                            // Message was successfully saved to database
-                            // The UI will automatically update via the chat history flow
+                            if (!isNotificationsMuted) {
+                                notificationSoundManager.playNotification()
+                            }
                         }
                         is ReceiveMessageResult.Error -> {
-                            // Handle error without crashing the app
                             _uiState.update { currentState ->
                                 when (currentState) {
                                     is ChatUiState.Success -> {
@@ -178,7 +174,7 @@ class ChatViewModel @Inject constructor(
                             // After a brief delay, return to success state if messages exist
                             val currentMessages = (_uiState.value as? ChatUiState.Success)?.messages
                             if (currentMessages != null && currentMessages.isNotEmpty()) {
-                                kotlinx.coroutines.delay(3000) // Show error for 3 seconds
+                                delay(3000) // Show error for 3 seconds
                                 _uiState.update {
                                     ChatUiState.Success(messages = currentMessages)
                                 }
@@ -256,7 +252,7 @@ class ChatViewModel @Inject constructor(
                 // After a brief delay, return to success state if messages exist
                 val currentMessages = (_uiState.value as? ChatUiState.Success)?.messages
                 if (currentMessages != null && currentMessages.isNotEmpty()) {
-                    kotlinx.coroutines.delay(3000)
+                    delay(3000)
                     _uiState.update {
                         ChatUiState.Success(messages = currentMessages)
                     }
@@ -342,37 +338,30 @@ class ChatViewModel @Inject constructor(
     fun saveContact(displayName: String? = null) {
         viewModelScope.launch {
             try {
-                // First, fetch the contact's public keys from the server (required)
-                // For now, we'll create a placeholder
                 val existingContact = contactDao.getContactById(recipientUserId)
                 
                 if (existingContact != null) {
-                    // Contact already exists, just update the display name
                     val updated = existingContact.copy(displayName = displayName)
                     contactDao.insertContact(updated)
                     contactName = displayName
                     isContactSaved = true
+                    
+                    _uiState.update { currentState ->
+                        if (currentState is ChatUiState.Success) {
+                            currentState.copy(
+                                contactName = contactName,
+                                isContactSaved = true
+                            )
+                        } else {
+                            currentState
+                        }
+                    }
                 } else {
-                    // Cannot save contact without its public keys
-                    // This should be handled by AddContactUseCase in normal flow
                     _uiState.update { currentState ->
                         ChatUiState.Error(
-                            message = "Cannot save contact — public keys not available. Please add via fingerprint first.",
+                            message = "Contact not found",
                             messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
                         )
-                    }
-                    return@launch
-                }
-                
-                // Update UI
-                _uiState.update { currentState ->
-                    if (currentState is ChatUiState.Success) {
-                        currentState.copy(
-                            contactName = contactName,
-                            isContactSaved = true
-                        )
-                    } else {
-                        currentState
                     }
                 }
             } catch (e: Exception) {
@@ -425,6 +414,19 @@ class ChatViewModel @Inject constructor(
                         messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
                     )
                 }
+            }
+        }
+    }
+
+    fun toggleMuteNotifications() {
+        isNotificationsMuted = !isNotificationsMuted
+        notificationSoundManager.setMuted(isNotificationsMuted)
+        
+        _uiState.update { currentState ->
+            if (currentState is ChatUiState.Success) {
+                currentState.copy(isNotificationsMuted = isNotificationsMuted)
+            } else {
+                currentState
             }
         }
     }

@@ -7,9 +7,11 @@ import com.nigdroid.quantummessenger.data.local.ContactDao
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import com.nigdroid.quantummessenger.domain.model.InboxItem
 import com.nigdroid.quantummessenger.domain.usecase.GetInboxUseCase
+import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageResult
 import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SyncContactsUseCase
 import com.nigdroid.quantummessenger.network.WebSocketManager
+import com.nigdroid.quantummessenger.network.notification.NotificationSoundManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -26,7 +28,8 @@ class HomeViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val contactDao: ContactDao,
     private val webSocketManager: WebSocketManager,
-    private val receiveMessageUseCase: ReceiveMessageUseCase
+    private val receiveMessageUseCase: ReceiveMessageUseCase,
+    private val notificationSoundManager: NotificationSoundManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -128,7 +131,11 @@ class HomeViewModel @Inject constructor(
     private fun observeIncomingMessages() {
         viewModelScope.launch {
             receiveMessageUseCase()
-                .collect { /* Results auto-saved to Room → inbox flow updates */ }
+                .collect { result ->
+                    if (result is ReceiveMessageResult.Success) {
+                        notificationSoundManager.playNotification()
+                    }
+                }
         }
     }
 }

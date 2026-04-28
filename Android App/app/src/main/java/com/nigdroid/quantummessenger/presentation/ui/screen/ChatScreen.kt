@@ -314,7 +314,8 @@ fun ChatScreen(
         onRenameContact = { 
             contactNameInput = (uiState as? ChatUiState.Success)?.contactName ?: ""
             showRenameContactDialog = true 
-        }
+        },
+        onMuteNotifications = { viewModel.toggleMuteNotifications() }
     )
 }
 
@@ -335,7 +336,8 @@ private fun ChatScreenContent(
     onRetry       : () -> Unit,
     onClearChat   : () -> Unit = {},
     onSaveContact : () -> Unit = {},
-    onRenameContact : () -> Unit = {}
+    onRenameContact : () -> Unit = {},
+    onMuteNotifications : () -> Unit = {}
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -350,6 +352,7 @@ private fun ChatScreenContent(
             // ── Header ───────────────────────────────────────────────────────
             val contactName = (uiState as? ChatUiState.Success)?.contactName
             val isContactSaved = (uiState as? ChatUiState.Success)?.isContactSaved ?: false
+            val isNotificationsMuted = (uiState as? ChatUiState.Success)?.isNotificationsMuted ?: false
             ChatHeader(
                 participantInitial = (contactName?.firstOrNull() ?: participantId.firstOrNull())
                     ?.uppercaseChar()?.toString() ?: "?",
@@ -358,7 +361,9 @@ private fun ChatScreenContent(
                 onClearChat        = onClearChat,
                 onSaveContact      = onSaveContact,
                 onRenameContact    = onRenameContact,
-                isContactSaved     = isContactSaved
+                isContactSaved     = isContactSaved,
+                onMuteNotifications = onMuteNotifications,
+                isNotificationsMuted = isNotificationsMuted
             )
 
             // ── Content ──────────────────────────────────────────────────────
@@ -429,7 +434,9 @@ private fun ChatHeader(
     onClearChat        : () -> Unit = {},
     onSaveContact      : () -> Unit = {},
     onRenameContact    : () -> Unit = {},
-    isContactSaved     : Boolean = false
+    isContactSaved     : Boolean = false,
+    onMuteNotifications : () -> Unit = {},
+    isNotificationsMuted : Boolean = false
 ) {
     Column(
         modifier = Modifier
@@ -520,13 +527,8 @@ private fun ChatHeader(
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Search", color = QuantumColors.TextPrimary) },
-                        onClick = { showMenu = false },
-                        leadingIcon = { Icon(Icons.Default.MoreVert, null, tint = QuantumColors.Primary) }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Mute Notifications", color = QuantumColors.TextPrimary) },
-                        onClick = { showMenu = false },
+                        text = { Text(if (isNotificationsMuted) "Unmute Notifications" else "Mute Notifications", color = QuantumColors.TextPrimary) },
+                        onClick = { showMenu = false; onMuteNotifications() },
                         leadingIcon = { Icon(Icons.Default.AccessTime, null, tint = QuantumColors.Primary) }
                     )
                     if (!isContactSaved) {
