@@ -56,6 +56,7 @@ class ChatViewModel @Inject constructor(
     private var currentUserId: String = ""
     private var recipientUserId: String = ""
     private var contactName: String? = null
+    private var isContactSaved: Boolean = false
 
     /**
      * Initializes the ViewModel with the recipient and starts observing messages.
@@ -76,9 +77,10 @@ class ChatViewModel @Inject constructor(
                 return@launch
             }
 
-            // Look up contact display name
+            // Look up contact display name and check if saved
             val contact = contactDao.getContactById(recipientUserId)
             contactName = contact?.displayName
+            isContactSaved = contact != null
 
             // Connect WebSocket with our fingerprint for auth
             if (!webSocketManager.isConnected()) {
@@ -117,7 +119,8 @@ class ChatViewModel @Inject constructor(
                                 messages = messages,
                                 isSending = (currentState as? ChatUiState.Success)?.isSending ?: false,
                                 currentUserId = currentUserId,
-                                contactName = contactName
+                                contactName = contactName,
+                                isContactSaved = isContactSaved
                             )
                         }
                     }
@@ -311,6 +314,100 @@ class ChatViewModel @Inject constructor(
                 _uiState.update { currentState ->
                     ChatUiState.Error(
                         message = "Failed to clear chat: ${e.message}",
+                        messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Saves the current contact to the database.
+     * Uses the recipientUserId (fingerprint) and current contactName.
+     */
+    fun saveContact(displayName: String? = null) {
+        viewModelScope.launch {
+            try {
+                // First, fetch the contact's public keys from the server (required)
+                // For now, we'll create a placeholder
+                val existingContact = contactDao.getContactById(recipientUserId)
+                
+                if (existingContact != null) {
+                    // Contact already exists, just update the display name
+                    val updated = existingContact.copy(displayName = displayName)
+                    contactDao.insertContact(updated)
+                    contactName = displayName
+                    isContactSaved = true
+                } else {
+                    // Cannot save contact without its public keys
+                    // This should be handled by AddContactUseCase in normal flow
+                    _uiState.update { currentState ->
+                        ChatUiState.Error(
+                            message = "Cannot save contact — public keys not available. Please add via fingerprint first.",
+                            messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
+                        )
+                    }
+                    return@launch
+                }
+                
+                // Update UI
+                _uiState.update { currentState ->
+                    if (currentState is ChatUiState.Success) {
+                        currentState.copy(
+                            contactName = contactName,
+                            isContactSaved = true
+                        )
+                    } else {
+                        currentState
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { currentState ->
+                    ChatUiState.Error(
+                        message = "Failed to save contact: ${e.message}",
+                        messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Renames an existing saved contact.
+     *
+     * @param newName The new display name for the contact
+     */
+    fun renameContact(newName: String) {
+        viewModelScope.launch {
+            try {
+                val existingContact = contactDao.getContactById(recipientUserId)
+                
+                if (existingContact == null) {
+                    _uiState.update { currentState ->
+                        ChatUiState.Error(
+                            message = "Contact not found",
+                            messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
+                        )
+                    }
+                    return@launch
+                }
+
+                val updated = existingContact.copy(displayName = newName.takeIf { it.isNotBlank() })
+                contactDao.insertContact(updated)
+                contactName = updated.displayName
+                
+                // Update UI
+                _uiState.update { currentState ->
+                    if (currentState is ChatUiState.Success) {
+                        currentState.copy(contactName = contactName)
+                    } else {
+                        currentState
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { currentState ->
+                    ChatUiState.Error(
+                        message = "Failed to rename contact: ${e.message}",
                         messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
                     )
                 }

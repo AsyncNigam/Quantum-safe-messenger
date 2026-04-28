@@ -38,6 +38,7 @@ import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumMessengerTheme
 import com.nigdroid.quantummessenger.presentation.viewmodel.LockState
 import com.nigdroid.quantummessenger.presentation.viewmodel.MainViewModel
 import com.nigdroid.quantummessenger.security.BiometricPromptManager
+import com.nigdroid.quantummessenger.security.NotificationPermissionManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -87,6 +88,9 @@ class MainActivity : AppCompatActivity() {
 //            WindowManager.LayoutParams.FLAG_SECURE)
 
         enableEdgeToEdge()
+
+        // Request notification permission (Android 13+)
+        NotificationPermissionManager.requestNotificationPermission(this)
 
         // Register process-level lifecycle observer (survives config changes)
         ProcessLifecycleOwner.get().lifecycle.addObserver(processLifecycleObserver)

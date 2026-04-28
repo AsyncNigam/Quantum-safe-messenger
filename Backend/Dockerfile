@@ -35,7 +35,8 @@ RUN npm ci --only=production
 # Copy compiled JavaScript from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Expose port for the API
+# Copy Firebase service account (if exists)
+COPY firebase-service-account.json* ./
 EXPOSE 8000
 
 # Health check

@@ -16,12 +16,14 @@ sealed class ChatUiState {
      * Success state with the current list of messages.
      * @param messages The list of decrypted chat messages to display
      * @param isSending Whether a message is currently being sent
+     * @param isContactSaved Whether the contact is saved in the database
      */
     data class Success(
         val messages: List<ChatMessage> = emptyList(),
         val isSending: Boolean = false,
         val currentUserId: String = "",
-        val contactName: String? = null
+        val contactName: String? = null,
+        val isContactSaved: Boolean = false
     ) : ChatUiState()
 
     /**

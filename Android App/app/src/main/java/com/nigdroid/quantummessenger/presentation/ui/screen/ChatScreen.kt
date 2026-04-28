@@ -14,8 +14,10 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -77,6 +79,9 @@ fun ChatScreen(
     val currentUserId = (uiState as? ChatUiState.Success)?.currentUserId ?: ""
 
     var showClearChatDialog by remember { mutableStateOf(false) }
+    var showSaveContactDialog by remember { mutableStateOf(false) }
+    var showRenameContactDialog by remember { mutableStateOf(false) }
+    var contactNameInput by remember { mutableStateOf("") }
 
     // Clear chat confirmation dialog
     if (showClearChatDialog) {
@@ -134,6 +139,160 @@ fun ChatScreen(
         )
     }
 
+    // Save contact dialog
+    if (showSaveContactDialog) {
+        AlertDialog(
+            onDismissRequest = { showSaveContactDialog = false },
+            containerColor = QuantumColors.Surface,
+            shape = RoundedCornerShape(24.dp),
+            icon = {
+                Box(
+                    Modifier.size(52.dp)
+                        .background(QuantumColors.Primary.copy(alpha = 0.15f), CircleShape)
+                        .clip(CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.PersonAdd, null, tint = QuantumColors.Primary, modifier = Modifier.size(26.dp))
+                }
+            },
+            title = {
+                Text(
+                    "Save Contact",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = QuantumColors.TextPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        "Enter a name for this contact:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = QuantumColors.TextSecondary,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    TextField(
+                        value = contactNameInput,
+                        onValueChange = { contactNameInput = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Contact name", color = QuantumColors.TextTertiary) },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = QuantumColors.GlassWhite08,
+                            unfocusedContainerColor = QuantumColors.GlassWhite08,
+                            focusedIndicatorColor = QuantumColors.Primary,
+                            unfocusedIndicatorColor = QuantumColors.GlassBorder
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSaveContactDialog = false
+                        viewModel.saveContact(contactNameInput.ifBlank { null })
+                        contactNameInput = ""
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = QuantumColors.Primary),
+                    modifier = Modifier.height(44.dp)
+                ) {
+                    Text("Save", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showSaveContactDialog = false; contactNameInput = "" },
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, QuantumColors.GlassBorder),
+                    modifier = Modifier.height(44.dp)
+                ) {
+                    Text("Cancel", color = QuantumColors.TextSecondary)
+                }
+            }
+        )
+    }
+
+    // Rename contact dialog
+    if (showRenameContactDialog) {
+        AlertDialog(
+            onDismissRequest = { showRenameContactDialog = false },
+            containerColor = QuantumColors.Surface,
+            shape = RoundedCornerShape(24.dp),
+            icon = {
+                Box(
+                    Modifier.size(52.dp)
+                        .background(QuantumColors.Primary.copy(alpha = 0.15f), CircleShape)
+                        .clip(CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Edit, null, tint = QuantumColors.Primary, modifier = Modifier.size(26.dp))
+                }
+            },
+            title = {
+                Text(
+                    "Rename Contact",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = QuantumColors.TextPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        "Enter new name for this contact:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = QuantumColors.TextSecondary,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    TextField(
+                        value = contactNameInput,
+                        onValueChange = { contactNameInput = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Contact name", color = QuantumColors.TextTertiary) },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = QuantumColors.GlassWhite08,
+                            unfocusedContainerColor = QuantumColors.GlassWhite08,
+                            focusedIndicatorColor = QuantumColors.Primary,
+                            unfocusedIndicatorColor = QuantumColors.GlassBorder
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showRenameContactDialog = false
+                        viewModel.renameContact(contactNameInput)
+                        contactNameInput = ""
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = QuantumColors.Primary),
+                    modifier = Modifier.height(44.dp)
+                ) {
+                    Text("Rename", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showRenameContactDialog = false; contactNameInput = "" },
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, QuantumColors.GlassBorder),
+                    modifier = Modifier.height(44.dp)
+                ) {
+                    Text("Cancel", color = QuantumColors.TextSecondary)
+                }
+            }
+        )
+    }
+
     ChatScreenContent(
         uiState       = uiState,
         currentUserId = currentUserId,
@@ -150,7 +309,12 @@ fun ChatScreen(
             }
         },
         onRetry       = { viewModel.retryLoadingMessages() },
-        onClearChat   = { showClearChatDialog = true }
+        onClearChat   = { showClearChatDialog = true },
+        onSaveContact = { showSaveContactDialog = true },
+        onRenameContact = { 
+            contactNameInput = (uiState as? ChatUiState.Success)?.contactName ?: ""
+            showRenameContactDialog = true 
+        }
     )
 }
 
@@ -169,7 +333,9 @@ private fun ChatScreenContent(
     onInputChange : (String) -> Unit,
     onSend        : () -> Unit,
     onRetry       : () -> Unit,
-    onClearChat   : () -> Unit = {}
+    onClearChat   : () -> Unit = {},
+    onSaveContact : () -> Unit = {},
+    onRenameContact : () -> Unit = {}
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -183,12 +349,16 @@ private fun ChatScreenContent(
         ) {
             // ── Header ───────────────────────────────────────────────────────
             val contactName = (uiState as? ChatUiState.Success)?.contactName
+            val isContactSaved = (uiState as? ChatUiState.Success)?.isContactSaved ?: false
             ChatHeader(
                 participantInitial = (contactName?.firstOrNull() ?: participantId.firstOrNull())
                     ?.uppercaseChar()?.toString() ?: "?",
                 participantName    = contactName ?: participantId.take(12) + "…",
                 onBack             = onBack,
-                onClearChat        = onClearChat
+                onClearChat        = onClearChat,
+                onSaveContact      = onSaveContact,
+                onRenameContact    = onRenameContact,
+                isContactSaved     = isContactSaved
             )
 
             // ── Content ──────────────────────────────────────────────────────
@@ -238,7 +408,10 @@ private fun ChatHeader(
     participantInitial : String,
     participantName    : String,
     onBack             : () -> Unit,
-    onClearChat        : () -> Unit = {}
+    onClearChat        : () -> Unit = {},
+    onSaveContact      : () -> Unit = {},
+    onRenameContact    : () -> Unit = {},
+    isContactSaved     : Boolean = false
 ) {
     Column(
         modifier = Modifier
@@ -338,6 +511,19 @@ private fun ChatHeader(
                         onClick = { showMenu = false },
                         leadingIcon = { Icon(Icons.Default.AccessTime, null, tint = QuantumColors.Primary) }
                     )
+                    if (!isContactSaved) {
+                        DropdownMenuItem(
+                            text = { Text("Save Contact", color = QuantumColors.Primary) },
+                            onClick = { showMenu = false; onSaveContact() },
+                            leadingIcon = { Icon(Icons.Default.PersonAdd, null, tint = QuantumColors.Primary) }
+                        )
+                    } else {
+                        DropdownMenuItem(
+                            text = { Text("Rename Contact", color = QuantumColors.Primary) },
+                            onClick = { showMenu = false; onRenameContact() },
+                            leadingIcon = { Icon(Icons.Default.Edit, null, tint = QuantumColors.Primary) }
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text("Clear Chat", color = QuantumColors.Error) },
                         onClick = { showMenu = false; onClearChat() },

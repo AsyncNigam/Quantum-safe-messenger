@@ -34,7 +34,14 @@ export class SocketController {
         .then((buffers: Buffer[]) => {
           if (buffers.length > 0) {
             console.log(`[Socket] Draining ${buffers.length} offline message(s) → fp=${fingerprint.slice(0, 12)}…`);
-            buffers.forEach((buf) => socket.emit('receive_message', buf));
+            buffers.forEach((buf) => {
+              try {
+                const envelope = JSON.parse(buf.toString());
+                socket.emit('receive_message', envelope);
+              } catch (e) {
+                console.warn(`[Socket] Failed to parse offline message | fp=${fingerprint.slice(0, 12)}…`);
+              }
+            });
           }
         })
         .catch((err: Error) =>
