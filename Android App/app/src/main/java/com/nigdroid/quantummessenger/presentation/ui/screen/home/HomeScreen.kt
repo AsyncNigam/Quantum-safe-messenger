@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -42,6 +44,7 @@ import com.nigdroid.quantummessenger.presentation.viewmodel.HomeUiState
 import com.nigdroid.quantummessenger.presentation.viewmodel.HomeViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.launch
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Root composable
@@ -78,7 +81,8 @@ private fun HomeScreenContent(
 ) {
     var showSearch by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
-    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Chats, 1 = Contacts
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val coroutineScope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
@@ -236,42 +240,39 @@ private fun HomeScreenContent(
                 // ── Tab selector ────────────────────────────────────────
                 val contactCount = (uiState as? HomeUiState.Success)?.allContacts?.size ?: 0
                 HomeTabSelector(
-                    selectedTab = selectedTab,
-                    onTabSelected = { selectedTab = it },
+                    selectedTab = pagerState.currentPage,
+                    onTabSelected = { coroutineScope.launch { pagerState.animateScrollToPage(it) } },
                     contactCount = contactCount
                 )
 
-                // ── Main content ────────────────────────────────────────
-                AnimatedContent(
-                    targetState   = uiState,
-                    transitionSpec = {
-                        fadeIn(tween(350)) togetherWith fadeOut(tween(200))
-                    },
-                    label    = "homeStateAnim",
-                    modifier = Modifier.weight(1f)
-                ) { state ->
-                    when (state) {
-                        is HomeUiState.Loading -> HomeLoadingState()
-                        is HomeUiState.Error   -> HomeErrorState(state.message, onRetry)
-                        is HomeUiState.Success -> {
-                            when (selectedTab) {
+                // ── Swipeable pager content ──────────────────────────────
+                when (uiState) {
+                    is HomeUiState.Loading -> HomeLoadingState()
+                    is HomeUiState.Error   -> HomeErrorState(uiState.message, onRetry)
+                    is HomeUiState.Success -> {
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.weight(1f),
+                            beyondViewportPageCount = 1
+                        ) { page ->
+                            when (page) {
                                 0 -> { // Chats tab
-                                    if (state.inboxItems.isEmpty() && state.contacts.isEmpty()) {
+                                    if (uiState.inboxItems.isEmpty() && uiState.contacts.isEmpty()) {
                                         HomeEmptyState(onNewChatClick)
                                     } else {
                                         HomeConversationList(
-                                            inboxItems  = state.inboxItems,
-                                            contacts    = state.contacts,
+                                            inboxItems  = uiState.inboxItems,
+                                            contacts    = uiState.contacts,
                                             onChatClick = onChatClick
                                         )
                                     }
                                 }
                                 1 -> { // Contacts tab
-                                    if (state.allContacts.isEmpty()) {
+                                    if (uiState.allContacts.isEmpty()) {
                                         ContactsEmptyState(onNewChatClick)
                                     } else {
                                         ContactsTabList(
-                                            contacts = state.allContacts,
+                                            contacts = uiState.allContacts,
                                             onChatClick = onChatClick
                                         )
                                     }
