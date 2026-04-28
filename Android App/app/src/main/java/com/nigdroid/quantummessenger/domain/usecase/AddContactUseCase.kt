@@ -61,6 +61,11 @@ class AddContactUseCase @Inject constructor(
 
             val body = response.body() ?: return@withContext Result.Error("Empty response from server.")
 
+            // Check if the user has deleted their account
+            if (body.deleted == true) {
+                return@withContext Result.Error("This user has deleted their account.")
+            }
+
             val fingerprint = body.fingerprint ?: return@withContext Result.Error("Response missing fingerprint.")
             val mlKem = body.mlKemPublicKey ?: return@withContext Result.Error("Response missing ML-KEM key.")
             val x25519 = body.x25519PublicKey ?: return@withContext Result.Error("Response missing X25519 key.")

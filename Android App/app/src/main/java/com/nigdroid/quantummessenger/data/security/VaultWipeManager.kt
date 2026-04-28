@@ -18,24 +18,30 @@ import javax.inject.Singleton
  * which permanently invalidates our Keystore-bound master key.
  *
  * The wipe protocol:
- *   1. Delete the encrypted Room/SQLCipher database file
- *   2. Clear all DataStore preferences (session, fingerprint)
- *   3. Delete all Android Keystore aliases matching our prefix
- *   4. Clear Tink keyset SharedPreferences
+ *   1. Close the open Room/SQLCipher database connection
+ *   2. Delete the encrypted Room/SQLCipher database file
+ *   3. Clear all DataStore preferences (session, fingerprint, display name, keys)
+ *   4. Delete all Android Keystore aliases matching our prefix
+ *   5. Clear Tink keyset SharedPreferences
  *
  * After this, the user must re-register via AuthScreen to generate a new identity.
  */
 @Singleton
 class VaultWipeManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val database: QuantumMessengerDatabase
 ) {
 
     companion object {
         private const val TAG = "VaultWipeManager"
 
-        // Must match CryptoManager constants (covers v2 and v3 for migration safety)
-        private val TINK_PREF_FILES    = listOf("quantum_messenger_prefs_v2", "quantum_messenger_prefs_v3")
+        // Must match CryptoManager and GenerateIdentityUseCase constants
+        private val TINK_PREF_FILES    = listOf(
+            "quantum_messenger_prefs_v2",
+            "quantum_messenger_prefs_v3",
+            "quantum_messenger_keys_v1"   // Encrypted PQ private keys
+        )
         private val MASTER_KEY_ALIASES = listOf("quantum_messenger_master_key_v2", "quantum_messenger_master_key_v3")
 
         // Keystore alias prefix for PQ key material
@@ -49,21 +55,35 @@ class VaultWipeManager @Inject constructor(
      * The next launch will route to AuthScreen for identity re-generation.
      */
     suspend fun executeZeroTrustWipe() = withContext(Dispatchers.IO) {
-        android.util.Log.w(TAG, "⚠️ EXECUTING ZERO-TRUST VAULT WIPE — biometric enrollment changed")
+        android.util.Log.w(TAG, "⚠️ EXECUTING ZERO-TRUST VAULT WIPE")
 
-        // ── 1. Delete the Room/SQLCipher database ──────────────────────────
+        // ── 1. Close the Room database connection ──────────────────────────
+        closeDatabaseConnection()
+
+        // ── 2. Delete the Room/SQLCipher database ──────────────────────────
         deleteDatabaseFiles()
 
-        // ── 2. Clear DataStore (session, fingerprint) ──────────────────────
+        // ── 3. Clear DataStore (session, fingerprint, keys, display name) ──
         clearSessionData()
 
-        // ── 3. Delete all Keystore keys ────────────────────────────────────
+        // ── 4. Delete all Keystore keys ────────────────────────────────────
         deleteKeystoreKeys()
 
-        // ── 4. Clear Tink keyset from SharedPreferences ────────────────────
+        // ── 5. Clear Tink keyset from SharedPreferences ────────────────────
         clearTinkKeysets()
 
         android.util.Log.w(TAG, "✅ Zero-trust wipe complete — app will require re-registration")
+    }
+
+    private fun closeDatabaseConnection() {
+        try {
+            if (database.isOpen) {
+                database.close()
+                android.util.Log.d(TAG, "Closed Room database connection")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to close database: ${e.message}")
+        }
     }
 
     private fun deleteDatabaseFiles() {

@@ -134,6 +134,12 @@ class ProfileViewModel @Inject constructor(
                 val success = authRepository.deleteAccount()
                 if (success) {
                     _accountAction.value = AccountActionState.Success
+                    // Kill the process after a short delay to allow the UI
+                    // to navigate. This ensures all stale Hilt singletons
+                    // (Room DB, WebSocket, etc.) are fully destroyed.
+                    // On next launch, Hilt creates everything fresh.
+                    kotlinx.coroutines.delay(500)
+                    android.os.Process.killProcess(android.os.Process.myPid())
                 } else {
                     _accountAction.value = AccountActionState.Error(
                         "Failed to delete account on server. Please try again."

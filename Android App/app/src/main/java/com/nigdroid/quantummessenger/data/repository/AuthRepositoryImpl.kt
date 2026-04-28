@@ -142,6 +142,9 @@ class AuthRepositoryImpl @Inject constructor(
     /**
      * Delete the account on the backend (soft-delete), then wipe all local data.
      *
+     * After wipe, the app process is killed to ensure stale Hilt singletons
+     * (especially the Room database) are re-created on next launch.
+     *
      * @return true if the backend confirmed deletion, false on network/server error
      */
     override suspend fun deleteAccount(): Boolean = withContext(Dispatchers.IO) {
@@ -156,6 +159,8 @@ class AuthRepositoryImpl @Inject constructor(
                 android.util.Log.e("AuthRepo", "Delete account failed: HTTP ${response.code()}")
                 return@withContext false
             }
+
+            android.util.Log.w("AuthRepo", "✅ Backend confirmed deletion — wiping local data")
 
             // Backend confirmed deletion — now wipe all local data
             vaultWipeManager.executeZeroTrustWipe()
