@@ -79,6 +79,13 @@ class SessionManager @Inject constructor(
         }
     }
 
+    suspend fun clearPublicKeys() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(ML_KEM_PUBLIC_KEY)
+            prefs.remove(X25519_PUBLIC_KEY)
+        }
+    }
+
     suspend fun setFcmToken(token: String?) {
         context.dataStore.edit { prefs ->
             if (token != null) {

@@ -89,6 +89,9 @@ class VaultWipeManager @Inject constructor(
     private suspend fun clearSessionData() {
         try {
             sessionManager.setTextFingerprint(null)
+            sessionManager.setDisplayName(null)
+            sessionManager.setFcmToken(null)
+            sessionManager.clearPublicKeys()
             sessionManager.setUserRegistered(false)
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Failed to clear session: ${e.message}")
