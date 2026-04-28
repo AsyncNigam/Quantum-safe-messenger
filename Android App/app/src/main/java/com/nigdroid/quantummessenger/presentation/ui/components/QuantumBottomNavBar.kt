@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.PersonAddAlt
 import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material3.*
@@ -51,9 +51,9 @@ enum class BottomNavTab(
     val unselectedIcon: ImageVector
 ) {
     Chats(
-        label          = "Chats",
-        selectedIcon   = Icons.Filled.ChatBubble,
-        unselectedIcon = Icons.Outlined.ChatBubbleOutline
+        label          = "Home",
+        selectedIcon   = Icons.Filled.Home,
+        unselectedIcon = Icons.Outlined.Home
     ),
     AddContact(
         label          = "Add",
@@ -95,6 +95,7 @@ fun QuantumBottomNavBar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 10.dp)
+            .clip(RoundedCornerShape(32.dp))
             .navigationBarsPadding()
     ) {
 
@@ -162,10 +163,24 @@ fun QuantumBottomNavBar(
                         val pillY      = (size.height - pillHeight) / 2f
                         val pillCorner = CornerRadius(21.dp.toPx())
 
+                        // Minimum edge inset to clear the 32dp rounded corners
+                        val edgeInset = 10.dp.toPx()
+
+                        // Clamp indicator pill position so it never overlaps rounded edges
+                        val clampedX     = indicatorX.coerceAtLeast(edgeInset)
+                        val clampedEnd   = (indicatorX + indicatorWidth).coerceAtMost(size.width - edgeInset)
+                        val clampedWidth = (clampedEnd - clampedX).coerceAtLeast(0f)
+
+                        // Outer glow — slightly larger, also clamped
+                        val glowInset = edgeInset - 2.dp.toPx()
+                        val glowX     = (clampedX - 4.dp.toPx()).coerceAtLeast(glowInset)
+                        val glowEnd   = (clampedEnd + 4.dp.toPx()).coerceAtMost(size.width - glowInset)
+                        val glowWidth = (glowEnd - glowX).coerceAtLeast(0f)
+
                         drawRoundRect(
                             color        = accentColor.copy(alpha = if (isDark) 0.12f else 0.10f),
-                            topLeft      = Offset(indicatorX - 4.dp.toPx(), pillY - 3.dp.toPx()),
-                            size         = Size(indicatorWidth + 8.dp.toPx(), pillHeight + 6.dp.toPx()),
+                            topLeft      = Offset(glowX, pillY - 3.dp.toPx()),
+                            size         = Size(glowWidth, pillHeight + 6.dp.toPx()),
                             cornerRadius = CornerRadius(24.dp.toPx())
                         )
 
@@ -175,19 +190,19 @@ fun QuantumBottomNavBar(
                                     accentColor.copy(alpha = if (isDark) 0.18f else 0.14f),
                                     accentColor.copy(alpha = if (isDark) 0.10f else 0.08f)
                                 ),
-                                start = Offset(indicatorX, pillY),
-                                end   = Offset(indicatorX + indicatorWidth, pillY + pillHeight)
+                                start = Offset(clampedX, pillY),
+                                end   = Offset(clampedEnd, pillY + pillHeight)
                             ),
-                            topLeft      = Offset(indicatorX, pillY),
-                            size         = Size(indicatorWidth, pillHeight),
+                            topLeft      = Offset(clampedX, pillY),
+                            size         = Size(clampedWidth, pillHeight),
                             cornerRadius = pillCorner
                         )
 
                         // Indicator border
                         drawRoundRect(
                             color        = accentColor.copy(alpha = if (isDark) 0.22f else 0.18f),
-                            topLeft      = Offset(indicatorX, pillY),
-                            size         = Size(indicatorWidth, pillHeight),
+                            topLeft      = Offset(clampedX, pillY),
+                            size         = Size(clampedWidth, pillHeight),
                             cornerRadius = pillCorner,
                             style        = Stroke(width = 0.6.dp.toPx())
                         )
@@ -289,7 +304,8 @@ private fun NavItem(
                 Box(
                     modifier         = Modifier
                         .size(22.dp)
-                        .scale(iconScale),
+                        // Only apply scale to non-AddContact tabs
+                        .scale(if (tab == BottomNavTab.AddContact) 1f else iconScale),
                     contentAlignment = Alignment.Center
                 ) {
                     // Unselected icon — fades out

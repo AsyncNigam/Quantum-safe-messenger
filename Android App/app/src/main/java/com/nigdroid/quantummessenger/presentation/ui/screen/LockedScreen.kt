@@ -152,122 +152,78 @@ private fun LockedScreenContent(
 
 @Composable
 private fun LockOrb() {
-    val infiniteTransition = rememberInfiniteTransition(label = "lockOrb")
-
-    val pulse by infiniteTransition.animateFloat(
-        initialValue = 0.92f,
-        targetValue  = 1.08f,
-        animationSpec = infiniteRepeatable(
-            animation  = tween(2_400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "lockPulse"
+    val infinite = rememberInfiniteTransition(label = "orb")
+    val pulse by infinite.animateFloat(
+        initialValue = 0.90f, targetValue = 1.10f,
+        animationSpec = infiniteRepeatable(tween(2_200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "pulse"
     )
-    val ringAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.15f,
-        targetValue  = 0.45f,
-        animationSpec = infiniteRepeatable(
-            animation  = tween(2_400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "ringAlpha"
+    val glow by infinite.animateFloat(
+        initialValue = 0.30f, targetValue = 0.65f,
+        animationSpec = infiniteRepeatable(tween(2_800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "glow"
     )
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue  = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(20_000, easing = LinearEasing)
-        ),
-        label = "orbRotation"
-    )
-    val particleAngle by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue  = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(8_000, easing = LinearEasing)
-        ),
+    val particleAngle by infinite.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(6_000, easing = LinearEasing)),
         label = "particleAngle"
     )
 
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.size(220.dp)
-    ) {
-        // Rotating dashed ring
+    Box(contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
-                .size(200.dp)
+                .size(170.dp)
                 .scale(pulse)
-                .rotate(rotation)
                 .background(
-                    brush = Brush.sweepGradient(
+                    brush = Brush.radialGradient(
                         colors = listOf(
-                            QuantumColors.Primary.copy(alpha = ringAlpha),
-                            QuantumColors.Accent.copy(alpha  = ringAlpha * 0.6f),
-                            Color.Transparent,
-                            QuantumColors.Teal.copy(alpha    = ringAlpha * 0.4f),
+                            QuantumColors.Primary.copy(alpha = glow * 0.5f),
+                            QuantumColors.Accent.copy(alpha  = glow * 0.15f),
                             Color.Transparent
                         )
                     ),
                     shape = CircleShape
                 )
         )
-
-        // Orbiting particles
-        Canvas(modifier = Modifier.size(180.dp)) {
+        Canvas(modifier = Modifier.size(150.dp)) {
             val center = Offset(size.width / 2f, size.height / 2f)
-            val orbRadius = size.width / 2f * 0.78f
-            for (i in 0 until 6) {
-                val angle = (particleAngle + i * 60f) * (PI / 180f).toFloat()
+            val orbRadius = size.width / 2f * 0.82f
+            for (i in 0 until 8) {
+                val angle = (particleAngle + i * 45f) * (PI / 180f).toFloat()
                 val x = center.x + orbRadius * cos(angle)
                 val y = center.y + orbRadius * sin(angle)
-                val alpha = 0.35f + (i % 3) * 0.18f
+                val alpha = 0.3f + (i % 3) * 0.2f
+                val r = (2.5f + (i % 3)).dp.toPx()
                 drawCircle(
                     color  = QuantumColors.Primary.copy(alpha = alpha),
-                    radius = (2f + (i % 2)).dp.toPx(),
+                    radius = r,
                     center = Offset(x, y)
                 )
             }
         }
-
-        // Outer glow
         Box(
             modifier = Modifier
-                .size(160.dp)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            QuantumColors.Primary.copy(alpha = 0.30f),
-                            Color.Transparent
-                        )
-                    ),
-                    shape = CircleShape
-                )
-        )
-
-        // Glass orb
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .glassmorphism(cornerRadius = 60, overlayAlpha = 0.18f, usePrimaryTint = true)
+                .size(96.dp)
+                .glassmorphism(cornerRadius = 48, overlayAlpha = 0.20f, usePrimaryTint = true)
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            QuantumColors.Primary.copy(alpha = 0.50f),
-                            QuantumColors.PrimaryDark.copy(alpha = 0.70f)
+                            QuantumColors.Primary.copy(alpha = 0.45f),
+                            QuantumColors.Accent.copy(alpha  = 0.20f)
                         ),
                         start = Offset(0f, 0f),
-                        end   = Offset(120f, 120f)
+                        end   = Offset(100f, 100f)
                     ),
                     shape = CircleShape
                 )
                 .clip(CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter            = painterResource(id = R.drawable.qlogo),
-                contentDescription = "App Logo",
-                modifier           = Modifier.size(72.dp)
+            Icon(
+                imageVector        = Icons.Default.Lock,
+                contentDescription = "Locked",
+                tint               = Color.White,
+                modifier           = Modifier.size(44.dp)
             )
         }
     }
