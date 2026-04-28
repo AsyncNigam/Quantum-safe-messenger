@@ -8,6 +8,7 @@ import com.nigdroid.quantummessenger.network.WebSocketManager
 import com.nigdroid.quantummessenger.network.notification.NotificationSoundManager
 import com.nigdroid.quantummessenger.domain.model.ChatMessage
 import com.nigdroid.quantummessenger.domain.model.MessageType
+import com.nigdroid.quantummessenger.domain.usecase.AddContactUseCase
 import com.nigdroid.quantummessenger.domain.usecase.GetChatHistoryUseCase
 import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageResult
 import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageUseCase
@@ -37,6 +38,7 @@ class ChatViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val receiveMessageUseCase: ReceiveMessageUseCase,
     private val getChatHistoryUseCase: GetChatHistoryUseCase,
+    private val addContactUseCase: AddContactUseCase,
     private val sessionManager: SessionManager,
     private val contactDao: ContactDao,
     private val chatMessageDao: ChatMessageDao,
@@ -338,30 +340,40 @@ class ChatViewModel @Inject constructor(
     fun saveContact(displayName: String? = null) {
         viewModelScope.launch {
             try {
-                val existingContact = contactDao.getContactById(recipientUserId)
+                // If the contact doesn't exist, we must use AddContactUseCase
+                // to fetch their keys and properly register them.
+                val result = addContactUseCase(recipientUserId, displayName)
                 
-                if (existingContact != null) {
-                    val updated = existingContact.copy(displayName = displayName)
-                    contactDao.insertContact(updated)
-                    contactName = displayName
-                    isContactSaved = true
-                    
-                    _uiState.update { currentState ->
-                        if (currentState is ChatUiState.Success) {
-                            currentState.copy(
-                                contactName = contactName,
-                                isContactSaved = true
-                            )
-                        } else {
-                            currentState
+                when (result) {
+                    is AddContactUseCase.Result.Success, 
+                    is AddContactUseCase.Result.AlreadyExists -> {
+                        // Successfully added or already existed.
+                        // Refresh local state.
+                        val contact = contactDao.getContactById(recipientUserId)
+                        contactName = contact?.displayName
+                        isContactSaved = true
+                        
+                        _uiState.update { currentState ->
+                            if (currentState is ChatUiState.Success) {
+                                currentState.copy(
+                                    contactName = contactName,
+                                    isContactSaved = true
+                                )
+                            } else {
+                                currentState
+                            }
                         }
                     }
-                } else {
-                    _uiState.update { currentState ->
-                        ChatUiState.Error(
-                            message = "Contact not found",
-                            messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
-                        )
+                    is AddContactUseCase.Result.Error -> {
+                        _uiState.update { currentState ->
+                            ChatUiState.Error(
+                                message = result.message,
+                                messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
+                            )
+                        }
+                    }
+                    AddContactUseCase.Result.SelfAdd -> {
+                        // Should not happen in ChatScreen but handle for safety
                     }
                 }
             } catch (e: Exception) {

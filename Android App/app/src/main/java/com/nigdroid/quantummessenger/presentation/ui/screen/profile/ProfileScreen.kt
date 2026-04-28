@@ -158,16 +158,56 @@ fun ProfileScreen(
                 )
                 Spacer(Modifier.height(16.dp))
 
+                // ── Delete Account ───────────────────────────────────────
+                Box(
+                    Modifier.fillMaxWidth()
+                        .glassmorphism(cornerRadius = 20, overlayAlpha = 0.10f)
+                        .background(QuantumColors.GlassWhite08, RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(20.dp))
+                        .padding(20.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.ManageAccounts, null, tint = QuantumColors.Primary,
+                                modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Account", style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold, color = QuantumColors.TextPrimary)
+                        }
+                        Text(
+                            "Manage your anonymous identity.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = QuantumColors.TextTertiary
+                        )
+                        OutlinedButton(
+                            onClick = { showDeleteDialog = true },
+                            enabled = accountAction !is AccountActionState.Loading,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            border = BorderStroke(1.dp, QuantumColors.Error.copy(alpha = 0.5f)),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = QuantumColors.Error
+                            )
+                        ) {
+                            if (accountAction is AccountActionState.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = QuantumColors.Error
+                                )
+                                Spacer(Modifier.width(10.dp))
+                            }
+                            Icon(Icons.Default.DeleteForever, null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Delete Account", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+
                 // ── About PQC Card ───────────────────────────────────────
                 AboutPqcCard(onClick = { showAboutSheet = true })
                 Spacer(Modifier.height(24.dp))
-
-                // ── Account Actions ─────────────────────────────────────
-                AccountActionsCard(
-                    isLoading = accountAction is AccountActionState.Loading,
-                    onLogoutClick = { showLogoutDialog = true },
-                    onDeleteClick = { showDeleteDialog = true }
-                )
             }
         }
     }
@@ -177,25 +217,7 @@ fun ProfileScreen(
         AboutPqcBottomSheet(onDismiss = { showAboutSheet = false })
     }
 
-    // ── Logout Confirmation Dialog ──────────────────────────────────────
-    if (showLogoutDialog) {
-        ConfirmationDialog(
-            title = "Logout",
-            message = "You will be logged out and taken to the registration screen.\n\n" +
-                    "Your keys, messages and contacts will stay on this device. " +
-                    "Tap \u201cGenerate Identity\u201d to log back into the same account.",
-            confirmText = "Logout",
-            confirmColor = QuantumColors.Warning,
-            icon = Icons.AutoMirrored.Filled.Logout,
-            onConfirm = {
-                showLogoutDialog = false
-                viewModel.logout()
-            },
-            onDismiss = { showLogoutDialog = false }
-        )
-    }
-
-    // ── Delete Account Confirmation Dialog ──────────────────────────────
+    // ── Confirmation Dialog ──────────────────────────────
     if (showDeleteDialog) {
         ConfirmationDialog(
             title = "Delete Account",
@@ -216,7 +238,7 @@ fun ProfileScreen(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Avatar Orb ───────────────────────────────────────────────────────────────────────────────
 // Avatar
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -328,7 +350,7 @@ private fun DisplayNameCard(
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = if (displayName != null) QuantumColors.TextPrimary
-                                else QuantumColors.TextTertiary
+                        else QuantumColors.TextTertiary
                     )
                     Icon(
                         Icons.Default.Edit, "Edit",
@@ -357,7 +379,7 @@ private fun QrCodeCard(fingerprint: String) {
             .padding(20.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(), // ← add this
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
@@ -371,13 +393,13 @@ private fun QrCodeCard(fingerprint: String) {
                 text = "Others can scan this to add you as a contact.",
                 style = MaterialTheme.typography.bodySmall,
                 color = QuantumColors.TextTertiary,
-                textAlign = TextAlign.Center, // ← center the subtitle too
+                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
             if (qrBitmap != null) {
                 Box(
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally) // ← explicit centering
+                        .align(Alignment.CenterHorizontally)
                         .size(200.dp)
                         .background(Color.White, RoundedCornerShape(12.dp))
                         .clip(RoundedCornerShape(12.dp))
@@ -622,79 +644,7 @@ private fun EncryptionDetailCard(icon: String, title: String, desc: String) {
 // Account Actions Card (Logout + Delete)
 // ─────────────────────────────────────────────────────────────────────────────
 
-@Composable
-private fun AccountActionsCard(
-    isLoading: Boolean,
-    onLogoutClick: () -> Unit,
-    onDeleteClick: () -> Unit
-) {
-    Box(
-        Modifier.fillMaxWidth()
-            .glassmorphism(cornerRadius = 20, overlayAlpha = 0.10f)
-            .background(QuantumColors.GlassWhite08, RoundedCornerShape(20.dp))
-            .clip(RoundedCornerShape(20.dp))
-            .padding(20.dp)
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.ManageAccounts, null, tint = QuantumColors.Primary,
-                    modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Account", style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold, color = QuantumColors.TextPrimary)
-            }
-            Text(
-                "Manage your anonymous identity.",
-                style = MaterialTheme.typography.bodySmall,
-                color = QuantumColors.TextTertiary
-            )
-
-            // ── Logout Button ────────────────────────────────────────────
-            OutlinedButton(
-                onClick = onLogoutClick,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, QuantumColors.Warning.copy(alpha = 0.5f)),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = QuantumColors.Warning
-                )
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
-                        color = QuantumColors.Warning
-                    )
-                    Spacer(Modifier.width(10.dp))
-                }
-                Icon(Icons.AutoMirrored.Filled.Logout, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Logout", fontWeight = FontWeight.SemiBold)
-            }
-
-            // ── Delete Account Button ────────────────────────────────────
-            OutlinedButton(
-                onClick = onDeleteClick,
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, QuantumColors.Error.copy(alpha = 0.5f)),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = QuantumColors.Error
-                )
-            ) {
-                Icon(Icons.Default.DeleteForever, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Delete Account", fontWeight = FontWeight.SemiBold)
-            }
-        }
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Confirmation Dialog
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Confirmation Dialog ──────────────────────────────────────────────────────
 
 @Composable
 private fun ConfirmationDialog(

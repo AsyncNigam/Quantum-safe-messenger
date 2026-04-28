@@ -311,9 +311,9 @@ fun ChatScreen(
         onRetry       = { viewModel.retryLoadingMessages() },
         onClearChat   = { showClearChatDialog = true },
         onSaveContact = { showSaveContactDialog = true },
-        onRenameContact = { 
+        onRenameContact = {
             contactNameInput = (uiState as? ChatUiState.Success)?.contactName ?: ""
-            showRenameContactDialog = true 
+            showRenameContactDialog = true
         },
         onMuteNotifications = { viewModel.toggleMuteNotifications() }
     )
@@ -347,7 +347,7 @@ private fun ChatScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .imePadding() // Use imePadding on the main container to shift contents correctly
+                .imePadding()
         ) {
             // ── Header ───────────────────────────────────────────────────────
             val contactName = (uiState as? ChatUiState.Success)?.contactName
@@ -428,14 +428,14 @@ private fun ChatScreenContent(
 
 @Composable
 private fun ChatHeader(
-    participantInitial : String,
-    participantName    : String,
-    onBack             : () -> Unit,
-    onClearChat        : () -> Unit = {},
-    onSaveContact      : () -> Unit = {},
-    onRenameContact    : () -> Unit = {},
-    isContactSaved     : Boolean = false,
-    onMuteNotifications : () -> Unit = {},
+    participantInitial   : String,
+    participantName      : String,
+    onBack               : () -> Unit,
+    onClearChat          : () -> Unit = {},
+    onSaveContact        : () -> Unit = {},
+    onRenameContact      : () -> Unit = {},
+    isContactSaved       : Boolean = false,
+    onMuteNotifications  : () -> Unit = {},
     isNotificationsMuted : Boolean = false
 ) {
     Column(
@@ -510,7 +510,7 @@ private fun ChatHeader(
                 }
             }
 
-            // Options
+            // Options menu
             var showMenu by remember { mutableStateOf(false) }
             Box {
                 IconButton(onClick = { showMenu = true }) {
@@ -521,16 +521,22 @@ private fun ChatHeader(
                     )
                 }
                 DropdownMenu(
-                    expanded = showMenu,
+                    expanded         = showMenu,
                     onDismissRequest = { showMenu = false },
-                    containerColor = QuantumColors.Surface,
-                    shape = RoundedCornerShape(16.dp)
+                    containerColor   = QuantumColors.Surface,
+                    shape            = RoundedCornerShape(16.dp)
                 ) {
                     DropdownMenuItem(
-                        text = { Text(if (isNotificationsMuted) "Unmute Notifications" else "Mute Notifications", color = QuantumColors.TextPrimary) },
-                        onClick = { showMenu = false; onMuteNotifications() },
+                        text = {
+                            Text(
+                                if (isNotificationsMuted) "Unmute Notifications" else "Mute Notifications",
+                                color = QuantumColors.TextPrimary
+                            )
+                        },
+                        onClick     = { showMenu = false; onMuteNotifications() },
                         leadingIcon = { Icon(Icons.Default.AccessTime, null, tint = QuantumColors.Primary) }
                     )
+                    // ── FIX: restored missing if/else for Save vs Rename ──────
                     if (!isContactSaved) {
                         DropdownMenuItem(
                             text = { Text("Save Contact", color = QuantumColors.Primary) },
@@ -545,8 +551,8 @@ private fun ChatHeader(
                         )
                     }
                     DropdownMenuItem(
-                        text = { Text("Clear Chat", color = QuantumColors.Error) },
-                        onClick = { showMenu = false; onClearChat() },
+                        text        = { Text("Clear Chat", color = QuantumColors.Error) },
+                        onClick     = { showMenu = false; onClearChat() },
                         leadingIcon = { Icon(Icons.Default.DeleteSweep, null, tint = QuantumColors.Error) }
                     )
                 }
@@ -566,9 +572,9 @@ private fun ChatMessageList(
     lazyListState : LazyListState
 ) {
     LazyColumn(
-        modifier       = Modifier.fillMaxSize(),
-        state          = lazyListState,
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+        modifier            = Modifier.fillMaxSize(),
+        state               = lazyListState,
+        contentPadding      = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         // Group messages by date — insert date separators
@@ -576,14 +582,13 @@ private fun ChatMessageList(
             SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(msg.timestamp))
         }
         grouped.forEach { (dateKey, msgs) ->
-            // Date separator
             item(key = "date_$dateKey") {
                 DateSeparator(timestamp = msgs.first().timestamp)
             }
             items(msgs, key = { it.id }) { message ->
                 AnimatedVisibility(
-                    visible       = true,
-                    enter         = slideInVertically(
+                    visible = true,
+                    enter   = slideInVertically(
                         initialOffsetY = { 30 },
                         animationSpec  = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
                     ) + fadeIn()
@@ -601,7 +606,7 @@ private fun ChatMessageList(
 @Composable
 private fun DateSeparator(timestamp: Long) {
     Box(
-        modifier = Modifier
+        modifier         = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center
@@ -613,9 +618,9 @@ private fun DateSeparator(timestamp: Long) {
                 .clip(RoundedCornerShape(12.dp))
                 .padding(horizontal = 14.dp, vertical = 5.dp)
         ) {
-            val today    = Calendar.getInstance()
-            val msgCal   = Calendar.getInstance().apply { time = Date(timestamp) }
-            val dateStr  = when {
+            val today   = Calendar.getInstance()
+            val msgCal  = Calendar.getInstance().apply { time = Date(timestamp) }
+            val dateStr = when {
                 today.get(Calendar.DATE) == msgCal.get(Calendar.DATE)
                         && today.get(Calendar.YEAR) == msgCal.get(Calendar.YEAR) -> "Today"
                 today.get(Calendar.DATE) - msgCal.get(Calendar.DATE) == 1
@@ -638,7 +643,7 @@ private fun DateSeparator(timestamp: Long) {
 @Composable
 private fun MessageBubble(message: ChatMessage, isOwn: Boolean) {
     Box(
-        modifier          = Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(
                 start = if (isOwn) 48.dp else 0.dp,
@@ -652,10 +657,10 @@ private fun MessageBubble(message: ChatMessage, isOwn: Boolean) {
                     .glassmorphismBubbleOwn()
                     .clip(
                         RoundedCornerShape(
-                            topStart     = 18.dp,
-                            topEnd       = 4.dp,
-                            bottomStart  = 18.dp,
-                            bottomEnd    = 18.dp
+                            topStart    = 18.dp,
+                            topEnd      = 4.dp,
+                            bottomStart = 18.dp,
+                            bottomEnd   = 18.dp
                         )
                     )
                     .padding(horizontal = 14.dp, vertical = 10.dp)
@@ -665,18 +670,18 @@ private fun MessageBubble(message: ChatMessage, isOwn: Boolean) {
                     .background(
                         color = QuantumColors.GlassWhite08,
                         shape = RoundedCornerShape(
-                            topStart     = 4.dp,
-                            topEnd       = 18.dp,
-                            bottomStart  = 18.dp,
-                            bottomEnd    = 18.dp
+                            topStart    = 4.dp,
+                            topEnd      = 18.dp,
+                            bottomStart = 18.dp,
+                            bottomEnd   = 18.dp
                         )
                     )
                     .clip(
                         RoundedCornerShape(
-                            topStart     = 4.dp,
-                            topEnd       = 18.dp,
-                            bottomStart  = 18.dp,
-                            bottomEnd    = 18.dp
+                            topStart    = 4.dp,
+                            topEnd      = 18.dp,
+                            bottomStart = 18.dp,
+                            bottomEnd   = 18.dp
                         )
                     )
                     .padding(horizontal = 14.dp, vertical = 10.dp)
@@ -684,28 +689,28 @@ private fun MessageBubble(message: ChatMessage, isOwn: Boolean) {
             horizontalAlignment = if (isOwn) Alignment.End else Alignment.Start
         ) {
             Text(
-                text      = message.content,
-                style     = MaterialTheme.typography.bodyLarge.copy(
-                    color  = QuantumColors.TextPrimary,
-                    fontSize = 15.sp,
+                text  = message.content,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    color      = QuantumColors.TextPrimary,
+                    fontSize   = 15.sp,
                     lineHeight = 22.sp
                 )
             )
             Spacer(Modifier.height(4.dp))
             Row(
-                verticalAlignment  = Alignment.CenterVertically,
+                verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text  = formatTimestamp(message.timestamp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isOwn) Color.White.copy(alpha = 0.6f) else QuantumColors.TextTertiary,
+                    text     = formatTimestamp(message.timestamp),
+                    style    = MaterialTheme.typography.labelSmall,
+                    color    = if (isOwn) Color.White.copy(alpha = 0.6f) else QuantumColors.TextTertiary,
                     fontSize = 10.sp
                 )
                 if (isOwn) {
                     val (icon, tint) = when (message.status) {
-                        MessageStatus.PENDING -> Icons.Default.AccessTime to QuantumColors.TextTertiary
-                        MessageStatus.SENT    -> Icons.Default.Check       to QuantumColors.Teal
+                        MessageStatus.PENDING -> Icons.Default.AccessTime  to QuantumColors.TextTertiary
+                        MessageStatus.SENT    -> Icons.Default.Check        to QuantumColors.Teal
                         MessageStatus.ERROR   -> Icons.Default.ErrorOutline to QuantumColors.Error
                     }
                     Icon(
@@ -735,7 +740,7 @@ private fun ChatInputBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(QuantumColors.GlassWhite08)
-            .navigationBarsPadding() // Keep input bar above system nav
+            .navigationBarsPadding()
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment     = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -760,8 +765,8 @@ private fun ChatInputBar(
                         color = QuantumColors.TextTertiary
                     )
                 },
-                maxLines      = 4,
-                singleLine    = false,
+                maxLines        = 4,
+                singleLine      = false,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences,
                     keyboardType   = KeyboardType.Text,
@@ -825,13 +830,13 @@ private fun ChatInputBar(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Empty / Loading / Error
+// Empty / Loading / Error states
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun ChatEmptyState() {
     Column(
-        modifier            = Modifier.fillMaxSize(),
+        modifier              = Modifier.fillMaxSize(),
         verticalArrangement   = Arrangement.Center,
         horizontalAlignment   = Alignment.CenterHorizontally
     ) {
@@ -855,7 +860,7 @@ private fun ChatEmptyState() {
 @Composable
 private fun ChatLoadingState() {
     Column(
-        modifier            = Modifier.fillMaxSize(),
+        modifier              = Modifier.fillMaxSize(),
         verticalArrangement   = Arrangement.Center,
         horizontalAlignment   = Alignment.CenterHorizontally
     ) {
@@ -876,7 +881,7 @@ private fun ChatLoadingState() {
 @Composable
 private fun ChatErrorState(message: String, onRetry: () -> Unit) {
     Column(
-        modifier            = Modifier
+        modifier              = Modifier
             .fillMaxSize()
             .padding(32.dp),
         verticalArrangement   = Arrangement.Center,
@@ -899,9 +904,11 @@ private fun ChatErrorState(message: String, onRetry: () -> Unit) {
         Spacer(Modifier.height(28.dp))
         Button(
             onClick  = onRetry,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            shape    = RoundedCornerShape(16.dp),
-            colors   = ButtonDefaults.buttonColors(containerColor = QuantumColors.Primary)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape  = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = QuantumColors.Primary)
         ) {
             Text("Retry", fontWeight = FontWeight.Bold)
         }
@@ -920,10 +927,10 @@ private fun formatTimestamp(ts: Long): String =
 // ─────────────────────────────────────────────────────────────────────────────
 
 private val sampleMessages = listOf(
-    ChatMessage(id = 1L, senderId = "other",        receiverId = "me", content = "Hey! Is this quantum-encrypted? 🔐",      timestamp = System.currentTimeMillis() - 180_000, status = MessageStatus.SENT, messageType = MessageType.TEXT),
-    ChatMessage(id = 2L, senderId = "current_user", receiverId = "other", content = "Yes! Post-quantum CRYSTALS-Kyber key exchange. Nobody can read it.", timestamp = System.currentTimeMillis() - 120_000, status = MessageStatus.SENT, messageType = MessageType.TEXT),
-    ChatMessage(id = 3L, senderId = "other",        receiverId = "me", content = "That's incredible. Even quantum computers can't break it?", timestamp = System.currentTimeMillis() - 90_000, status = MessageStatus.SENT, messageType = MessageType.TEXT),
-    ChatMessage(id = 4L, senderId = "current_user", receiverId = "other", content = "Exactly. That's the whole point 🛡️", timestamp = System.currentTimeMillis() - 30_000, status = MessageStatus.PENDING, messageType = MessageType.TEXT),
+    ChatMessage(id = 1L, senderId = "other",        receiverId = "me",    content = "Hey! Is this quantum-encrypted? 🔐",                              timestamp = System.currentTimeMillis() - 180_000, status = MessageStatus.SENT,    messageType = MessageType.TEXT),
+    ChatMessage(id = 2L, senderId = "current_user", receiverId = "other", content = "Yes! Post-quantum CRYSTALS-Kyber key exchange. Nobody can read it.", timestamp = System.currentTimeMillis() - 120_000, status = MessageStatus.SENT,    messageType = MessageType.TEXT),
+    ChatMessage(id = 3L, senderId = "other",        receiverId = "me",    content = "That's incredible. Even quantum computers can't break it?",        timestamp = System.currentTimeMillis() -  90_000, status = MessageStatus.SENT,    messageType = MessageType.TEXT),
+    ChatMessage(id = 4L, senderId = "current_user", receiverId = "other", content = "Exactly. That's the whole point 🛡️",                              timestamp = System.currentTimeMillis() -  30_000, status = MessageStatus.PENDING, messageType = MessageType.TEXT),
 )
 
 @Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Chat — Messages", widthDp = 390, heightDp = 844)
