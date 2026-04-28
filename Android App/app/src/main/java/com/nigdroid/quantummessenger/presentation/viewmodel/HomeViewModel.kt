@@ -82,10 +82,16 @@ class HomeViewModel @Inject constructor(
                     (contact.displayName?.contains(query, ignoreCase = true) == true) ||
                     contact.userId.contains(query, ignoreCase = true)
                 }
+                val filteredAllContacts = if (query.isBlank()) allContacts
+                else allContacts.filter { contact ->
+                    (contact.displayName?.contains(query, ignoreCase = true) == true) ||
+                    contact.userId.contains(query, ignoreCase = true)
+                }
 
                 HomeUiState.Success(
                     inboxItems = filteredInbox,
                     contacts = filteredContacts,
+                    allContacts = filteredAllContacts,
                     searchQuery = query
                 )
             }

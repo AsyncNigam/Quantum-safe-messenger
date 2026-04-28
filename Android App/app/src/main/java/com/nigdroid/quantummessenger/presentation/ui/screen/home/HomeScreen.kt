@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -76,6 +78,123 @@ private fun HomeScreenContent(
 ) {
     var showSearch by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Chats, 1 = Contacts
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+
+    // ── FAB Bottom Sheet ─────────────────────────────────────────────────
+    if (showBottomSheet) {
+        val allContacts = (uiState as? HomeUiState.Success)?.allContacts ?: emptyList()
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = sheetState,
+            containerColor = QuantumColors.Surface,
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            dragHandle = {
+                Box(
+                    Modifier.fillMaxWidth().padding(top = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        Modifier.size(width = 40.dp, height = 4.dp)
+                            .background(QuantumColors.TextDisabled, RoundedCornerShape(2.dp))
+                    )
+                }
+            }
+        ) {
+            Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+                Text(
+                    "Start a Conversation",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = QuantumColors.TextPrimary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // New Contact button
+                Box(
+                    Modifier.fillMaxWidth()
+                        .glassmorphism(cornerRadius = 16, overlayAlpha = 0.12f, usePrimaryTint = true)
+                        .background(
+                            brush = Brush.linearGradient(
+                                listOf(QuantumColors.Primary, QuantumColors.PrimaryDark)
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { showBottomSheet = false; onNewChatClick() }
+                        .padding(16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.PersonAdd, null, tint = Color.White, modifier = Modifier.size(22.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text("Add New Contact", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 15.sp)
+                            Text("Scan QR code or enter fingerprint", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                        }
+                    }
+                }
+
+                if (allContacts.isNotEmpty()) {
+                    Text(
+                        "Existing Contacts",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = QuantumColors.TextTertiary,
+                        modifier = Modifier.padding(top = 20.dp, bottom = 10.dp)
+                    )
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 300.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(allContacts, key = { "sheet_${it.userId}" }) { contact ->
+                            Box(
+                                Modifier.fillMaxWidth()
+                                    .glassmorphism(cornerRadius = 16, overlayAlpha = 0.08f)
+                                    .background(QuantumColors.GlassWhite08, RoundedCornerShape(16.dp))
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .clickable { showBottomSheet = false; onChatClick(contact.userId) }
+                                    .padding(horizontal = 14.dp, vertical = 12.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        Modifier.size(42.dp)
+                                            .background(
+                                                brush = Brush.linearGradient(
+                                                    listOf(QuantumColors.Accent.copy(alpha = 0.6f), QuantumColors.Primary.copy(alpha = 0.4f))
+                                                ),
+                                                shape = CircleShape
+                                            ).clip(CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            contact.displayName?.firstOrNull()?.uppercase() ?: "?",
+                                            color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp
+                                        )
+                                    }
+                                    Spacer(Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            contact.displayName ?: "Unknown",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = QuantumColors.TextPrimary
+                                        )
+                                        Text(
+                                            contact.userId.take(16) + "…",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = QuantumColors.TextTertiary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp).navigationBarsPadding())
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -114,6 +233,14 @@ private fun HomeScreenContent(
                     )
                 }
 
+                // ── Tab selector ────────────────────────────────────────
+                val contactCount = (uiState as? HomeUiState.Success)?.allContacts?.size ?: 0
+                HomeTabSelector(
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it },
+                    contactCount = contactCount
+                )
+
                 // ── Main content ────────────────────────────────────────
                 AnimatedContent(
                     targetState   = uiState,
@@ -127,14 +254,28 @@ private fun HomeScreenContent(
                         is HomeUiState.Loading -> HomeLoadingState()
                         is HomeUiState.Error   -> HomeErrorState(state.message, onRetry)
                         is HomeUiState.Success -> {
-                            if (state.inboxItems.isEmpty() && state.contacts.isEmpty()) {
-                                HomeEmptyState(onNewChatClick)
-                            } else {
-                                HomeConversationList(
-                                    inboxItems  = state.inboxItems,
-                                    contacts    = state.contacts,
-                                    onChatClick = onChatClick
-                                )
+                            when (selectedTab) {
+                                0 -> { // Chats tab
+                                    if (state.inboxItems.isEmpty() && state.contacts.isEmpty()) {
+                                        HomeEmptyState(onNewChatClick)
+                                    } else {
+                                        HomeConversationList(
+                                            inboxItems  = state.inboxItems,
+                                            contacts    = state.contacts,
+                                            onChatClick = onChatClick
+                                        )
+                                    }
+                                }
+                                1 -> { // Contacts tab
+                                    if (state.allContacts.isEmpty()) {
+                                        ContactsEmptyState(onNewChatClick)
+                                    } else {
+                                        ContactsTabList(
+                                            contacts = state.allContacts,
+                                            onChatClick = onChatClick
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -149,7 +290,7 @@ private fun HomeScreenContent(
                 .navigationBarsPadding()
                 .padding(end = 20.dp, bottom = 24.dp)
         ) {
-            NewChatFab(onClick = onNewChatClick)
+            NewChatFab(onClick = { showBottomSheet = true })
         }
     }
 }
@@ -661,6 +802,165 @@ private fun HomeErrorState(message: String, onRetry: () -> Unit) {
             colors   = ButtonDefaults.buttonColors(containerColor = QuantumColors.Primary)
         ) {
             Text("Retry", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tab Selector (Chats | Contacts)
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun HomeTabSelector(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+    contactCount: Int
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .glassmorphism(cornerRadius = 14, overlayAlpha = 0.08f)
+            .background(QuantumColors.GlassWhite08, RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(14.dp))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        listOf("Chats", "Contacts").forEachIndexed { index, label ->
+            val isSelected = selectedTab == index
+            val bgAlpha by animateFloatAsState(
+                targetValue = if (isSelected) 1f else 0f,
+                animationSpec = tween(250),
+                label = "tabBg"
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        color = if (isSelected) QuantumColors.Primary.copy(alpha = bgAlpha * 0.2f)
+                                else Color.Transparent,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .clickable { onTabSelected(index) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isSelected) QuantumColors.Primary else QuantumColors.TextTertiary
+                    )
+                    // Contact count badge
+                    if (index == 1 && contactCount > 0) {
+                        Spacer(Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .background(
+                                    color = if (isSelected) QuantumColors.Primary else QuantumColors.TextDisabled,
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (contactCount > 99) "99+" else contactCount.toString(),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Contacts Tab — full list
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun ContactsTabList(
+    contacts: List<ContactEntity>,
+    onChatClick: (String) -> Unit
+) {
+    LazyColumn(
+        modifier       = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start  = 16.dp,
+            end    = 16.dp,
+            top    = 8.dp,
+            bottom = 100.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        items(contacts, key = { "ctab_${it.userId}" }) { contact ->
+            ContactListItem(
+                contact = contact,
+                onClick = { onChatClick(contact.userId) }
+            )
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Contacts Empty State
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun ContactsEmptyState(onNewChatClick: (() -> Unit)? = null) {
+    Column(
+        modifier            = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 40.dp),
+        verticalArrangement   = Arrangement.Center,
+        horizontalAlignment   = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .glassmorphism(cornerRadius = 50, overlayAlpha = 0.12f, usePrimaryTint = true)
+                .background(QuantumColors.GlassWhite08, CircleShape)
+                .clip(CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("👤", fontSize = 42.sp)
+        }
+        Spacer(Modifier.height(28.dp))
+        Text(
+            text       = "No contacts yet",
+            style      = MaterialTheme.typography.titleLarge,
+            color      = QuantumColors.TextPrimary,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text      = "Scan a QR code or enter a fingerprint\nto add your first contact.",
+            style     = MaterialTheme.typography.bodyMedium,
+            color     = QuantumColors.TextTertiary,
+            textAlign = TextAlign.Center
+        )
+        if (onNewChatClick != null) {
+            Spacer(Modifier.height(32.dp))
+            Button(
+                onClick  = onNewChatClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape  = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = QuantumColors.Primary)
+            ) {
+                Icon(Icons.Default.PersonAdd, null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Add Contact", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

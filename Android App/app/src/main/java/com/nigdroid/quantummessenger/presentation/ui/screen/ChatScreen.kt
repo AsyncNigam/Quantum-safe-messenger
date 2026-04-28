@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Send
@@ -75,6 +76,64 @@ fun ChatScreen(
     // currentUserId is loaded from SessionManager inside ChatViewModel
     val currentUserId = (uiState as? ChatUiState.Success)?.currentUserId ?: ""
 
+    var showClearChatDialog by remember { mutableStateOf(false) }
+
+    // Clear chat confirmation dialog
+    if (showClearChatDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearChatDialog = false },
+            containerColor = QuantumColors.Surface,
+            shape = RoundedCornerShape(24.dp),
+            icon = {
+                Box(
+                    Modifier.size(52.dp)
+                        .background(QuantumColors.Error.copy(alpha = 0.15f), CircleShape)
+                        .clip(CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.DeleteSweep, null, tint = QuantumColors.Error, modifier = Modifier.size(26.dp))
+                }
+            },
+            title = {
+                Text(
+                    "Clear Chat",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = QuantumColors.TextPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Text(
+                    "This will permanently delete all messages in this conversation. The contact will remain.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = QuantumColors.TextSecondary
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showClearChatDialog = false; viewModel.clearChat() },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = QuantumColors.Error),
+                    modifier = Modifier.height(44.dp)
+                ) {
+                    Text("Clear", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showClearChatDialog = false },
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, QuantumColors.GlassBorder),
+                    modifier = Modifier.height(44.dp)
+                ) {
+                    Text("Cancel", color = QuantumColors.TextSecondary)
+                }
+            }
+        )
+    }
+
     ChatScreenContent(
         uiState       = uiState,
         currentUserId = currentUserId,
@@ -90,7 +149,8 @@ fun ChatScreen(
                 focusManager.clearFocus()
             }
         },
-        onRetry       = { viewModel.retryLoadingMessages() }
+        onRetry       = { viewModel.retryLoadingMessages() },
+        onClearChat   = { showClearChatDialog = true }
     )
 }
 
@@ -108,7 +168,8 @@ private fun ChatScreenContent(
     onBack        : () -> Unit,
     onInputChange : (String) -> Unit,
     onSend        : () -> Unit,
-    onRetry       : () -> Unit
+    onRetry       : () -> Unit,
+    onClearChat   : () -> Unit = {}
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -126,7 +187,8 @@ private fun ChatScreenContent(
                 participantInitial = (contactName?.firstOrNull() ?: participantId.firstOrNull())
                     ?.uppercaseChar()?.toString() ?: "?",
                 participantName    = contactName ?: participantId.take(12) + "…",
-                onBack             = onBack
+                onBack             = onBack,
+                onClearChat        = onClearChat
             )
 
             // ── Content ──────────────────────────────────────────────────────
@@ -175,7 +237,8 @@ private fun ChatScreenContent(
 private fun ChatHeader(
     participantInitial : String,
     participantName    : String,
-    onBack             : () -> Unit
+    onBack             : () -> Unit,
+    onClearChat        : () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -276,9 +339,9 @@ private fun ChatHeader(
                         leadingIcon = { Icon(Icons.Default.AccessTime, null, tint = QuantumColors.Primary) }
                     )
                     DropdownMenuItem(
-                        text = { Text("Clear Chat", color = QuantumColors.TextPrimary) },
-                        onClick = { showMenu = false },
-                        leadingIcon = { Icon(Icons.Default.ErrorOutline, null, tint = QuantumColors.Error) }
+                        text = { Text("Clear Chat", color = QuantumColors.Error) },
+                        onClick = { showMenu = false; onClearChat() },
+                        leadingIcon = { Icon(Icons.Default.DeleteSweep, null, tint = QuantumColors.Error) }
                     )
                 }
             }

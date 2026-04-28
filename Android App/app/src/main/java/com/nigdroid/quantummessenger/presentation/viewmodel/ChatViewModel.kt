@@ -2,6 +2,7 @@ package com.nigdroid.quantummessenger.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nigdroid.quantummessenger.data.local.ChatMessageDao
 import com.nigdroid.quantummessenger.data.local.ContactDao
 import com.nigdroid.quantummessenger.network.WebSocketManager
 import com.nigdroid.quantummessenger.domain.model.ChatMessage
@@ -41,6 +42,7 @@ class ChatViewModel @Inject constructor(
     private val getChatHistoryUseCase: GetChatHistoryUseCase,
     private val sessionManager: SessionManager,
     private val contactDao: ContactDao,
+    private val chatMessageDao: ChatMessageDao,
     private val webSocketManager: WebSocketManager
 ) : ViewModel() {
 
@@ -294,5 +296,25 @@ class ChatViewModel @Inject constructor(
     fun retryLoadingMessages() {
         _uiState.update { ChatUiState.Loading }
         loadChatHistory()
+    }
+
+    /**
+     * Clears all messages in the current conversation.
+     * The contact remains — only chat history is deleted.
+     */
+    fun clearChat() {
+        viewModelScope.launch {
+            try {
+                chatMessageDao.deleteConversation(currentUserId, recipientUserId)
+                // Room Flow will automatically emit an empty list
+            } catch (e: Exception) {
+                _uiState.update { currentState ->
+                    ChatUiState.Error(
+                        message = "Failed to clear chat: ${e.message}",
+                        messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
+                    )
+                }
+            }
+        }
     }
 }
