@@ -21,18 +21,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel for the Chat screen.
- *
- * Manages the application state following Unidirectional Data Flow (UDF) principles:
- * - Exposes a single StateFlow<ChatUiState> for the entire screen state
- * - Handles user actions (sendMessage)
- * - Observes incoming messages
- * - Loads chat history
- * - Manages errors gracefully
- *
- * All coroutines are launched in viewModelScope to ensure proper cleanup.
- */
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
@@ -47,7 +35,6 @@ class ChatViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ChatUiState>(ChatUiState.Loading)
-
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
     private var currentUserId: String = ""
@@ -56,18 +43,10 @@ class ChatViewModel @Inject constructor(
     private var isContactSaved: Boolean = false
     private var isNotificationsMuted: Boolean = false
 
-    /**
-     * Initializes the ViewModel with the recipient and starts observing messages.
-     * The current user's ID is ALWAYS loaded from SessionManager (real fingerprint).
-     *
-     * @param userId Ignored — kept for API compat but SessionManager is the source of truth
-     * @param participantId The ID of the user to chat with
-     */
     fun initialize(userId: String, participantId: String) {
         recipientUserId = participantId
 
         viewModelScope.launch {
-            // ALWAYS load from SessionManager — never trust the parameter
             currentUserId = sessionManager.textFingerprint.firstOrNull() ?: ""
 
             if (currentUserId.isBlank()) {
@@ -75,12 +54,10 @@ class ChatViewModel @Inject constructor(
                 return@launch
             }
 
-            // Look up contact display name and check if saved
             val contact = contactDao.getContactById(recipientUserId)
             contactName = contact?.displayName
             isContactSaved = contact != null
 
-            // Connect WebSocket with our fingerprint for auth
             if (!webSocketManager.isConnected()) {
                 webSocketManager.connect(currentUserId)
             }
@@ -90,17 +67,11 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-
-    /**
-     * Loads the chat history between the current user and the recipient.
-     * Updates the UI state with Success or Error depending on the outcome.
-     */
     private fun loadChatHistory() {
         viewModelScope.launch {
             try {
                 getChatHistoryUseCase(currentUserId, recipientUserId)
                     .catch { e ->
-                        // Handle unexpected errors loading messages
                         _uiState.update { currentState ->
                             ChatUiState.Error(
                                 message = "Failed to load chat history: ${e.message}",
@@ -144,10 +115,6 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Observes incoming messages from the WebSocket and saves them to the database.
-     * Handles both successful receptions and errors gracefully.
-     */
     private fun observeIncomingMessages() {
         viewModelScope.launch {
             receiveMessageUseCase()
@@ -173,10 +140,9 @@ class ChatViewModel @Inject constructor(
                                 }
                             }
 
-                            // After a brief delay, return to success state if messages exist
                             val currentMessages = (_uiState.value as? ChatUiState.Success)?.messages
                             if (currentMessages != null && currentMessages.isNotEmpty()) {
-                                delay(3000) // Show error for 3 seconds
+                                delay(3000)
                                 _uiState.update {
                                     ChatUiState.Success(messages = currentMessages)
                                 }
@@ -187,20 +153,11 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Sends a text message to the recipient.
-     * Updates the UI state to show sending indicator while in flight.
-     *
-     * @param plainTextContent The plain text message to send
-     */
     fun sendMessage(plainTextContent: String) {
-        if (plainTextContent.isBlank()) {
-            return // Ignore empty messages
-        }
+        if (plainTextContent.isBlank()) return
 
         viewModelScope.launch {
             try {
-                // Update UI to show sending indicator
                 _uiState.update { currentState ->
                     if (currentState is ChatUiState.Success) {
                         currentState.copy(isSending = true)
@@ -209,7 +166,6 @@ class ChatViewModel @Inject constructor(
                     }
                 }
 
-                // Execute the use case to send message
                 sendMessageUseCase(
                     plainTextContent = plainTextContent,
                     senderId = currentUserId,
@@ -217,7 +173,6 @@ class ChatViewModel @Inject constructor(
                     messageType = MessageType.TEXT
                 )
 
-                // Update UI to hide sending indicator
                 _uiState.update { currentState ->
                     if (currentState is ChatUiState.Success) {
                         currentState.copy(isSending = false)
@@ -226,17 +181,13 @@ class ChatViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                // Handle send error gracefully
                 _uiState.update { currentState ->
                     when (currentState) {
-                        is ChatUiState.Success -> {
-                            currentState.copy(isSending = false)
-                        }
+                        is ChatUiState.Success -> currentState.copy(isSending = false)
                         else -> currentState
                     }
                 }
 
-                // Emit error but keep existing messages
                 _uiState.update { currentState ->
                     when (currentState) {
                         is ChatUiState.Success -> {
@@ -251,7 +202,6 @@ class ChatViewModel @Inject constructor(
                     }
                 }
 
-                // After a brief delay, return to success state if messages exist
                 val currentMessages = (_uiState.value as? ChatUiState.Success)?.messages
                 if (currentMessages != null && currentMessages.isNotEmpty()) {
                     delay(3000)
@@ -263,32 +213,17 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Marks a message as read.
-     *
-     * @param messageId The ID of the message to mark as read
-     */
     fun markMessageAsRead(messageId: Long) {
         viewModelScope.launch {
             try {
-                // Use repository to mark as read (called directly via use case if needed)
-                // For now, this is a placeholder
             } catch (e: Exception) {
-                // Handle error silently for read receipt failures
             }
         }
     }
 
-    /**
-     * Deletes a message from the conversation.
-     *
-     * @param messageId The ID of the message to delete
-     */
     fun deleteMessage(messageId: Long) {
         viewModelScope.launch {
             try {
-                // Use repository to delete message
-                // Implementation would depend on repository interface
             } catch (e: Exception) {
                 _uiState.update { currentState ->
                     when (currentState) {
@@ -305,23 +240,15 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Retries loading chat history after an error.
-     */
     fun retryLoadingMessages() {
         _uiState.update { ChatUiState.Loading }
         loadChatHistory()
     }
 
-    /**
-     * Clears all messages in the current conversation.
-     * The contact remains — only chat history is deleted.
-     */
     fun clearChat() {
         viewModelScope.launch {
             try {
                 chatMessageDao.deleteConversation(currentUserId, recipientUserId)
-                // Room Flow will automatically emit an empty list
             } catch (e: Exception) {
                 _uiState.update { currentState ->
                     ChatUiState.Error(
@@ -333,22 +260,14 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Saves the current contact to the database.
-     * Uses the recipientUserId (fingerprint) and current contactName.
-     */
     fun saveContact(displayName: String? = null) {
         viewModelScope.launch {
             try {
-                // If the contact doesn't exist, we must use AddContactUseCase
-                // to fetch their keys and properly register them.
                 val result = addContactUseCase(recipientUserId, displayName)
                 
                 when (result) {
                     is AddContactUseCase.Result.Success, 
                     is AddContactUseCase.Result.AlreadyExists -> {
-                        // Successfully added or already existed.
-                        // Refresh local state.
                         val contact = contactDao.getContactById(recipientUserId)
                         contactName = contact?.displayName
                         isContactSaved = true
@@ -372,9 +291,7 @@ class ChatViewModel @Inject constructor(
                             )
                         }
                     }
-                    AddContactUseCase.Result.SelfAdd -> {
-                        // Should not happen in ChatScreen but handle for safety
-                    }
+                    AddContactUseCase.Result.SelfAdd -> {}
                 }
             } catch (e: Exception) {
                 _uiState.update { currentState ->
@@ -387,11 +304,6 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Renames an existing saved contact.
-     *
-     * @param newName The new display name for the contact
-     */
     fun renameContact(newName: String) {
         viewModelScope.launch {
             try {
@@ -411,7 +323,6 @@ class ChatViewModel @Inject constructor(
                 contactDao.insertContact(updated)
                 contactName = updated.displayName
                 
-                // Update UI
                 _uiState.update { currentState ->
                     if (currentState is ChatUiState.Success) {
                         currentState.copy(contactName = contactName)

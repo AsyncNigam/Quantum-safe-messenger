@@ -42,17 +42,6 @@ import com.nigdroid.quantummessenger.security.NotificationPermissionManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-/**
- * MainActivity — the single-Activity entry point.
- *
- * Security flow:
- *   1. App starts → LockedScreen (biometric gate)
- *   2. Biometric success → validate Keystore key integrity
- *   3. Key intact → Unlocked → AppNavigation
- *   4. Key invalidated (KPIE) → VaultCompromisedScreen → wipe → AuthScreen
- *   5. App backgrounded (ON_STOP) → lock immediately
- *   6. App resumed (ON_START) → LockedScreen + biometric prompt again
- */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
@@ -61,19 +50,15 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var biometricPromptManager: BiometricPromptManager
 
-    // Track if we've already triggered biometric this lifecycle to avoid double-prompts
     private var biometricTriggeredThisResume = false
 
-    // ── Lifecycle observer for lock-on-background ─────────────────────────────
     private val processLifecycleObserver = object : DefaultLifecycleObserver {
         override fun onStop(owner: LifecycleOwner) {
-            // Lock immediately when app goes to background
             viewModel.lock()
             biometricTriggeredThisResume = false
         }
 
         override fun onStart(owner: LifecycleOwner) {
-            // Auto-trigger biometric when app returns to foreground
             if (!biometricTriggeredThisResume && viewModel.lockState.value == LockState.Locked) {
                 biometricTriggeredThisResume = true
                 triggerBiometricUnlock()
@@ -83,16 +68,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Disable screenshots and screen recording
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE)
 
         enableEdgeToEdge()
-
-        // Request notification permission (Android 13+)
         NotificationPermissionManager.requestNotificationPermission(this)
-
-        // Register process-level lifecycle observer (survives config changes)
         ProcessLifecycleOwner.get().lifecycle.addObserver(processLifecycleObserver)
 
         setContent {
@@ -104,7 +84,6 @@ class MainActivity : AppCompatActivity() {
                     val lockState by viewModel.lockState.collectAsState()
                     val startDestination by viewModel.startDestination.collectAsState()
 
-                    // Auto-trigger biometric on first composition if locked
                     LaunchedEffect(lockState) {
                         if (lockState == LockState.Locked && !biometricTriggeredThisResume) {
                             biometricTriggeredThisResume = true
@@ -112,7 +91,6 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
 
-                    // ── Screen stack ─────────────────────────────────────────────
                     Box(modifier = Modifier.fillMaxSize()) {
                         val isLocked = lockState != LockState.Unlocked && lockState != LockState.WipeComplete
 
@@ -131,9 +109,7 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
 
-                        // Authentication Overlay (LockedScreen)
                         if (isLocked) {
-                            // Semi-transparent background to hide the UI beneath efficiently
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -167,14 +143,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Removed AuthenticationDialog (reverting to LockedScreen)
-
     override fun onDestroy() {
         super.onDestroy()
         ProcessLifecycleOwner.get().lifecycle.removeObserver(processLifecycleObserver)
     }
-
-    // ── Biometric Prompt ──────────────────────────────────────────────────────
 
     private fun triggerBiometricUnlock() {
         biometricPromptManager.showBiometricPrompt(
@@ -195,11 +167,8 @@ class MainActivity : AppCompatActivity() {
                     is BiometricPromptManager.BiometricResult.PermanentLockout -> {
                         viewModel.onBiometricError(result.message)
                     }
-                    is BiometricPromptManager.BiometricResult.Failed -> {
-                        // Single attempt failed — prompt retries automatically, no state change
-                    }
+                    is BiometricPromptManager.BiometricResult.Failed -> {}
                     is BiometricPromptManager.BiometricResult.FeatureUnavailable -> {
-                        // No biometric hardware — skip gate, validate key directly
                         viewModel.onBiometricUnavailable()
                     }
                 }

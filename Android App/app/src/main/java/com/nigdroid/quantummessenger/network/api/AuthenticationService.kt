@@ -10,67 +10,45 @@ import retrofit2.http.Query
 
 interface AuthenticationService {
 
-    /** GET /health — liveness check */
+
     @GET("health")
     suspend fun checkHealth(): Response<GenericResponse>
 
-    /**
-     * POST /auth/register
-     *
-     * Zero-Knowledge identity registration.
-     * Sends ML-KEM and X25519 public keys, receives a textFingerprint.
-     */
+
     @POST("api/auth/register")
     suspend fun register(
         @Body request: RegisterRequest
     ): Response<RegisterResponse>
 
-    /** GET /keys/sync — fetch paginated public key bundles */
+
     @GET("api/keys/sync")
     suspend fun syncKeys(
         @Query("page")  page: Int,
         @Query("limit") limit: Int
     ): Response<KeySyncResponse>
 
-    /** POST /api/keys/upload — upload full hybrid key bundle (after registration) */
+
     @POST("api/keys/upload")
     suspend fun uploadKeyBundle(
         @Header("Authorization") fingerprint: String,
         @Body request: KeyUploadRequest
     ): Response<GenericResponse>
 
-    /**
-     * GET /auth/lookup/{fingerprint}
-     *
-     * Contact discovery — fetch public keys for a given text fingerprint.
-     * Requires Bearer auth.
-     */
+
     @GET("api/auth/lookup/{fingerprint}")
     suspend fun lookupUser(
         @Header("Authorization") auth: String,
         @retrofit2.http.Path("fingerprint") fingerprint: String
     ): Response<LookupResponse>
 
-    /**
-     * POST /api/auth/fcm-token
-     *
-     * Register or update FCM token for push notifications.
-     * Requires Bearer auth.
-     */
+
     @POST("api/auth/fcm-token")
     suspend fun registerFcmToken(
         @Header("Authorization") auth: String,
         @Body request: FcmTokenRequest
     ): Response<GenericResponse>
 
-    /**
-     * DELETE /api/auth/account
-     *
-     * Soft-delete the authenticated user's account.
-     * Wipes public keys from backend but keeps the fingerprint row
-     * so contacts can detect "Deleted Account".
-     * Requires Bearer auth.
-     */
+
     @DELETE("api/auth/account")
     suspend fun deleteAccount(
         @Header("Authorization") auth: String

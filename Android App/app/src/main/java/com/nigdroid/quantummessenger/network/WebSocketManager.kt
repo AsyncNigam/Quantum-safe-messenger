@@ -40,10 +40,8 @@ class WebSocketManager @Inject constructor() {
     val events: SharedFlow<SocketEvent> = _events.asSharedFlow()
 
     fun connect(fingerprint: String) {
-        // If already connected with same fingerprint, skip
         if (socket?.connected() == true && currentFingerprint == fingerprint) return
 
-        // Disconnect existing socket if any
         socket?.off()
         socket?.disconnect()
 

@@ -15,16 +15,6 @@ import kotlinx.coroutines.withContext
 import java.security.KeyPairGenerator
 import javax.inject.Inject
 
-/**
- * Use Case: Generate the two public keys required for Zero-Knowledge registration.
- *
- * Generates:
- *  - ML-KEM-768 keypair  (post-quantum KEM — sent to backend)
- *  - X25519 keypair      (classical DH    — sent to backend)
- *
- * Private keys are encrypted with Tink AEAD and stored in SharedPreferences.
- * Only public keys are returned for transmission to /auth/register.
- */
 class GenerateIdentityUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
     private val cryptoManager: CryptoManager
@@ -38,10 +28,7 @@ class GenerateIdentityUseCase @Inject constructor(
     suspend operator fun invoke(): Result<PublicKeys> =
         withContext(Dispatchers.Default) {
             runCatching {
-                // Step 1: Generate ML-KEM-768 keypair
                 val mlKemPair = generateMLKemKey()
-
-                // Step 2: Generate X25519 keypair
                 val x25519Pair = generateX25519Key()
 
                 val keys = PublicKeys(
@@ -49,7 +36,6 @@ class GenerateIdentityUseCase @Inject constructor(
                     x25519PublicKey = x25519Pair.publicKey,
                 )
 
-                // Secure-erase private key bytes from memory
                 mlKemPair.clear()
                 x25519Pair.clear()
 
@@ -87,31 +73,17 @@ class GenerateIdentityUseCase @Inject constructor(
         }
     }
 
-    /**
-     * Encrypts and persists key material in SharedPreferences.
-     *
-     * Android Keystore does not support non-standard key types (ML-KEM),
-     * so we encrypt them with the app's Tink AEAD master key (which IS
-     * backed by the Android Keystore) and store the ciphertext.
-     *
-     * Alias: "quantum_messenger_<keyType>"
-     */
     @VisibleForTesting
     internal fun storeKeyInKeystore(keyType: String, keyMaterial: ByteArray) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val aad = "private_key_$keyType".toByteArray(Charsets.UTF_8)
 
-        // Encrypt with Tink AEAD (backed by Android Keystore master key)
         val encrypted = runBlocking { cryptoManager.encrypt(keyMaterial, aad) }
         val encoded = Base64.encodeToString(encrypted, Base64.NO_WRAP)
 
         prefs.edit().putString("encrypted_pk_$keyType", encoded).apply()
     }
 
-    /**
-     * Retrieves and decrypts a previously stored private key.
-     * @return decrypted key bytes, or null if not found.
-     */
     suspend fun retrievePrivateKey(keyType: String): ByteArray? {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val encoded = prefs.getString("encrypted_pk_$keyType", null) ?: return null
@@ -131,7 +103,5 @@ class GenerateIdentityUseCase @Inject constructor(
     }
 }
 
-// Kotlin extension to transform Result<T> error without changing type
 private fun <T> Result<T>.mapError(transform: (Throwable) -> Throwable): Result<T> =
     fold(onSuccess = { Result.success(it) }, onFailure = { Result.failure(transform(it)) })
-

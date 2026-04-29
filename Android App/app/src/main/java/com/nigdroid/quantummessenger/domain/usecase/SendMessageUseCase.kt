@@ -13,9 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-/**
- * Enhanced Use Case for sending messages with Background Resilience.
- */
 class SendMessageUseCase @Inject constructor(
     private val chatRepository: ChatRepository,
     private val webSocketManager: WebSocketManager,
@@ -29,20 +26,17 @@ class SendMessageUseCase @Inject constructor(
         messageType: MessageType = MessageType.TEXT
     ) {
         withContext(Dispatchers.IO) {
-            // 1. Prepare domain model
             val domainMessage = ChatMessage(
                 senderId = senderId,
                 receiverId = receiverId,
                 content = plainTextContent,
                 timestamp = System.currentTimeMillis(),
                 messageType = messageType,
-                status = MessageStatus.PENDING // Initially pending
+                status = MessageStatus.PENDING
             )
 
-            // 2. Save to local DB and get the generated ID
             val messageId = chatRepository.sendMessage(domainMessage)
 
-            // 3. Prepare Protobuf payload
             val protoMessage = ProtoMessage.newBuilder()
                 .setSenderId(senderId)
                 .setRecipientId(receiverId)
@@ -51,17 +45,13 @@ class SendMessageUseCase @Inject constructor(
                 .build()
 
             try {
-                // 4. Try immediate send via WebSocket
                 if (webSocketManager.isConnected()) {
                     webSocketManager.sendMessage(protoMessage)
-                    // Update status to SENT immediately
                     chatRepository.updateMessageStatus(messageId, MessageStatus.SENT)
                 } else {
-                    // Fallback to WorkManager if not connected
                     enqueueBackgroundSend(messageId, protoMessage, receiverId)
                 }
             } catch (e: Exception) {
-                // If immediate send fails, enqueue for background retry
                 enqueueBackgroundSend(messageId, protoMessage, receiverId)
             }
         }

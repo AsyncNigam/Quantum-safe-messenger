@@ -12,16 +12,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-/**
- * Implementation of ChatRepository that handles encryption/decryption of messages.
- */
+
 class ChatRepositoryImpl @Inject constructor(
     private val chatMessageDao: ChatMessageDao,
     private val cryptoManager: CryptoManager
 ) : ChatRepository {
 
     override suspend fun sendMessage(message: ChatMessage): Long {
-        // Encrypt the message content
         val encryptedContent = cryptoManager.encrypt(
             message.content.toByteArray(Charsets.UTF_8)
         ).toString(Charsets.ISO_8859_1) // Store as string for Room
@@ -70,9 +67,7 @@ class ChatRepositoryImpl @Inject constructor(
         chatMessageDao.updateMessageStatus(messageId, status)
     }
 
-    /**
-     * Decrypts a ChatMessageEntity to a ChatMessage domain model.
-     */
+
     private suspend fun decryptEntity(entity: ChatMessageEntity): ChatMessage {
         val decryptedContent = try {
             val encryptedBytes = entity.content.toByteArray(Charsets.ISO_8859_1)

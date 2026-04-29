@@ -10,10 +10,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-/**
- * Use case to synchronize contacts from the remote server to the local database.
- * Updated for ZK architecture — uses key sync endpoint instead of phone-based contacts.
- */
+
 class SyncContactsUseCase @Inject constructor(
     private val authService: AuthenticationService,
     private val contactDao: ContactDao,

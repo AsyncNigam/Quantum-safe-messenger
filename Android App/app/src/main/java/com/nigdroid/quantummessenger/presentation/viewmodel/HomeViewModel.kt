@@ -17,9 +17,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel for the Home/Inbox screen.
- */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getInboxUseCase: GetInboxUseCase,
@@ -35,10 +32,7 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    /** The real user fingerprint — loaded from SessionManager. */
     private var currentUserId: String? = null
-
-    /** Current search query. */
     private val _searchQuery = MutableStateFlow("")
 
     init {
@@ -48,7 +42,6 @@ class HomeViewModel @Inject constructor(
 
     private fun loadUserAndObserveInbox() {
         viewModelScope.launch {
-            // Get the user's fingerprint first, then observe inbox
             currentUserId = sessionManager.textFingerprint.firstOrNull()
 
             if (currentUserId == null) {
@@ -62,17 +55,14 @@ class HomeViewModel @Inject constructor(
                 webSocketManager.connect(currentUserId!!)
             }
 
-            // Combine inbox items, contacts, and search query into a single flow
             combine(
                 getInboxUseCase(currentUserId!!),
                 contactDao.getAllContacts(),
                 _searchQuery
             ) { inboxItems, allContacts, query ->
-                // Find contacts that have NO conversation yet
                 val inboxUserIds = inboxItems.map { it.userId }.toSet()
                 val contactsWithoutChat = allContacts.filter { it.userId !in inboxUserIds }
 
-                // Apply search filter
                 val filteredInbox = if (query.isBlank()) inboxItems
                 else inboxItems.filter { item ->
                     (item.displayName?.contains(query, ignoreCase = true) == true) ||
@@ -107,7 +97,6 @@ class HomeViewModel @Inject constructor(
 
     fun syncContacts() {
         viewModelScope.launch {
-            // Trigger sync which handles its own errors and updates the DB
             syncContactsUseCase()
         }
     }
@@ -123,11 +112,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Observes incoming messages from WebSocket and saves them to Room DB.
-     * This runs as long as the HomeViewModel is alive (i.e. user is in the app).
-     * Messages saved to DB will auto-update the inbox via Room's Flow queries.
-     */
     private fun observeIncomingMessages() {
         viewModelScope.launch {
             receiveMessageUseCase()
@@ -139,4 +123,3 @@ class HomeViewModel @Inject constructor(
         }
     }
 }
-

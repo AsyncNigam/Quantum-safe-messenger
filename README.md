@@ -367,23 +367,23 @@ SMS OTP: 482901                   (nothing)
 ```mermaid
 erDiagram
     USERS {
-        text fingerprint PK "SHA-256(mlKemPK || x25519PK)"
-        text ml_kem_public_key "Base64, 1184 bytes"
-        text x25519_public_key "Base64, 32 bytes"
+        text fingerprint PK "SHA-256 of public keys"
+        text ml_kem_public_key "Base64 1184 bytes"
+        text x25519_public_key "Base64 32 bytes"
         timestamp created_at
     }
 
     PUBLIC_KEYS {
         uuid id PK
-        text user_id FK "→ users.fingerprint"
+        text user_id FK "users.fingerprint"
         varchar algorithm "hybrid-pq"
-        jsonb key_data "x25519PK, mlKemPK, ed25519Sig, mlDsaSig"
+        jsonb key_data "all public keys and signatures"
         timestamp created_at
         timestamp updated_at
     }
 
     FCM_TOKENS {
-        text fingerprint PK_FK "→ users.fingerprint"
+        text fingerprint FK "users.fingerprint"
         text fcm_token "Firebase device token"
         timestamp updated_at
     }

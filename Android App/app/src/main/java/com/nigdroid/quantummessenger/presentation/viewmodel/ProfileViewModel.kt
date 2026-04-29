@@ -12,8 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// ── Action result states ─────────────────────────────────────────────────────
-
 sealed class AccountActionState {
     object Idle : AccountActionState()
     object Loading : AccountActionState()
@@ -34,22 +32,18 @@ class ProfileViewModel @Inject constructor(
     private val _displayName = MutableStateFlow<String?>(null)
     val displayName: StateFlow<String?> = _displayName.asStateFlow()
 
-    /** Real Base64-encoded ML-KEM public key from registration. */
     private val _mlKemPublicKey = MutableStateFlow("Loading…")
     val mlKemPublicKey: StateFlow<String> = _mlKemPublicKey.asStateFlow()
 
-    /** Real Base64-encoded X25519 public key from registration. */
     private val _x25519PublicKey = MutableStateFlow("Loading…")
     val x25519PublicKey: StateFlow<String> = _x25519PublicKey.asStateFlow()
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
 
-    /** Whether the display name is in edit mode */
     private val _isEditing = MutableStateFlow(false)
     val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()
 
-    /** Account action (logout / delete) state */
     private val _accountAction = MutableStateFlow<AccountActionState>(AccountActionState.Idle)
     val accountAction: StateFlow<AccountActionState> = _accountAction.asStateFlow()
 
@@ -85,7 +79,7 @@ class ProfileViewModel @Inject constructor(
             _isSaving.value = true
             sessionManager.setDisplayName(name.ifBlank { null })
             _isSaving.value = false
-            _isEditing.value = false  // Switch back to view mode
+            _isEditing.value = false
         }
     }
 
@@ -97,13 +91,6 @@ class ProfileViewModel @Inject constructor(
         _isEditing.value = false
     }
 
-    // ── Delete Account ───────────────────────────────────────────────────────
-
-    /**
-     * Delete Account — soft-deletes the account on the backend
-     * (wipes public keys, marks as deleted), then wipes all local data.
-     * Contacts will see "Deleted Account" when they look up this identity.
-     */
     fun deleteAccount() {
         viewModelScope.launch {
             _accountAction.value = AccountActionState.Loading
@@ -111,10 +98,6 @@ class ProfileViewModel @Inject constructor(
                 val success = authRepository.deleteAccount()
                 if (success) {
                     _accountAction.value = AccountActionState.Success
-                    // Kill the process after a short delay to allow the UI
-                    // to navigate. This ensures all stale Hilt singletons
-                    // (Room DB, WebSocket, etc.) are fully destroyed.
-                    // On next launch, Hilt creates everything fresh.
                     kotlinx.coroutines.delay(500)
                     android.os.Process.killProcess(android.os.Process.myPid())
                 } else {
@@ -130,7 +113,6 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    /** Reset the action state after the UI has consumed it */
     fun resetAccountAction() {
         _accountAction.value = AccountActionState.Idle
     }

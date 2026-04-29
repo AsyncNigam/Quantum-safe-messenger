@@ -23,17 +23,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * Firebase Cloud Messaging service for Quantum Messenger.
- *
- * Handles:
- *  1. Token refresh → syncs new token with backend
- *  2. Incoming data messages → shows encrypted notification
- *
- * All notifications are "opaque" — the server only sends a sender fingerprint
- * and a "you have a new message" signal. The actual message content is never
- * in the push payload (Zero-Knowledge compliance).
- */
+
 @AndroidEntryPoint
 class QuantumFirebaseMessagingService : FirebaseMessagingService() {
 
@@ -48,7 +38,6 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
         const val CHANNEL_NAME = "Quantum Messages"
         const val CHANNEL_DESC = "Encrypted message notifications"
 
-        /** Call this from Application.onCreate() to set up the notification channel. */
         fun createNotificationChannel(context: Context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val channel = NotificationChannel(
@@ -66,20 +55,14 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    /**
-     * Called when FCM generates a new registration token.
-     * This happens on first launch, after app data clear, or when the
-     * previous token is invalidated by Google.
-     */
+
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d(TAG, "New FCM token received")
         serviceScope.launch {
             try {
-                // 1. Store locally
                 sessionManager.setFcmToken(token)
 
-                // 2. Sync with backend (if registered)
                 val fingerprint = sessionManager.textFingerprint.firstOrNull()
                 if (fingerprint != null) {
                     val response = authService.registerFcmToken(
@@ -98,18 +81,9 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    /**
-     * Called when a push notification is received while the app is in the foreground.
-     *
-     * The payload is deliberately minimal (Zero-Knowledge):
-     *   - data["senderFingerprint"]: who sent the message (for local contact lookup)
-     *   - data["type"]: "new_message" | "contact_request"
-     *
-     * The actual message content is NEVER in the push payload.
-     */
+
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        Log.d(TAG, "Push notification received from: ${message.from}")
 
         val data = message.data
         val type = data["type"] ?: "new_message"
@@ -133,7 +107,6 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Truncated fingerprint for display
         val shortFp = senderFingerprint.take(8).uppercase()
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)

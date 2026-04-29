@@ -2,26 +2,17 @@ package com.nigdroid.quantummessenger.crypto
 
 import java.security.SecureRandom
 
-/**
- * Represents the state of a Double Ratchet session with one conversation partner.
- *
- * The Double Ratchet Algorithm provides:
- * 1. Forward secrecy: Deleting a message key reveals no information about past messages
- * 2. Break-in recovery: Compromise of current keys doesn't recover past messages
- * 3. Out-of-order tolerance: Messages can be decrypted later if arrived out of order
- */
 data class DoubleRatchetSession(
-    val userId: String,                    // ID of the remote user
-    var sendChainKey: ByteArray,           // Key for deriving send keys (KDF chain)
-    var receiveChainKey: ByteArray,        // Key for deriving receive keys
-    var dhPublicKey: ByteArray,            // Our current Diffie-Hellman public key
-    var dhPrivateKey: ByteArray,           // Our current Diffie-Hellman private key
-    var remoteDhPublicKey: ByteArray,      // Remote user's last known DH public key
-    var sendChainCounter: Int = 0,         // How many times we've ratcheted send
-    var receiveChainCounter: Int = 0,      // How many times we've ratcheted receive
-    var messageCounter: Int = 0,           // Counter within current chain
+    val userId: String,
+    var sendChainKey: ByteArray,
+    var receiveChainKey: ByteArray,
+    var dhPublicKey: ByteArray,
+    var dhPrivateKey: ByteArray,
+    var remoteDhPublicKey: ByteArray,
+    var sendChainCounter: Int = 0,
+    var receiveChainCounter: Int = 0,
+    var messageCounter: Int = 0,
     var timestamp: Long = System.currentTimeMillis(),
-    // Skipped message keys for out-of-order messages
     val skippedKeys: MutableMap<String, ByteArray> = mutableMapOf()
 ) {
     init {
@@ -32,18 +23,10 @@ data class DoubleRatchetSession(
         require(remoteDhPublicKey.size == 32) { "Remote DH public key must be 32 bytes" }
     }
 
-    /**
-     * Generates a unique key identifier for a skipped message.
-     * Format: "remoteChainCounter_messageCounter"
-     */
     fun getSkippedKeyId(chainCounter: Int, msgCounter: Int): String {
         return "$chainCounter:$msgCounter"
     }
 
-    /**
-     * Cleanup old keys to prevent unbounded memory growth.
-     * Keeps only the most recent 100 skipped keys.
-     */
     fun pruneSkippedKeys(maxSize: Int = 100) {
         if (skippedKeys.size > maxSize) {
             val keysToDelete = skippedKeys.keys.drop(skippedKeys.size - maxSize)
@@ -52,14 +35,10 @@ data class DoubleRatchetSession(
     }
 }
 
-
-/**
- * XChaCha20 DH result for ratcheting.
- */
 data class DiffieHellmanResult(
-    val publicKey: ByteArray,     // Our new public key
-    val privateKey: ByteArray,    // Our new private key (KEEP SECURE)
-    val sharedSecret: ByteArray   // DH result from (our private) * (their public)
+    val publicKey: ByteArray,
+    val privateKey: ByteArray,
+    val sharedSecret: ByteArray
 ) {
     init {
         require(publicKey.size == 32) { "Public key must be 32 bytes" }
@@ -84,14 +63,11 @@ data class DiffieHellmanResult(
     }
 }
 
-/**
- * Message key with metadata for encryption/decryption.
- */
 data class MessageKey(
-    val key: ByteArray,           // The symmetric key for AES-GCM
-    val chainCounter: Int,        // Which DH ratchet epoch
-    val messageCounter: Int,      // Which message in this chain
-    val initializationVector: ByteArray = ByteArray(12) // 96-bit IV for AES-GCM
+    val key: ByteArray,
+    val chainCounter: Int,
+    val messageCounter: Int,
+    val initializationVector: ByteArray = ByteArray(12)
 ) {
     init {
         require(key.size == 32) { "Message key must be 32 bytes" }
@@ -116,4 +92,3 @@ data class MessageKey(
         return result
     }
 }
-

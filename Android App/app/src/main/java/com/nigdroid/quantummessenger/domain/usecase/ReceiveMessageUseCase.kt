@@ -12,9 +12,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.mapNotNull
 import javax.inject.Inject
 
-/**
- * Use case for receiving and processing incoming messages.
- */
+
 class ReceiveMessageUseCase @Inject constructor(
     private val chatRepository: ChatRepository,
     private val webSocketManager: WebSocketManager
@@ -27,8 +25,6 @@ class ReceiveMessageUseCase @Inject constructor(
                 try {
                     val protoMessage = event.message
 
-                    // protoMessage is of type com.nigdroid.quantummessenger.proto.ChatMessage
-                    // The getter names from Protobuf Java Lite are used here.
                     val payloadString = String(protoMessage.payload.toByteArray(), Charsets.UTF_8)
 
                     val domainMessage = DomainChatMessage(

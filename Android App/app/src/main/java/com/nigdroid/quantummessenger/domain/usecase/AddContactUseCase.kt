@@ -9,10 +9,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-/**
- * AddContactUseCase — fetches a user's public keys from the server
- * by their Text Fingerprint and saves them locally as a ContactEntity.
- */
+
 class AddContactUseCase @Inject constructor(
     private val authService: AuthenticationService,
     private val contactDao: ContactDao,
@@ -29,24 +26,24 @@ class AddContactUseCase @Inject constructor(
         try {
             val cleaned = targetFingerprint.trim().lowercase()
 
-            // Validate format
+
             if (cleaned.length != 64 || !cleaned.matches(Regex("^[a-f0-9]+$"))) {
                 return@withContext Result.Error("Invalid fingerprint format — must be 64 hex characters.")
             }
 
-            // Prevent adding yourself
+
             val ownFingerprint = sessionManager.textFingerprint.firstOrNull()
             if (cleaned == ownFingerprint) {
                 return@withContext Result.SelfAdd
             }
 
-            // Check if already saved locally
+
             val existing = contactDao.getContactById(cleaned)
             if (existing != null) {
                 return@withContext Result.AlreadyExists(cleaned)
             }
 
-            // Fetch from server
+
             val bearerToken = "Bearer $ownFingerprint"
             val response = authService.lookupUser(bearerToken, cleaned)
 
@@ -61,7 +58,7 @@ class AddContactUseCase @Inject constructor(
 
             val body = response.body() ?: return@withContext Result.Error("Empty response from server.")
 
-            // Check if the user has deleted their account
+
             if (body.deleted == true) {
                 return@withContext Result.Error("This user has deleted their account.")
             }
@@ -70,7 +67,7 @@ class AddContactUseCase @Inject constructor(
             val mlKem = body.mlKemPublicKey ?: return@withContext Result.Error("Response missing ML-KEM key.")
             val x25519 = body.x25519PublicKey ?: return@withContext Result.Error("Response missing X25519 key.")
 
-            // Save to local Room database with display name
+
             val contact = ContactEntity(
                 userId         = fingerprint,
                 displayName    = displayName?.takeIf { it.isNotBlank() },

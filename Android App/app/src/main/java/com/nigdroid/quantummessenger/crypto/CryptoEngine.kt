@@ -1,9 +1,5 @@
 package com.nigdroid.quantummessenger.crypto
 
-/**
- * Legacy wrapper for PostQuantumCrypto to maintain compatibility with existing code.
- * All new code should use PostQuantumCrypto directly.
- */
 object CryptoEngine {
 
     fun generateKeypair(): KemKeypair {

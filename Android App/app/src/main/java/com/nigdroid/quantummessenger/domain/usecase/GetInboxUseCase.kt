@@ -8,17 +8,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 
-/**
- * Use case to retrieve the list of inbox items (recent conversations).
- */
+
 class GetInboxUseCase @Inject constructor(
     private val chatMessageDao: ChatMessageDao,
     private val contactDao: ContactDao,
     private val cryptoManager: CryptoManager
 ) {
-    /**
-     * Returns a flow of inbox items for the given user, combining message and contact data.
-     */
+
     operator fun invoke(currentUserId: String): Flow<List<InboxItem>> {
         return combine(
             chatMessageDao.getLastMessagesForUser(currentUserId),
@@ -31,7 +27,6 @@ class GetInboxUseCase @Inject constructor(
                 
                 val unreadCount = unreadMessages.count { it.senderId == otherUserId }
 
-                // Decrypt message content for display
                 val decryptedContent = try {
                     val encryptedBytes = lastMsg.content.toByteArray(Charsets.ISO_8859_1)
                     val decryptedBytes = cryptoManager.decrypt(encryptedBytes)
