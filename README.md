@@ -1,53 +1,49 @@
-# � Quantum Safe - Post-Quantum Encrypted Messaging
-
 <div align="center">
 
-![Quantum Safe](Quantum%20Safe%20images/Screenshot_2026-04-29-21-27-39-63_fc0d678334bc258baed0b03034397354.jpg)
+# 🛡️ Quantum Safe
 
-**A Privacy-First Messaging App Built with NIST-Approved Post-Quantum Cryptography**
+### Post-Quantum Encrypted Messenger for Android
 
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
-![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
-![Version](https://img.shields.io/badge/Version-1.0.0-blue)
-![Platform](https://img.shields.io/badge/Platform-Android%2B%20Web-blue)
+**The first production-ready messaging app built entirely on NIST-approved post-quantum cryptography.**  
+No passwords. No accounts. No phone numbers. Just math.
 
-**Features Zero-Knowledge Authentication • ML-KEM & ML-DSA Post-Quantum Encryption • Biometric SQLCipher Vault • Glassmorphism Compose UI • Offline Message Queuing**
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6?logo=typescript&logoColor=white)
+![PostQuantum](https://img.shields.io/badge/Post--Quantum-ML--KEM%20%7C%20ML--DSA-blueviolet)
 
-[Getting Started](#getting-started) • [Architecture](#architecture) • [Features](#features) • [Tech Stack](#tech-stack)
+<br/>
+
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-36-13-32_fc0d678334bc258baed0b03034397354.jpg" width="220" alt="Key Generation"/>
+&nbsp;&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-34-25-20_fc0d678334bc258baed0b03034397354.jpg" width="220" alt="Biometric Lock Light"/>
+&nbsp;&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-27-27-29_fc0d678334bc258baed0b03034397354.jpg" width="220" alt="Chat Dark"/>
+
+<sub>Key generation → Biometric vault → End-to-end encrypted chat</sub>
 
 </div>
 
 ---
 
-## 🌟 Overview
+## 🧠 The Problem We Solve
 
-**Quantum Safe** is the world's first production-ready, post-quantum encrypted messaging application that combines:
+> **"Harvest now, decrypt later"** — adversaries are already storing encrypted traffic today, waiting for quantum computers to break RSA and ECC in the near future.
 
-- 🔒 **NIST-Approved Post-Quantum Algorithms**: ML-KEM (Kyber) and ML-DSA (Dilithium) for future-proof encryption
-- 🔑 **Zero-Knowledge Architecture**: The server cannot decrypt your messages—ever
-- 🚫 **No Passwords, No Accounts**: Identity derived from cryptographic keys only
-- 📱 **Glassmorphic Compose UI**: Beautiful, modern Android UI with light/dark themes
-- 🔐 **Biometric SQLCipher Vault**: Fingerprint/Face unlock with encrypted local storage
-- 📴 **Offline-First Design**: WorkManager queues messages when recipients are offline
-- 🚀 **Silent Push Notifications**: Redis-backed FCM for real-time delivery
-- 🌐 **Hybrid Cryptography**: Classical (X25519, Ed25519) + Post-Quantum for maximum security
+Current messaging apps (Signal, WhatsApp, Telegram) rely on classical cryptography (Curve25519, RSA) that **will be broken** by sufficiently powerful quantum computers. Quantum Safe is built from the ground up with **NIST FIPS 203/204 approved post-quantum algorithms**, ensuring your messages stay private — today, tomorrow, and in the quantum era.
 
----
+### What Makes This Different
 
-## ✨ Features
-
-| Feature | Description | Status |
-|---------|-------------|--------|
-| 🔑 **Zero-Knowledge Authentication** | Cryptographic fingerprint-based identity (no passwords) | ✅ Active |
-| 🧬 **Hybrid Encryption** | ML-KEM + X25519 for key encapsulation; ML-DSA + Ed25519 for signatures | ✅ Active |
-| 💎 **Glassmorphism UI** | Frosted glass effect with Material3 Compose | ✅ Active |
-| 👁️ **Biometric Vault** | Fingerprint/Face + SQLCipher encryption | ✅ Active |
-| 📴 **Offline Queue** | WorkManager + SQLite for queued messages | ✅ Active |
-| 📲 **Push Notifications** | Firebase + Redis for real-time silent notifications | ✅ Active |
-| 🎨 **Dark/Light Themes** | Adaptive theming with glassmorphic elements | ✅ Active |
-| 🌐 **Peer Discovery** | Paginated public key synchronization | ✅ Active |
-| 🔄 **Real-Time Sync** | Socket.io with Redis pub/sub adapter | ✅ Active |
-| ✍️ **Message History** | Encrypted message persistence | ✅ Active |
+| | Traditional Messengers | Quantum Safe |
+|---|---|---|
+| **Key Exchange** | X25519 (vulnerable to quantum) | ML-KEM-768 + X25519 hybrid |
+| **Signatures** | Ed25519 only | ML-DSA + Ed25519 dual signing |
+| **Identity** | Phone number / email | SHA-256 cryptographic fingerprint |
+| **Authentication** | Password + OTP | Biometric + zero-knowledge proof |
+| **Local Storage** | Plaintext SQLite | SQLCipher AES-256 vault |
+| **Server Knowledge** | Metadata visible | True zero-knowledge relay |
 
 ---
 
@@ -55,220 +51,346 @@
 
 <div align="center">
 
-| Light Theme | Dark Theme |
-|-------------|-----------|
-| ![Contacts Light](Quantum%20Safe%20images/Screenshot_2026-04-29-21-27-39-63_fc0d678334bc258baed0b03034397354.jpg) | ![Empty State Dark](Quantum%20Safe%20images/Screenshot_2026-04-29-21-43-05-77_fc0d678334bc258baed0b03034397354.jpg) |
+### ☀️ Light Theme
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-32-05-72_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-32-11-58_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-27-33-49_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-32-19-08_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+
+<sub>Home · Contacts · Chat · Profile with QR Identity</sub>
+
+### 🌙 Dark Theme
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-27-49-14_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-33-11-40_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-27-27-29_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-33-24-66_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+
+<sub>Home · Contacts · Chat · Profile with QR Identity</sub>
+
+### 🔐 Security Features
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-34-12-07_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-36-13-32_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-27-53-41_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-22-12-38-29_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+
+<sub>Biometric Lock (Dark) · Key Generation · QR Scanner · QR Scan Contact Add</sub>
+
+### 📱 Additional Views
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-43-05-77_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-32-39-20_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-33-41-37_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+&nbsp;
+<img src="Quantum%20Safe%20images/Screenshot_2026-04-29-21-32-25-17_fc0d678334bc258baed0b03034397354.jpg" width="180"/>
+
+<sub>Empty State · Add Contact (Manual) · Start Conversation Sheet · Crypto Info</sub>
 
 </div>
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
-### Hybrid Encryption Flow
+```mermaid
+graph TB
+    subgraph Client["📱 Android Client — Kotlin + Jetpack Compose"]
+        UI["🎨 Glassmorphic UI<br/>Compose + Material3"]
+        VM["📦 ViewModels<br/>Hilt DI + StateFlow"]
+        Crypto["🔐 Crypto Engine<br/>liboqs · Bouncy Castle · Tink"]
+        DB["💾 Room + SQLCipher<br/>AES-256 Encrypted Vault"]
+        Net["🌐 Network Layer<br/>Ktor · Socket.io Client"]
+        WM["⏱️ WorkManager<br/>Offline Queue"]
+        Bio["👁️ BiometricPrompt<br/>TEE-backed Auth"]
+    end
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        QUANTUM SAFE                                 │
-│                   Hybrid Encryption Flow                            │
-├─────────────────────────────────────────────────────────────────────┤
+    subgraph Server["🚀 Express Backend — Node.js + TypeScript"]
+        API["📡 REST API<br/>/auth · /keys · /health"]
+        WS["⚡ Socket.io<br/>Real-time Relay"]
+        MW["🛡️ Middleware<br/>Auth · Rate Limit · Helmet"]
+        SVC["⚙️ Services<br/>FCM · OfflineQueue"]
+    end
 
-1️⃣  SENDER (Alice)
-   ┌──────────────────────────────────────┐
-   │ Plain Message: "Hello Bob"           │
-   └──────────────────────────┬───────────┘
-                              │
-                 ┌────────────▼────────────┐
-                 │ Symmetric Encryption   │
-                 │ (ChaCha20-Poly1305)   │
-                 │ Using shared secret    │
-                 └────────────┬───────────┘
-                              │
-                 ┌────────────▼────────────────────────────┐
-                 │ Encapsulate symmetric key using:        │
-                 │ • ML-KEM (Bob's post-quantum public)   │
-                 │ • X25519 (Bob's classical DH key)      │
-                 └────────────┬───────────────────────────┘
-                              │
-                 ┌────────────▼────────────────────────────┐
-                 │ Sign the ciphertext with Alice's:      │
-                 │ • ML-DSA (post-quantum private key)   │
-                 │ • Ed25519 (classical private key)     │
-                 └────────────┬───────────────────────────┘
-                              │
-                 ┌────────────▼────────────────────────────┐
-                 │ Encrypted Message Packet:              │
-                 │ {                                      │
-                 │   ciphertext: "...",                   │
-                 │   mlKemEncapsulated: "...",            │
-                 │   x25519Encapsulated: "...",           │
-                 │   mlDsaSignature: "...",               │
-                 │   ed25519Signature: "..."              │
-                 │ }                                      │
-                 └────────────┬───────────────────────────┘
-                              │
-                              ▼
-                 ┌────────────────────────┐
-                 │   REDIS QUEUE/Socket   │
-                 │   (Server Blind)       │
-                 └────────────┬───────────┘
-                              │
-2️⃣  RECEIVER (Bob)
-   ┌──────────────────────────────────────┐
-   │ Receive encrypted packet             │
-   │ (cannot decrypt on server)           │
-   └──────────────────────────┬───────────┘
-                              │
-                 ┌────────────▼────────────────────────────┐
-                 │ Verify signatures with Alice's:        │
-                 │ • ML-DSA public key                   │
-                 │ • Ed25519 public key                  │
-                 └────────────┬───────────────────────────┘
-                              │
-                 ┌────────────▼────────────────────────────┐
-                 │ Decapsulate symmetric key using Bob's: │
-                 │ • ML-KEM private key                  │
-                 │ • X25519 private key                  │
-                 └────────────┬───────────────────────────┘
-                              │
-                 ┌────────────▼────────────────────────────┐
-                 │ Symmetric Decryption                   │
-                 │ (ChaCha20-Poly1305)                   │
-                 └────────────┬───────────────────────────┘
-                              │
-                 ┌────────────▼────────────────────────────┐
-                 │ Plain Message: "Hello Bob" ✅          │
-                 └────────────────────────────────────────┘
+    subgraph Infra["☁️ Cloud Infrastructure"]
+        Supa["🐘 Supabase PostgreSQL<br/>Users · Keys · FCM Tokens"]
+        Redis["⚡ Upstash Redis<br/>Offline Queue · Pub/Sub"]
+        FCM["🔔 Firebase FCM<br/>Push Notifications"]
+    end
+
+    UI --> VM --> Net
+    VM --> Crypto
+    VM --> DB
+    Net -->|HTTPS + WSS| API
+    Net -->|WebSocket| WS
+    Bio --> DB
+    WM --> Net
+
+    API --> MW --> SVC
+    WS --> SVC
+    SVC --> Supa
+    SVC --> Redis
+    SVC --> FCM
+
+    style Client fill:#1a1a2e,stroke:#e94560,color:#fff
+    style Server fill:#16213e,stroke:#0f3460,color:#fff
+    style Infra fill:#0f3460,stroke:#533483,color:#fff
 ```
 
-### Silent Push Notification (Redis/FCM)
+### Layered Architecture (Android)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│          SILENT PUSH NOTIFICATION ARCHITECTURE                  │
-├─────────────────────────────────────────────────────────────────┤
-
-1️⃣  Message Arrives at Server
-   ┌──────────────────────────────────┐
-   │ POST /api/messages (encrypted)    │
-   │ Auth: Sender's JWT               │
-   └──────────────────────────────────┘
-                    │
-                    ▼
-   ┌──────────────────────────────────┐
-   │ Is Bob online (Socket.io)?        │
-   └──────────────────┬───────────────┘
-          YES         │         NO
-            │         │         │
-            │         │    ┌────▼─────────────────────┐
-            │         │    │ Queue to Redis:          │
-            │         │    │ offline:messages:{bobId} │
-            │         │    │ TTL: 24 hours            │
-            │         │    └────┬────────────────────┘
-            │         │         │
-            ▼         │         ▼
-      ┌─────────┐     │   ┌──────────────────────┐
-      │Socket.io│     │   │Trigger FCM Push      │
-      │Emit     │     │   │(Silent + Data)       │
-      │Message  │     │   │                      │
-      └────┬────┘     │   │ {                    │
-           │          │   │   recipient: Bob,    │
-           │          │   │   type: "newMessage",│
-           │          │   │   badge: 1           │
-           │          │   │ }                    │
-           │          │   └──────┬───────────────┘
-           │          │          │
-           ▼          ▼          ▼
-      ┌──────────────────────────────┐
-      │ Bob's Device Receives Update │
-      │ (Wakes WorkManager if needed)│
-      │ Fetches full encrypted msg   │
-      └──────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│  PRESENTATION    Jetpack Compose + Material3 │
+├─────────────────────────────────────────────┤
+│  VIEWMODEL       Hilt + StateFlow + LiveData │
+├─────────────────────────────────────────────┤
+│  DOMAIN          Use Cases & Business Logic  │
+├─────────────────────────────────────────────┤
+│  REPOSITORY      Room + Network Abstraction  │
+├─────────────────────────────────────────────┤
+│  CRYPTO          liboqs + Bouncy Castle      │
+├─────────────────────────────────────────────┤
+│  NETWORK         Ktor + Socket.io Client     │
+├─────────────────────────────────────────────┤
+│  STORAGE         Room DB + SQLCipher (AES)   │
+└─────────────────────────────────────────────┘
 ```
 
-### System Architecture
+---
+
+## 🔐 Encryption Deep Dive
+
+This is the core innovation of Quantum Safe — a **hybrid post-quantum + classical** encryption pipeline that protects every message with multiple independent layers.
+
+### Cryptographic Algorithms Used
+
+| Layer | Algorithm | Standard | Purpose |
+|-------|-----------|----------|---------|
+| **Key Encapsulation** | ML-KEM-768 (CRYSTALS-Kyber) | NIST FIPS 203 | Quantum-resistant shared secret derivation |
+| **Key Agreement** | X25519 (Curve25519 DH) | RFC 7748 | Classical fallback key exchange |
+| **Digital Signature** | ML-DSA (CRYSTALS-Dilithium) | NIST FIPS 204 | Quantum-resistant message authentication |
+| **Digital Signature** | Ed25519 (Edwards-curve DSA) | RFC 8032 | Classical fallback signature |
+| **Symmetric Cipher** | AES-256-GCM | NIST SP 800-38D | Authenticated message encryption |
+| **Key Derivation** | HMAC-SHA256 (HKDF) | RFC 5869 | Deterministic symmetric key from shared secret |
+| **Identity Hash** | SHA-256 | FIPS 180-4 | Cryptographic fingerprint generation |
+| **Database Encryption** | SQLCipher (AES-256-CBC) | Industry Standard | Local storage protection |
+| **Transport** | TLS 1.3 | RFC 8446 | Network layer encryption |
+
+### End-to-End Encryption Flow
+
+```mermaid
+sequenceDiagram
+    participant Alice as 🔑 Alice (Sender)
+    participant Server as 🖥️ Server (Blind Relay)
+    participant Bob as 🔑 Bob (Receiver)
+
+    Note over Alice: Compose: "Hello Bob!"
+
+    rect rgb(40, 40, 80)
+    Note over Alice: 🔒 ENCRYPTION PIPELINE
+    Alice->>Alice: 1. Fetch Bob's ML-KEM public key
+    Alice->>Alice: 2. ML-KEM Encapsulate → shared secret (32 bytes)
+    Alice->>Alice: 3. HKDF(shared secret) → AES-256 key
+    Alice->>Alice: 4. AES-256-GCM encrypt plaintext
+    Alice->>Alice: 5. Sign with ML-DSA + Ed25519
+    Alice->>Alice: 6. Pack into Protobuf envelope
+    end
+
+    Alice->>Server: 📦 Encrypted envelope (binary blob)
+
+    Note over Server: ⛔ Cannot read payload<br/>Only sees: {to, from, timestamp}
+
+    alt Bob is online
+        Server->>Bob: ⚡ Socket.io → receive_message
+    else Bob is offline
+        Server->>Server: 📥 Queue in Redis (24h TTL)
+        Server->>Bob: 🔔 FCM push (metadata only)
+        Note over Bob: Opens app, reconnects
+        Server->>Bob: 📤 Drain Redis queue
+    end
+
+    rect rgb(40, 80, 40)
+    Note over Bob: 🔓 DECRYPTION PIPELINE
+    Bob->>Bob: 1. Load private keys from SQLCipher vault
+    Bob->>Bob: 2. ML-KEM Decapsulate → same shared secret
+    Bob->>Bob: 3. HKDF(shared secret) → same AES-256 key
+    Bob->>Bob: 4. Verify ML-DSA + Ed25519 signatures
+    Bob->>Bob: 5. AES-256-GCM decrypt → "Hello Bob!" ✅
+    end
+```
+
+### Why Hybrid Cryptography?
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    QUANTUM SAFE ARCHITECTURE                 │
-├──────────────────────────────────────────────────────────────┤
+                    ┌──────────────────────────────────────┐
+                    │      DEFENSE-IN-DEPTH STRATEGY       │
+                    └──────────────────────────────────────┘
 
-                        ANDROID CLIENT
-                   ┌────────────────────┐
-                   │  Glassmorphic UI   │
-                   │  (Compose)         │
-                   └────────────┬───────┘
+    ┌─────────────────────┐     ┌─────────────────────────┐
+    │  POST-QUANTUM       │     │  CLASSICAL              │
+    │  (New, conservative)│     │  (Battle-tested)        │
+    │                     │     │                         │
+    │  ML-KEM-768         │  +  │  X25519                 │
+    │  (Key Encapsulation)│     │  (Key Agreement)        │
+    │                     │     │                         │
+    │  ML-DSA             │  +  │  Ed25519                │
+    │  (Signatures)       │     │  (Signatures)           │
+    └─────────────────────┘     └─────────────────────────┘
+                    │                       │
+                    └───────────┬───────────┘
                                 │
-         ┌──────────────────────┼──────────────────────┐
-         │                      │                      │
-         ▼                      ▼                      ▼
-    ┌──────────┐      ┌─────────────────┐      ┌──────────────┐
-    │Biometric │      │Hybrid Encryption│      │WorkManager   │
-    │SQLCipher │      │(ML-KEM/ML-DSA)  │      │Offline Queue │
-    │Vault     │      └─────────────────┘      │(SQLite)      │
-    └──────────┘              │                └──────────────┘
-                              │
-                ┌─────────────▼──────────────┐
-                │   Firebase Admin SDK       │
-                │   FCM Integration          │
-                └─────────────┬──────────────┘
-                              │
-                              │ HTTPS
-                              ▼
-                    ┌──────────────────────────┐
-                    │  EXPRESS BACKEND         │
-                    │  (TypeScript)            │
-                    ├──────────────────────────┤
-                    │ Routes:                  │
-                    │ • /api/auth (ZK signup)  │
-                    │ • /api/keys (sync keys)  │
-                    │ • /api/messages (queue)  │
-                    │ • Socket.io (real-time)  │
-                    └──────────────┬───────────┘
-                                   │
-         ┌─────────────────────────┼────────────────────┐
-         │                         │                    │
-         ▼                         ▼                    ▼
-    ┌─────────────┐     ┌───────────────────┐    ┌──────────────┐
-    │SUPABASE     │     │REDIS              │    │FIREBASE      │
-    │PostgreSQL   │     │Offline Queue      │    │Push Service  │
-    │• Users      │     │Message Cache      │    │FCM Tokens    │
-    │• Key Bundles│     │Pub/Sub for        │    │Notifications │
-    │• Messages   │     │Socket.io Scaling  │    │              │
-    └─────────────┘     └───────────────────┘    └──────────────┘
+                    ┌───────────▼───────────┐
+                    │  BOTH must be broken  │
+                    │  to compromise a msg  │
+                    │                       │
+                    │  Quantum computer?    │
+                    │  → Classical holds.   │
+                    │                       │
+                    │  Classical break?     │
+                    │  → PQ holds.          │
+                    └───────────────────────┘
 ```
+
+### Zero-Knowledge Identity Model
+
+```
+Traditional App                    Quantum Safe
+─────────────                     ─────────────
+Email: alice@mail.com             (nothing)
+Password: ********               (nothing)
+Phone: +1-555-1234                (nothing)
+SMS OTP: 482901                   (nothing)
+                                        │
+                                        ▼
+                               ┌────────────────────┐
+                               │ On first launch:   │
+                               │                    │
+                               │ Generate:          │
+                               │ • ML-KEM key pair  │
+                               │ • X25519 key pair  │
+                               │ • Ed25519 key pair │
+                               │ • ML-DSA key pair  │
+                               │                    │
+                               │ Derive identity:   │
+                               │ SHA-256(pubkeys)   │
+                               │ = 64-char hex      │
+                               │                    │
+                               │ That's your ID.    │
+                               │ No email.          │
+                               │ No phone.          │
+                               │ No password.       │
+                               │ Ever.              │
+                               └────────────────────┘
+```
+
+---
+
+## 🔒 Security Architecture — 8 Layers Deep
+
+| Layer | Protection | Implementation |
+|-------|-----------|----------------|
+| **1. Transport** | Wire encryption | TLS 1.3 / WSS · Helmet CSP · HSTS |
+| **2. Authentication** | Identity verification | Zero-knowledge fingerprint (SHA-256 of public keys) |
+| **3. Message Encryption** | Content confidentiality | ML-KEM-768 encapsulation → HKDF → AES-256-GCM |
+| **4. Message Integrity** | Tamper detection | Dual signatures: ML-DSA + Ed25519 |
+| **5. Data at Rest** | Device storage | Room + SQLCipher (AES-256) · Keys never leave device |
+| **6. Biometric Gate** | Physical access control | BiometricPrompt + Android TEE · Fingerprint / Face |
+| **7. Rate Limiting** | DDoS protection | 100 req/15min global · 10 req/min for uploads |
+| **8. Push Privacy** | Notification metadata | Zero-knowledge FCM — no message content in push payload |
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Backend
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Runtime** | Node.js 20+ | JavaScript runtime |
-| **Framework** | Express.js 5.x | HTTP server |
-| **Language** | TypeScript | Type-safe backend |
-| **Real-Time** | Socket.io 4.x | Bidirectional communication |
-| **Database** | Supabase (PostgreSQL) | Persistent storage |
-| **Cache/Queue** | Redis (Upstash) | Offline message queue |
-| **Push** | Firebase Admin SDK | FCM notifications |
-| **Auth** | Supabase JWT | Zero-knowledge authentication |
-| **Security** | Helmet, CORS, Rate Limiting | Security headers & DDoS protection |
+### Android Client
 
-### Android App
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Language** | Kotlin | Type-safe Android development |
-| **UI** | Jetpack Compose | Modern declarative UI |
-| **Design** | Material Design 3 | Material Design principles |
-| **Encryption** | Liboqs (OpenSSL + Kyber/Dilithium) | Post-quantum cryptography |
-| **Database** | Room + SQLCipher | Encrypted local storage |
-| **Security** | BiometricPrompt | Fingerprint/Face unlock |
-| **Task Queue** | WorkManager | Offline message queuing |
-| **Push** | Firebase Cloud Messaging | Push notifications |
-| **State Management** | Hilt + ViewModel | Dependency injection & lifecycle |
-| **Networking** | Ktor Client | HTTP client |
-| **Serialization** | Kotlinx Serialization | JSON parsing |
+| Category | Technology | Details |
+|----------|-----------|---------|
+| **Language** | Kotlin 2.0+ | Coroutines, Flow, KSP |
+| **UI Framework** | Jetpack Compose | Material Design 3 + Glassmorphism |
+| **Architecture** | MVVM + Clean Architecture | Hilt DI · ViewModel · StateFlow |
+| **Post-Quantum Crypto** | liboqs (OpenSSL) | ML-KEM-768, ML-DSA |
+| **Classical Crypto** | Bouncy Castle | X25519, Ed25519 |
+| **Symmetric Crypto** | Google Tink | AES-256-GCM |
+| **Database** | Room + SQLCipher | AES-256 encrypted local storage |
+| **Biometrics** | BiometricPrompt API | TEE-backed fingerprint/face |
+| **Networking** | Ktor Client | HTTP + JSON serialization |
+| **Real-time** | Socket.io Client | WebSocket messaging |
+| **Serialization** | Protobuf + Kotlinx JSON | Binary message envelopes |
+| **Background Tasks** | WorkManager | Offline message queuing |
+| **Push** | Firebase Cloud Messaging | Silent data notifications |
+| **Target SDK** | API 36 (Android 15) | Min SDK: API 26 (Android 8.0) |
+
+### Backend Server
+
+| Category | Technology | Details |
+|----------|-----------|---------|
+| **Runtime** | Node.js 20+ | TypeScript 6.0+ |
+| **Framework** | Express.js 5.x | REST API + middleware |
+| **Real-time** | Socket.io 4.x | Redis-adapted for horizontal scaling |
+| **Database** | Supabase PostgreSQL | Users, public keys, FCM tokens |
+| **Cache / Queue** | Upstash Redis (ioredis) | Offline message queue (24h TTL) |
+| **Push** | Firebase Admin SDK | Zero-knowledge FCM notifications |
+| **Validation** | Zod 4.x | Schema-based input validation |
+| **Security** | Helmet + CORS + Rate Limit | HTTP hardening + DDoS protection |
+| **Deployment** | Docker + Docker Compose | Containerized production deploy |
+
+### Infrastructure
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                  PRODUCTION STACK                         │
+│                                                          │
+│   📱 Android Devices                                     │
+│       ↕ HTTPS + WSS (TLS 1.3)                           │
+│   🚀 Express Backend (Render / Docker)                   │
+│       ↕           ↕              ↕                       │
+│   🐘 Supabase   ⚡ Upstash     🔔 Firebase              │
+│   PostgreSQL     Redis          FCM                      │
+│   (Users/Keys)  (Msg Queue)    (Push)                    │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🗄️ Database Schema
+
+```mermaid
+erDiagram
+    USERS {
+        text fingerprint PK "SHA-256(mlKemPK || x25519PK)"
+        text ml_kem_public_key "Base64, 1184 bytes"
+        text x25519_public_key "Base64, 32 bytes"
+        timestamp created_at
+    }
+
+    PUBLIC_KEYS {
+        uuid id PK
+        text user_id FK "→ users.fingerprint"
+        varchar algorithm "hybrid-pq"
+        jsonb key_data "x25519PK, mlKemPK, ed25519Sig, mlDsaSig"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    FCM_TOKENS {
+        text fingerprint PK_FK "→ users.fingerprint"
+        text fcm_token "Firebase device token"
+        timestamp updated_at
+    }
+
+    USERS ||--o| PUBLIC_KEYS : "has key bundle"
+    USERS ||--o| FCM_TOKENS : "has device token"
+```
 
 ---
 
@@ -276,2014 +398,219 @@
 
 ### Prerequisites
 
-**Backend:**
-- Node.js 20.x or higher
-- npm or yarn
-- Render account (for hosting) or local Docker
-- Upstash Redis instance
-- Supabase PostgreSQL project
-- Firebase project with service account
+| Requirement | Backend | Android |
+|-------------|---------|---------|
+| **Runtime** | Node.js 20+ | Android Studio Koala+ |
+| **Language** | TypeScript | Kotlin 2.0+ / JDK 17+ |
+| **Services** | Supabase · Upstash Redis · Firebase | Google Play Services |
+| **SDK** | — | Target SDK 36 · Min SDK 26 |
 
-**Android:**
-- Android Studio Koala (2024.1.1) or newer
-- Kotlin 2.0+
-- JDK 17+
-- SDK 36 (targetSdk)
-- Google Play Services
-
-### Backend Setup
-
-#### 1. Clone & Install Dependencies
+### 1. Clone the Repository
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/quantum-messenger.git
-cd quantum-messenger/Backend
+git clone https://github.com/AsyncNigam/Quantum-safe-messenger.git
+cd Quantum-safe-messenger
+```
 
-# Install dependencies
+### 2. Backend Setup
+
+```bash
+cd Backend
 npm install
 ```
 
-#### 2. Environment Configuration
+Create a `.env` file (see `.env.example`):
 
-Create a `.env` file in the Backend directory:
-
-```bash
-# Server Configuration
+```env
 PORT=3000
 NODE_ENV=development
-CLIENT_ORIGIN=http://localhost:3000
 
-# Supabase Configuration (PostgreSQL + Auth)
+# Supabase
 SUPABASE_PROJECT_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key-here
-SUPABASE_SERVICE_KEY=your-service-key-here
-SUPABASE_JWT_SECRET=your-jwt-secret-here
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-key
 
-# Redis Configuration (Upstash)
+# Upstash Redis
 REDIS_URL=redis://default:password@your-instance.upstash.io:12345
-REDIS_HOST=your-instance.upstash.io
-REDIS_PORT=12345
-REDIS_PASSWORD=your-redis-password
 
-# Firebase Configuration (Push Notifications)
+# Firebase
 FIREBASE_PROJECT_ID=your-project-id
 FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk@your-project.iam.gserviceaccount.com
-FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
-
-# Socket.io Configuration
-SOCKET_CORS_ORIGIN=http://localhost:3000
 ```
 
-**How to obtain these values:**
-
-- **Supabase**: [supabase.com](https://supabase.com) → Create Project → Settings → API
-- **Upstash Redis**: [upstash.com](https://upstash.com) → Create Database → Copy URL
-- **Firebase**: [firebase.google.com](https://firebase.google.com) → Create Project → Service Account → Generate Key
-
-#### 3. Start the Development Server
-
 ```bash
-# Watch mode with auto-reload
+# Development (watch mode)
 npm run dev
 
-# Production build
-npm run build
-npm run start:prod
-
-# Type checking
-npm run typecheck
+# Production
+npm run build && npm run start:prod
 ```
 
-**Expected Output:**
-```
-Server running on http://localhost:3000
-Redis connected to Upstash
-Firebase Admin initialized
-Socket.io ready for connections
-```
+### 3. Android Setup
 
-#### 4. Deploy to Render (Optional)
+1. Open `Android App/` in Android Studio
+2. Place `google-services.json` in `Android App/app/`
+3. Update the backend URL in the config
+4. Build & run:
 
 ```bash
-# Login to Render CLI
-npm install -g render
-
-# Deploy
-render deploy --service quantum-safe-backend
-```
-
-### Android Setup
-
-#### 1. Clone & Open Project
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/quantum-messenger.git
-
-# Open in Android Studio
-cd quantum-messenger/Android\ App
-# Then: File → Open → (select this folder)
-```
-
-#### 2. Configure Firebase
-
-- Download `google-services.json` from Firebase Console
-- Place it in `Android App/app/` directory
-
-```bash
-# Verify file location
-ls Android\ App/app/google-services.json
-```
-
-#### 3. Configure Backend URL
-
-Edit [Backend/src/config/env.ts](Backend/src/config/env.ts):
-
-```kotlin
-// app/src/main/java/com/nigdroid/quantummessenger/config/Config.kt
-object Config {
-    const val BACKEND_URL = "https://your-render-backend.onrender.com"
-    const val SOCKET_URL = "https://your-render-backend.onrender.com"
-}
-```
-
-#### 4. Build & Run
-
-```bash
-# Build debug APK
-cd Android\ App
+cd "Android App"
 ./gradlew assembleDebug
-
-# Install on emulator/device
 ./gradlew installDebug
-
-# Or open in Android Studio and click "Run"
 ```
 
-**Expected Steps:**
-1. App asks for biometric permission (Fingerprint/Face)
-2. Displays Zero-Knowledge registration
-3. Shows contact list (empty initially)
-4. Can create new contacts by their public key
+### 4. First Launch Experience
 
----
-
-## 🔐 API Quick Reference
-
-### POST /api/auth/register
-**Register with Zero-Knowledge proof**
-
-```bash
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fingerprint": "base64-encoded-cryptographic-fingerprint"
-  }'
 ```
-
-**Response:**
-```json
-{
-  "userId": "550e8400-e29b-41d4-a716-446655440000",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
+1. 🔐 Biometric authentication prompt (fingerprint/face)
+2. 🔑 Automatic key generation (ML-KEM, X25519, Ed25519, ML-DSA)
+3. 📡 Zero-knowledge registration with server
+4. 📱 Home screen — ready to add contacts via QR scan
 ```
 
 ---
 
-### POST /api/keys/upload
-**Upload hybrid cryptographic key bundle**
+## 🔌 API Reference
 
-```bash
-curl -X POST http://localhost:3000/api/keys/upload \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "x25519PublicKey": "base64-encoded-32-bytes",
-    "mlKemPublicKey": "base64-encoded-1184-bytes",
-    "ed25519Signature": "base64-encoded-64-bytes",
-    "mlDsaSignature": "base64-encoded-4595-bytes"
-  }'
-```
+### Authentication
 
----
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/auth/register` | — | Register with public keys (zero-knowledge) |
+| `GET` | `/auth/lookup/:fingerprint` | Bearer | Lookup a contact's public keys |
+| `POST` | `/auth/fcm-token` | Bearer | Register device push token |
 
-### GET /keys/sync?page=1&limit=20
-**Fetch paginated public keys for peer discovery**
+### Key Management
 
-```bash
-curl -X GET "http://localhost:3000/keys/sync?page=1&limit=20"
-```
-
-**Response:**
-```json
-{
-  "page": 1,
-  "limit": 20,
-  "total": 150,
-  "data": [
-    {
-      "userId": "user-id-1",
-      "x25519PublicKey": "base64...",
-      "mlKemPublicKey": "base64...",
-      "ed25519Signature": "base64...",
-      "mlDsaSignature": "base64...",
-      "createdAt": "2026-04-20T08:15:30Z"
-    }
-  ]
-}
-```
-
----
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/keys/upload` | Bearer | Upload hybrid key bundle |
+| `GET` | `/api/keys?page=1&limit=20` | — | Paginated public key discovery |
 
 ### Socket.io Events
-**Real-time message synchronization**
 
-```typescript
-// Client: Connect
-socket.on('connect', () => {
-  socket.emit('user:online', { userId: '...' });
-});
+| Event | Direction | Payload |
+|-------|-----------|---------|
+| `send_message` | Client → Server | `{ to: fingerprint, payload: Buffer }` |
+| `receive_message` | Server → Client | `{ from: fingerprint, payload: Buffer, sentAt: ISO }` |
 
-// Client: Send encrypted message
-socket.emit('message:send', {
-  recipientId: 'user-id-2',
-  ciphertext: 'base64-encoded-encrypted-message',
-  signature: 'base64-encoded-signature'
-});
+### Health Check
 
-// Server: Receive message
-socket.on('message:new', (payload) => {
-  console.log('New message from:', payload.senderId);
-});
-
-// Server: User offline
-socket.emit('user:offline', { userId: 'user-id-1' });
+```
+GET /health → { "status": "ok", "timestamp": "..." }
 ```
 
 ---
 
-## 📊 Deployment Architecture
+## 🐳 Deployment
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                   PRODUCTION DEPLOYMENT                         │
-├─────────────────────────────────────────────────────────────────┤
+### Docker Compose
 
-   ANDROID DEVICES (Users)
-        │       │       │
-        └───────┼───────┘
-                │
-            HTTPS
-                │
-        ┌───────▼────────┐
-        │ RENDER CDN     │
-        │ (Global Proxy) │
-        └───────┬────────┘
-                │
-        ┌───────▼──────────────┐
-        │ RENDER BACKEND       │
-        │ • Express Server     │
-        │ • Socket.io Cluster  │
-        │ • 3x Replicas        │
-        └───────┬──────────────┘
-                │
-    ┌───────────┼───────────┐
-    │           │           │
-    ▼           ▼           ▼
-┌─────────┐ ┌────────┐ ┌──────────────┐
-│Supabase │ │Upstash │ │Firebase      │
-│DB       │ │Redis   │ │Push Service  │
-│(managed)│ │ (SLA)  │ │(Google)      │
-└─────────┘ └────────┘ └──────────────┘
-```
-
-**Deployment Command:**
 ```bash
-# Using Render CLI
-render deploy --service quantum-safe-backend --env production
-
-# Or push to main branch (auto-deploy via webhook)
-git push origin main
+docker-compose up -d
 ```
+
+```yaml
+services:
+  backend:
+    build: ./Backend
+    ports: ["3000:3000"]
+    depends_on: [redis]
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 512mb
+```
+
+### Production Checklist
+
+- [ ] `NODE_ENV=production`
+- [ ] HTTPS/TLS on all endpoints
+- [ ] CORS origins restricted
+- [ ] Redis persistence enabled (AOF)
+- [ ] Firebase service account secured
+- [ ] Rate limiting configured
+- [ ] Socket.io Redis adapter for horizontal scaling
+- [ ] Supabase RLS policies active
 
 ---
 
-## 🔒 Security Features
+## ✨ Key Features at a Glance
 
-| Feature | Implementation | Standard |
-|---------|----------------|----------|
-| **Post-Quantum Encryption** | ML-KEM (Kyber) + ML-DSA (Dilithium) | NIST PQC Standard (2024) |
-| **Key Exchange** | X25519 (Elliptic Curve DH) | RFC 7748 |
-| **Signatures** | Ed25519 (Edwards Curve DSA) | RFC 8032 |
-| **Symmetric Cipher** | ChaCha20-Poly1305 | RFC 8439 |
-| **Key Derivation** | HKDF (HMAC-based KDF) | RFC 5869 |
-| **Database Encryption** | SQLCipher (AES-256) | Industry Standard |
-| **Biometric Auth** | BiometricPrompt + TEE | Android KeyStore |
-| **Transport Security** | TLS 1.3 | RFC 8446 |
-| **Rate Limiting** | Token Bucket Algorithm | 100 req/15min per IP |
-
----
-
-## 📖 Documentation Index
-
-- [Backend Architecture Details](Backend/ARCHITECTURE_DIAGRAMS.md)
-- [API Endpoint Reference](Backend/ENDPOINTS.md)
-- [Database Schema](Backend/AUTH_DATABASE_QUICK_ANSWER.md)
-- [Authentication Flow](Backend/AUTHENTICATION_DATABASE_FLOW.md)
-- [Socket.io Events](Backend/YOUR_SPECIFIC_ANSWERS.md)
+| Feature | Description |
+|---------|-------------|
+| 🧬 **Hybrid PQC Encryption** | ML-KEM + X25519 key exchange · ML-DSA + Ed25519 signatures |
+| 🔑 **Zero-Knowledge Identity** | No email, phone, or password — identity derived from keys |
+| 💎 **Glassmorphism UI** | Frosted glass aesthetic with adaptive light/dark themes |
+| 👁️ **Biometric Vault** | Fingerprint/Face unlock guards SQLCipher encrypted database |
+| 📴 **Offline-First** | WorkManager queues messages; Redis stores with 24h TTL |
+| 🔔 **Silent Push** | Zero-knowledge FCM — push contains no message content |
+| 📷 **QR Contact Exchange** | Scan a QR code to securely add contacts — no numbers needed |
+| 🔄 **Real-Time Sync** | Socket.io with Redis pub/sub adapter for instant delivery |
 
 ---
 
-## 🐛 Troubleshooting
+## 🏆 Unique Innovations
 
-### Backend won't start
-```bash
-# Check Node version
-node --version  # Should be 20.x or higher
+| Innovation | How It Works | Why It Matters |
+|-----------|-------------|----------------|
+| **Opaque Relay Server** | Server only sees `{to, from, encrypted_blob}` | True zero-knowledge — no metadata leaks |
+| **Dual-Algorithm Signing** | Every message signed by both ML-DSA and Ed25519 | Both must be broken to forge a message |
+| **Per-Message KEM** | Fresh ML-KEM encapsulation per message | Forward secrecy — past messages safe even if keys leak |
+| **Fingerprint Identity** | `SHA-256(mlKemPK ‖ x25519PK)` = your identity | Deterministic, verifiable, no central authority |
+| **Biometric-Gated Crypto** | Private keys locked behind TEE biometric check | Physical access required to decrypt |
 
-# Check Redis connection
-redis-cli -h your-instance.upstash.io ping
+---
 
-# Check Supabase connection
-npm run typecheck
-```
+## 📖 Further Documentation
 
-### Android app crashes
-```bash
-# Clear cache and rebuild
-./gradlew clean build
-
-# Check Kotlin version
-./gradlew --version
-
-# View logcat
-./gradlew logcat
-```
-
-### Push notifications not working
-1. Verify `google-services.json` is in `app/` directory
-2. Check Firebase Console → Cloud Messaging → FCM Tokens
-3. Ensure app has POST_NOTIFICATIONS permission (Android 13+)
+| Document | Description |
+|----------|-------------|
+| [Architecture Diagrams](Backend/ARCHITECTURE_DIAGRAMS.md) | Detailed backend architecture |
+| [API Endpoints](Backend/ENDPOINTS.md) | Full endpoint reference with examples |
+| [Database Schema](Backend/AUTH_DATABASE_QUICK_ANSWER.md) | PostgreSQL table definitions |
+| [Authentication Flow](Backend/AUTHENTICATION_DATABASE_FLOW.md) | Registration & auth deep dive |
+| [Socket.io Events](Backend/YOUR_SPECIFIC_ANSWERS.md) | Real-time messaging protocol |
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please:
+```bash
+# 1. Fork & clone
+git clone https://github.com/<your-username>/Quantum-safe-messenger.git
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+# 2. Create a feature branch
+git checkout -b feature/amazing-feature
 
-### Development Guidelines
-- Use TypeScript (backend) and Kotlin (Android)
-- Write tests for new features
-- Follow existing code style
-- Update documentation
+# 3. Commit and push
+git commit -m "Add amazing feature"
+git push origin feature/amazing-feature
+
+# 4. Open a Pull Request
+```
+
+**Guidelines:** TypeScript for backend · Kotlin for Android · Tests for new features · Update docs
 
 ---
 
 ## 📝 License
 
-This project is licensed under the **ISC License** - see [LICENSE](LICENSE) file for details.
-
----
-
-## 👨‍💻 Author
-
-**Built with ❤️ for privacy-conscious developers**
-
-- **Project Start**: April 2026
-- **Status**: Production Ready
-- **Latest Version**: 1.0.0
-
----
-
-## 🌟 Acknowledgments
-
-- **NIST Post-Quantum Cryptography Standards** (ML-KEM, ML-DSA)
-- **OpenSSL & Liboqs** for cryptographic implementations
-- **Jetpack Compose** for modern Android UI
-- **Socket.io & Redis** for real-time messaging
-- **Firebase & Supabase** for backend infrastructure
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
 
-### Made with 🔐 Privacy • Built with 🚀 Security • Designed for 🌍 Everyone
+### Architected & Built by **Nigam Prasad Sahoo**
 
-**Star us on GitHub if you believe in post-quantum security! ⭐**
+*Quantum-safe messaging for the post-quantum era*
+
+<br/>
+
+**🔐 Privacy by Math** · **🚀 Built for Tomorrow** · **🌍 Open Source**
+
+⭐ Star this repo if you believe in post-quantum security!
 
 </div>
-│                                                                       │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ 📱 ANDROID CLIENT (Kotlin + Jetpack Compose)              │    │
-│  ├─────────────────────────────────────────────────────────────┤    │
-│  │                                                              │    │
-│  │ ┌──────────────────────────────────────────────────────┐   │    │
-│  │ │ UI Layer (Compose)                                  │   │    │
-│  │ │ - Chat screens                                      │   │    │
-│  │ │ - Contact discovery                                 │   │    │
-│  │ │ - Key management                                    │   │    │
-│  │ └──────────────────────────────────────────────────────┘   │    │
-│  │                          ▲                                   │    │
-│  │                          │                                   │    │
-│  │ ┌──────────────────────────────────────────────────────┐   │    │
-│  │ │ Crypto Layer (liboqs + Bouncy Castle + Tink)       │   │    │
-│  │ │ - ML-KEM-768 encapsulation/decapsulation           │   │    │
-│  │ │ - Ed25519 + ML-DSA signatures                       │   │    │
-│  │ │ - X25519 key exchange                              │   │    │
-│  │ │ - AES-256-GCM encryption                           │   │    │
-│  │ └──────────────────────────────────────────────────────┘   │    │
-│  │                          ▲                                   │    │
-│  │                          │                                   │    │
-│  │ ┌──────────────────────────────────────────────────────┐   │    │
-│  │ │ Network Layer                                       │   │    │
-│  │ │ - Socket.io WebSocket client                        │   │    │
-│  │ │ - Retrofit/OkHttp for REST calls                    │   │    │
-│  │ │ - Protobuf serialization                            │   │    │
-│  │ └──────────────────────────────────────────────────────┘   │    │
-│  │                          ▲                                   │    │
-│  │                          │                                   │    │
-│  │ ┌──────────────────────────────────────────────────────┐   │    │
-│  │ │ Local Storage (Room Database)                       │   │    │
-│  │ │ - Encrypted by SQLCipher (AES-256)                  │   │    │
-│  │ │ - Private keys, messages, contacts                  │   │    │
-│  │ └──────────────────────────────────────────────────────┘   │    │
-│  │                                                              │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                          │                                            │
-│                    ┌─────┴─────┐                                      │
-│                    │ WebSocket  │                                      │
-│                    └─────┬─────┘                                      │
-│                          │                                            │
-│         ┌────────────────┼────────────────┐                          │
-│         │                │                │                          │
-│         ▼                ▼                ▼                          │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ 🚀 EXPRESS BACKEND (Node.js + TypeScript)                │    │
-│  ├─────────────────────────────────────────────────────────────┤    │
-│  │                                                              │    │
-│  │ ┌──────────────────────────────────────────────────────┐   │    │
-│  │ │ HTTP REST Endpoints                                 │   │    │
-│  │ │ - POST /auth/register                               │   │    │
-│  │ │ - GET /auth/lookup/:fingerprint                     │   │    │
-│  │ │ - POST /auth/fcm-token                              │   │    │
-│  │ │ - POST /api/keys/upload                             │   │    │
-│  │ │ - GET /api/keys?page=1&limit=20                     │   │    │
-│  │ │ - GET /health                                       │   │    │
-│  │ └──────────────────────────────────────────────────────┘   │    │
-│  │                                                              │    │
-│  │ ┌──────────────────────────────────────────────────────┐   │    │
-│  │ │ Socket.io WebSocket Layer                           │   │    │
-│  │ │ - send_message (client → server)                    │   │    │
-│  │ │ - receive_message (server → client)                 │   │    │
-│  │ │ - Zero-knowledge relay model                        │   │    │
-│  │ └──────────────────────────────────────────────────────┘   │    │
-│  │                                                              │    │
-│  │ ┌──────────────────────────────────────────────────────┐   │    │
-│  │ │ Service Layer                                       │   │    │
-│  │ │ - AuthController (registration, lookup)             │   │    │
-│  │ │ - KeyController (key upload, sync)                  │   │    │
-│  │ │ - SocketController (message routing)                │   │    │
-│  │ │ - MessageService (Redis queue)                      │   │    │
-│  │ │ - FcmService (push notifications)                   │   │    │
-│  │ │ - OfflineQueueService (message buffering)           │   │    │
-│  │ └──────────────────────────────────────────────────────┘   │    │
-│  │                                                              │    │
-│  │ ┌──────────────────────────────────────────────────────┐   │    │
-│  │ │ Middleware Layer                                    │   │    │
-│  │ │ - authMiddleware (fingerprint validation)           │   │    │
-│  │ │ - socketAuthMiddleware (socket auth)                │   │    │
-│  │ │ - rateLimiter (DDoS protection)                      │   │    │
-│  │ │ - errorHandler (centralized errors)                 │   │    │
-│  │ └──────────────────────────────────────────────────────┘   │    │
-│  │                                                              │    │
-│  │ ┌──────────────────────────────────────────────────────┐   │    │
-│  │ │ Repository Layer                                    │   │    │
-│  │ │ - UserRepository (fingerprint lookups)              │   │    │
-│  │ │ - KeyRepository (key storage)                       │   │    │
-│  │ └──────────────────────────────────────────────────────┘   │    │
-│  │                                                              │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│         │                │                │                         │
-│         │                │                │                         │
-│    ┌────┴────┐      ┌────┴────┐      ┌───┴────┐                   │
-│    │          │      │          │      │         │                 │
-│    ▼          ▼      ▼          ▼      ▼         ▼                 │
-│  ┌──────────────────────────────────────────────────────────────┐  │
-│  │ 🗄️ EXTERNAL SERVICES                                        │  │
-│  ├──────────────────────────────────────────────────────────────┤  │
-│  │                                                               │  │
-│  │ ┌────────────────────────┐  ┌──────────────────┐            │  │
-│  │ │ Supabase PostgreSQL    │  │ Redis Cache      │            │  │
-│  │ ├────────────────────────┤  ├──────────────────┤            │  │
-│  │ │ - users table          │  │ - Message queue  │            │  │
-│  │ │ - public_keys table    │  │ - Session state  │            │  │
-│  │ │ - fcm_tokens table     │  │ - Pub/Sub adapter│            │  │
-│  │ │ - Keyed by fingerprint │  │ (24h TTL)        │            │  │
-│  │ └────────────────────────┘  └──────────────────┘            │  │
-│  │                                                               │  │
-│  │ ┌────────────────────────────────────────────┐              │  │
-│  │ │ Firebase Cloud Messaging (FCM)             │              │  │
-│  │ ├────────────────────────────────────────────┤              │  │
-│  │ │ - Device token registration                │              │  │
-│  │ │ - Zero-knowledge push payloads             │              │  │
-│  │ │ - Offline user alerts                      │              │  │
-│  │ └────────────────────────────────────────────┘              │  │
-│  │                                                               │  │
-│  └──────────────────────────────────────────────────────────────┘  │
-│                                                                       │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-### Layered Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│ PRESENTATION LAYER                              │
-│ Jetpack Compose UI Components                   │
-├─────────────────────────────────────────────────┤
-│ DOMAIN LAYER                                    │
-│ Use Cases & Business Logic                      │
-├─────────────────────────────────────────────────┤
-│ DATA LAYER                                      │
-│ Repository Pattern (Room + Network)             │
-├─────────────────────────────────────────────────┤
-│ CRYPTOGRAPHY LAYER                              │
-│ liboqs + Bouncy Castle + Tink                    │
-├─────────────────────────────────────────────────┤
-│ NETWORK LAYER                                   │
-│ Socket.io + Retrofit + Protobuf                 │
-├─────────────────────────────────────────────────┤
-│ LOCAL STORAGE LAYER                             │
-│ Room Database + SQLCipher                       │
-└─────────────────────────────────────────────────┘
-```
-
----
-
-## TECHNOLOGY STACK
-
-### Backend (Node.js)
-
-| Component | Technology | Version | Purpose |
-|-----------|-----------|---------|---------|
-| **Runtime** | Node.js | Latest | JavaScript runtime |
-| **Language** | TypeScript | 6.0+ | Type-safe backend |
-| **Framework** | Express.js | 5.x | REST API server |
-| **Real-time** | Socket.io | 4.x | WebSocket communication |
-| **Real-time Adapter** | @socket.io/redis-adapter | 8.3.0 | Horizontal scaling |
-| **Database Client** | @supabase/supabase-js | 2.103.3 | PostgreSQL access |
-| **Cache/Queue** | ioredis | 5.10.1 | Redis client |
-| **Validation** | Zod | 4.3.6 | Schema validation |
-| **Security Headers** | Helmet | 8.1.0 | HTTP security |
-| **CORS** | cors | 2.8.6 | Cross-origin handling |
-| **Rate Limiting** | express-rate-limit | 8.3.2 | DDoS protection |
-| **Push Notifications** | firebase-admin | 13.8.0 | FCM notifications |
-| **Env Management** | dotenv | 17.4.2 | Environment variables |
-
-### Android Client (Kotlin)
-
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Language** | Kotlin | Type-safe mobile |
-| **Min SDK** | Android 8.0 (API 26) | Wide compatibility |
-| **Target SDK** | Android 15+ (API 36) | Latest features |
-| **UI Framework** | Jetpack Compose | Declarative UI |
-| **Architecture** | MVVM + Clean | Separation of concerns |
-| **Dependency Injection** | Hilt | DI container |
-| **Local Database** | Room + SQLCipher | Encrypted storage |
-| **Network** | Socket.io Client | WebSocket |
-| **HTTP** | Retrofit + OkHttp | REST calls |
-| **Serialization** | Protobuf | Binary messages |
-| **JSON** | Kotlinx Serialization | JSON handling |
-| **Post-Quantum Crypto** | liboqs | ML-KEM-768, ML-DSA |
-| **Classical Crypto** | Bouncy Castle | X25519, Ed25519 |
-| **Symmetric Crypto** | Tink | AES-256-GCM |
-| **Annotation Processing** | KSP | Code generation |
-| **Protocol Buffers** | Protoc 4.34.1 | Message serialization |
-
-### Infrastructure & Deployment
-
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Containerization** | Docker | Package backend |
-| **Container Orchestration** | Docker Compose | Multi-service deployment |
-| **Database** | PostgreSQL (Supabase) | Cloud database |
-| **Auth Service** | Supabase Auth | User authentication |
-| **Cache/Queue** | Redis | Message persistence |
-| **Push Notifications** | Firebase | FCM notifications |
-| **Build Tool (Android)** | Gradle 8.x | Build system |
-| **Build Tool (Backend)** | TypeScript Compiler | Compilation |
-| **Package Manager (Backend)** | npm | Dependency management |
-| **Package Manager (Android)** | Gradle Dependencies | Dependency management |
-
----
-
-## AUTHENTICATION MODEL
-
-### Zero-Knowledge Registration
-
-**Traditional:** Email + Password → Account Created  
-**Quantum Messenger:** Send Keys → Fingerprint Derived
-
-#### Registration Flow
-
-```
-┌─────────────────────────────────────────────────────┐
-│ STEP 1: CLIENT GENERATES KEYS (ONE TIME)            │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│ On first app launch:                                │
-│                                                      │
-│ • Generate X25519 key pair (32-byte)               │
-│ • Generate ML-KEM-768 key pair (2400-byte private) │
-│ • Generate Ed25519 signing key pair                │
-│ • Generate ML-DSA signing key pair                 │
-│                                                      │
-│ Store private keys in:                              │
-│ Room Database encrypted by SQLCipher (AES-256)     │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-              │
-              ▼
-┌─────────────────────────────────────────────────────┐
-│ STEP 2: DERIVE FINGERPRINT                          │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│ fingerprint = SHA-256(                              │
-│   Buffer.from(mlKemPublicKey, 'base64') ||         │
-│   Buffer.from(x25519PublicKey, 'base64')           │
-│ )                                                   │
-│                                                      │
-│ Result: 64-character lowercase hex string           │
-│ Example: a3f2b8c1d4e5f6g7a3f2b8c1d4e5f6g7...       │
-│                                                      │
-│ ⚠️ DETERMINISTIC: Same keys → same fingerprint     │
-│ ✅ IDEMPOTENT: Re-register safely                    │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-              │
-              ▼
-┌─────────────────────────────────────────────────────┐
-│ STEP 3: SEND TO BACKEND                             │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│ POST /auth/register                                 │
-│ {                                                   │
-│   mlKemPublicKey: "base64...",                     │
-│   x25519PublicKey: "base64..."                     │
-│ }                                                   │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-              │
-              ▼
-┌─────────────────────────────────────────────────────┐
-│ STEP 4: BACKEND STORES & RESPONDS                   │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│ // Backend calculates same fingerprint             │
-│ const fp = SHA-256(mlKemPk || x25519Pk)           │
-│                                                      │
-│ // Upsert into users table                         │
-│ INSERT INTO users (                                 │
-│   fingerprint,                                      │
-│   ml_kem_public_key,                               │
-│   x25519_public_key,                               │
-│   created_at                                        │
-│ ) VALUES (...)                                      │
-│                                                      │
-│ // Response with fingerprint                        │
-│ {                                                   │
-│   success: true,                                    │
-│   textFingerprint: "a3f2b8c1d4e5f6g7..."          │
-│ }                                                   │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
-
-### Authentication (Per Request)
-
-```
-┌─────────────────────────────────────────────────────┐
-│ HTTP REQUEST WITH BEARER TOKEN                      │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│ POST /auth/fcm-token                                │
-│ Authorization: Bearer a3f2b8c1d4e5f6g7a3f2b8c...  │
-│ Content-Type: application/json                      │
-│                                                      │
-│ {                                                   │
-│   fcmToken: "ExponentPushToken[...]"               │
-│ }                                                   │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-              │
-              ▼
-┌─────────────────────────────────────────────────────┐
-│ BACKEND VALIDATION                                  │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│ 1. Extract fingerprint from Bearer token           │
-│    fingerprint = "a3f2b8c1d4e5f6g7a3f2b8c..."      │
-│                                                      │
-│ 2. Validate format (64-char hex)                   │
-│    if (fingerprint.length !== 64 ||                │
-│        !/^[a-f0-9]+$/.test(fingerprint))           │
-│      return 401 Unauthorized                        │
-│                                                      │
-│ 3. Query database                                   │
-│    const user = await db.query(                    │
-│      'SELECT * FROM users WHERE fingerprint = $1', │
-│      [fingerprint]                                  │
-│    )                                                │
-│                                                      │
-│ 4. If user found:                                  │
-│    req.user = { fingerprint: user.fingerprint }    │
-│    next()  // Continue                              │
-│                                                      │
-│ 5. If user not found:                              │
-│    return 401 { error: "Unrecognised identity" }   │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
-
-### Key Characteristics
-
-| Feature | Value |
-|---------|-------|
-| **User Registration** | No forms, no email, no password |
-| **Identity Source** | Cryptographic keys only |
-| **Fingerprint Length** | 64 characters (256-bit SHA-256) |
-| **Fingerprint Format** | Lowercase hexadecimal |
-| **Authentication Token** | Same as fingerprint (Bearer token) |
-| **Token Expiration** | None (permanent while registered) |
-| **Password Reset** | Not applicable |
-| **Account Deletion** | Delete from users table |
-| **Privacy Level** | Zero-knowledge (server doesn't know identity) |
-
----
-
-## DATABASE SCHEMA
-
-### PostgreSQL Tables (Supabase)
-
-#### users Table
-
-```sql
-CREATE TABLE users (
-  fingerprint TEXT PRIMARY KEY,
-  -- SHA-256 hash of (mlKemPublicKey || x25519PublicKey)
-  -- 64-character lowercase hex string
-  
-  ml_kem_public_key TEXT NOT NULL,
-  -- Base64-encoded ML-KEM-768 public key (1184 bytes)
-  
-  x25519_public_key TEXT NOT NULL,
-  -- Base64-encoded X25519 public key (32 bytes)
-  
-  created_at TIMESTAMP DEFAULT NOW()
-  -- Registration timestamp
-);
-
--- Index for fingerprint lookups
-CREATE INDEX idx_users_fingerprint ON users(fingerprint);
-```
-
-#### public_keys Table
-
-```sql
-CREATE TABLE public_keys (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
-  user_id TEXT NOT NULL UNIQUE,
-  -- Foreign key to users.fingerprint
-  
-  algorithm VARCHAR(50) NOT NULL DEFAULT 'hybrid-pq',
-  -- Always 'hybrid-pq' for hybrid post-quantum
-  
-  key_data JSONB NOT NULL,
-  -- {
-  --   x25519PublicKey: "base64...",
-  --   mlKemPublicKey: "base64...",
-  --   ed25519Signature: "base64...",
-  --   mlDsaSignature: "base64..."
-  -- }
-  
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- Index for fast key lookups
-CREATE INDEX idx_public_keys_user_id ON public_keys(user_id);
-
--- Foreign key constraint
-ALTER TABLE public_keys
-ADD CONSTRAINT fk_public_keys_user
-FOREIGN KEY (user_id) REFERENCES users(fingerprint);
-```
-
-#### fcm_tokens Table
-
-```sql
-CREATE TABLE fcm_tokens (
-  fingerprint TEXT PRIMARY KEY,
-  -- Foreign key to users.fingerprint
-  
-  fcm_token TEXT NOT NULL,
-  -- Firebase Cloud Messaging device token
-  -- Example: "ExponentPushToken[...]"
-  
-  updated_at TIMESTAMP DEFAULT NOW()
-  -- Last update time for token refresh
-);
-
--- Foreign key constraint
-ALTER TABLE fcm_tokens
-ADD CONSTRAINT fk_fcm_tokens_user
-FOREIGN KEY (fingerprint) REFERENCES users(fingerprint)
-ON DELETE CASCADE;
-```
-
-### Database Relationships
-
-```
-┌─────────────┐
-│   users     │
-├─────────────┤
-│ fingerprint │◄──┐
-│   (PK)      │   │
-│             │   │ (1:1)
-└─────────────┘   │
-                  │
-    ┌─────────────┴──────────────┐
-    │                            │
-    ▼                            ▼
-┌──────────────┐         ┌──────────────┐
-│ public_keys  │         │  fcm_tokens  │
-├──────────────┤         ├──────────────┤
-│ id (PK)      │         │fingerprint(PK)
-│ user_id(FK)──┼─────────┼─(FK)
-│ algorithm    │         │ fcm_token
-│ key_data     │         │ updated_at
-│ created_at   │         └──────────────┘
-│ updated_at   │
-└──────────────┘
-```
-
-### Data Examples
-
-#### users table
-```json
-{
-  "fingerprint": "a3f2b8c1d4e5f6g7h2i3j4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5",
-  "ml_kem_public_key": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...",
-  "x25519_public_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-  "created_at": "2026-04-22T10:30:45.123Z"
-}
-```
-
-#### public_keys table
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "user_id": "a3f2b8c1d4e5f6g7h2i3j4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5",
-  "algorithm": "hybrid-pq",
-  "key_data": {
-    "x25519PublicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-    "mlKemPublicKey": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...",
-    "ed25519Signature": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=",
-    "mlDsaSignature": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD="
-  },
-  "created_at": "2026-04-22T10:30:45.123Z",
-  "updated_at": "2026-04-22T10:30:45.123Z"
-}
-```
-
-#### fcm_tokens table
-```json
-{
-  "fingerprint": "a3f2b8c1d4e5f6g7h2i3j4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5",
-  "fcm_token": "ExponentPushToken[Z6Eo7sYtJ7aB8cD9eF0gH1iJ2kL3mN4oP5qR6sT7uV8wX9yZ0aB1cD2eF3g]",
-  "updated_at": "2026-04-28T14:22:33.456Z"
-}
-```
-
----
-
-## API ENDPOINTS
-
-### Authentication Endpoints
-
-#### 1. Register (Zero-Knowledge)
-
-```
-POST /auth/register
-Content-Type: application/json
-
-{
-  "mlKemPublicKey": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...",
-  "x25519PublicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-}
-
-Response: 201 Created
-{
-  "success": true,
-  "textFingerprint": "a3f2b8c1d4e5f6g7h2i3j4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5"
-}
-
-Error: 400 Bad Request
-{
-  "error": "Validation failed",
-  "issues": [...]
-}
-```
-
-#### 2. Lookup Contact
-
-```
-GET /auth/lookup/a3f2b8c1d4e5f6g7h2i3j4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5
-Authorization: Bearer <your_fingerprint>
-
-Response: 200 OK
-{
-  "success": true,
-  "fingerprint": "a3f2b8c1d4e5f6g7h2i3j4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5",
-  "mlKemPublicKey": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...",
-  "x25519PublicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-}
-
-Error: 404 Not Found
-{
-  "error": "User not found"
-}
-
-Error: 401 Unauthorized
-{
-  "error": "Authentication required"
-}
-```
-
-#### 3. Register FCM Token
-
-```
-POST /auth/fcm-token
-Authorization: Bearer <your_fingerprint>
-Content-Type: application/json
-
-{
-  "fcmToken": "ExponentPushToken[...]"
-}
-
-Response: 200 OK
-{
-  "success": true,
-  "message": "FCM token registered"
-}
-
-Error: 401 Unauthorized
-{
-  "error": "Authentication required"
-}
-
-Error: 400 Bad Request
-{
-  "error": "Invalid FCM token"
-}
-```
-
-### Key Management Endpoints
-
-#### 4. Upload Key Bundle
-
-```
-POST /api/keys/upload
-Authorization: Bearer <your_fingerprint>
-Content-Type: application/json
-
-{
-  "x25519PublicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-  "mlKemPublicKey": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...",
-  "ed25519Signature": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=",
-  "mlDsaSignature": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD="
-}
-
-Response: 201 Created
-{
-  "success": true,
-  "message": "Keys uploaded successfully"
-}
-
-Error: 401 Unauthorized
-{
-  "error": "Missing or invalid Authorization header"
-}
-
-Error: 400 Bad Request
-{
-  "error": "Validation failed",
-  "issues": [...]
-}
-```
-
-#### 5. Get Paginated Keys (Public Discovery)
-
-```
-GET /api/keys?page=1&limit=20
-
-Query Parameters:
-  page: integer (default: 1, min: 1)
-  limit: integer (default: 20, min: 1, max: 100)
-
-Response: 200 OK
-{
-  "data": [
-    {
-      "userId": "fingerprint_1",
-      "x25519PublicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-      "mlKemPublicKey": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...",
-      "ed25519Signature": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=",
-      "mlDsaSignature": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD=",
-      "createdAt": "2026-04-22T10:30:45.123Z",
-      "updatedAt": "2026-04-22T10:30:45.123Z"
-    },
-    ...
-  ],
-  "page": 1,
-  "limit": 20,
-  "total": 150,
-  "totalPages": 8
-}
-
-Error: 400 Bad Request
-{
-  "error": "Invalid pagination parameters",
-  "details": "Limit must be between 1 and 100"
-}
-```
-
-### Health Check
-
-#### 6. Health Status
-
-```
-GET /health
-
-Response: 200 OK
-{
-  "status": "ok",
-  "timestamp": "2026-04-28T14:30:45.123Z"
-}
-```
-
----
-
-## SOCKET.IO EVENTS
-
-### Connection Authentication
-
-```typescript
-// Client connects with userId in query
-io('http://localhost:3000', {
-  query: {
-    userId: 'a3f2b8c1d4e5f6g7h2i3j4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y9z0a1b2c3d4e5'
-  },
-  reconnection: true,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  reconnectionAttempts: Infinity
-})
-
-// Server validates userId and joins user to private room
-// named after their fingerprint
-```
-
-### Client → Server Events
-
-#### send_message
-
-```typescript
-// Emit encrypted message
-socket.emit('send_message', {
-  to: 'b4g3h8i2j5k6l7m8n9o0p1q2r3s4t5u6v7w8x9y0z1a2b3c4d5e6f7g8h9i0j1k2',
-  payload: <BUFFER>  // Binary encrypted envelope (never inspected by server)
-})
-
-// Server response: No acknowledgment needed
-// Message either delivered immediately or queued
-```
-
-### Server → Client Events
-
-#### receive_message
-
-```typescript
-// Receive encrypted message
-socket.on('receive_message', (envelope: MessageEnvelope) => {
-  // envelope.from = sender's fingerprint
-  // envelope.payload = encrypted buffer
-  // envelope.sentAt = ISO timestamp
-  
-  // Client decrypts locally
-})
-```
-
-#### disconnect
-
-```typescript
-// Server disconnects client (auto-reconnect enabled)
-socket.on('disconnect', (reason) => {
-  console.log('Disconnected:', reason)
-  // Automatic reconnection with exponential backoff
-})
-```
-
-### Event Flow Diagram
-
-```
-ONLINE RECIPIENT
-┌─────────────────────────────────────────────────────────┐
-│ 1. Client A: socket.emit('send_message', {to, payload})│
-│    └─ Packet sent via WebSocket                         │
-└────────────────┬────────────────────────────────────────┘
-                 │ WebSocket
-                 ▼
-┌─────────────────────────────────────────────────────────┐
-│ 2. Backend: registerSocketHandlers                       │
-│    ├─ Receive: {to, payload}                            │
-│    ├─ Create: MessageEnvelope = {from, payload, sentAt} │
-│    ├─ Check: isRecipientConnected(io, to)               │
-│    ├─ TRUE: io.to(to).emit('receive_message', env)      │
-│    └─ Send immediately via WebSocket                    │
-└────────────────┬────────────────────────────────────────┘
-                 │ WebSocket
-                 ▼
-┌─────────────────────────────────────────────────────────┐
-│ 3. Client B: socket.on('receive_message', envelope)    │
-│    └─ Decrypt locally and display                       │
-└─────────────────────────────────────────────────────────┘
-
-
-OFFLINE RECIPIENT
-┌─────────────────────────────────────────────────────────┐
-│ 1. Client A: socket.emit('send_message', {to, payload})│
-│    └─ Packet sent via WebSocket                         │
-└────────────────┬────────────────────────────────────────┘
-                 │ WebSocket
-                 ▼
-┌─────────────────────────────────────────────────────────┐
-│ 2. Backend: registerSocketHandlers                       │
-│    ├─ Receive: {to, payload}                            │
-│    ├─ Create: MessageEnvelope = {from, payload, sentAt} │
-│    ├─ Check: isRecipientConnected(io, to)               │
-│    ├─ FALSE: offlineQueueService.enqueue(to, env)       │
-│    └─ Store in Redis list (24-hour TTL)                 │
-└────────────────┬────────────────────────────────────────┘
-                 │ Redis + FCM
-                 ▼
-┌─────────────────────────────────────────────────────────┐
-│ 3. FCM Service:                                          │
-│    ├─ fcmService.sendPushNotification(...)              │
-│    ├─ Firebase sends push to device                     │
-│    └─ Payload: {type: 'new_message', senderFingerprint} │
-└────────────────┬────────────────────────────────────────┘
-                 │ Device wake-up
-                 ▼
-┌─────────────────────────────────────────────────────────┐
-│ 4. Client B (reopens app):                              │
-│    ├─ Connects to WebSocket                             │
-│    ├─ Backend: offlineQueueService.drain(userId)        │
-│    ├─ Reads all queued messages from Redis              │
-│    └─ Emits each: socket.emit('receive_message', ...)   │
-└────────────────┬────────────────────────────────────────┘
-                 │ WebSocket
-                 ▼
-┌─────────────────────────────────────────────────────────┐
-│ 5. Client B: socket.on('receive_message', envelope)    │
-│    └─ Decrypt locally and display all queued messages   │
-└─────────────────────────────────────────────────────────┘
-```
-
----
-
-## MESSAGE FLOW DIAGRAMS
-
-### Complete Message Encryption & Delivery Flow
-
-```
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                      SENDER-SIDE MESSAGE ENCRYPTION                        ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-
-STEP 1: USER COMPOSES MESSAGE
-┌─────────────────────────────────────────────────────────────────────────┐
-│ User: "Hello Bob!"                                                       │
-│ Recipient: bob_fingerprint = "b4g3h8i2j5k6l7m8n9o0p1q2r3s4t5u6v7w..."  │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 2: LOOKUP RECIPIENT KEYS
-┌─────────────────────────────────────────────────────────────────────────┐
-│ GET /auth/lookup/b4g3h8i2j5k6l7m8...                                    │
-│ Response:                                                                │
-│ {                                                                        │
-│   fingerprint: "b4g3h8i2j5k6l7m8...",                                   │
-│   mlKemPublicKey: "BAAAA...",  ← For encapsulation                      │
-│   x25519PublicKey: "AAAA..."                                             │
-│ }                                                                        │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 3: ML-KEM ENCAPSULATION (Hybrid PQC Key Exchange)
-┌─────────────────────────────────────────────────────────────────────────┐
-│ CryptoEngine.encapsulate(recipientMlKemPublicKey)                       │
-│                                                                          │
-│ Input:  Recipient's ML-KEM-768 public key                              │
-│ Output: {                                                               │
-│   ciphertext: <1088 bytes>,  ← Send this in message                    │
-│   sharedSecret: <32 bytes>   ← Use for encryption (temporary)          │
-│ }                                                                        │
-│                                                                          │
-│ Post-Quantum Safe: Resists quantum attacks                              │
-│ (Quantum computer cannot reverse this operation)                        │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 4: KEY DERIVATION (HMAC-SHA256)
-┌─────────────────────────────────────────────────────────────────────────┐
-│ symmetricKey = KDF(sharedSecret, "message_key")                        │
-│                                                                          │
-│ Input:  32-byte shared secret                                          │
-│ Function: HMAC-SHA256 with personalization                             │
-│ Output: 32-byte AES-256 key (deterministic)                            │
-│                                                                          │
-│ Same shared secret always produces same symmetric key                  │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 5: AES-256-GCM ENCRYPTION
-┌─────────────────────────────────────────────────────────────────────────┐
-│ CryptoManager.encrypt(plaintext, symmetricKey)                          │
-│                                                                          │
-│ Plaintext: "Hello Bob!"                                                │
-│ Key: 32-byte from KDF                                                  │
-│ Nonce: Random 96-bit (generated fresh for each message)                │
-│ AAD: recipientFingerprint (authenticated but not encrypted)            │
-│                                                                          │
-│ Output: {                                                               │
-│   ciphertext: <encrypted_payload>,                                     │
-│   authTag: <16_bytes>,  ← Proves authenticity & integrity              │
-│   nonce: <12_bytes>     ← Must be sent (non-secret)                    │
-│ }                                                                        │
-│                                                                          │
-│ AES-256 Security: 256-bit key (quantum-resistant)                      │
-│ GCM Mode: Authenticated encryption                                     │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 6: CREATE PROTOBUF MESSAGE ENVELOPE
-┌─────────────────────────────────────────────────────────────────────────┐
-│ EncryptedEnvelope (Protobuf):                                           │
-│ {                                                                        │
-│   recipient_id: "b4g3h8i2j5k6l7m8...",                                  │
-│   sender_id: "a3f2b8c1d4e5f6g7...",                                     │
-│   ciphertext: <encrypted_payload + nonce + tag>,                        │
-│   mlkem_ciphertext: <1088_bytes>,                                       │
-│   timestamp: 1713792045000                                              │
-│ }                                                                        │
-│                                                                          │
-│ Binary serialized via Protobuf (compact, efficient)                     │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 7: SEND VIA WEBSOCKET
-┌─────────────────────────────────────────────────────────────────────────┐
-│ socket.emit('send_message', {                                           │
-│   to: "b4g3h8i2j5k6l7m8...",                                            │
-│   payload: <protobuf_bytes>  ← Binary, never decrypted by server       │
-│ })                                                                       │
-│                                                                          │
-│ Server receives but DOES NOT READ payload (zero-knowledge)             │
-└─────────────────────────────────────────────────────────────────────────┘
-
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                         BACKEND MESSAGE ROUTING                            ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-
-STEP 8: BACKEND RECEIVES MESSAGE
-┌─────────────────────────────────────────────────────────────────────────┐
-│ socket.on('send_message', async (msg) => {                              │
-│   const { to, payload } = msg;                                          │
-│   const userId = socket.handshake.query.userId;  // Sender ID           │
-│                                                                          │
-│   // Wrap in envelope for delivery                                      │
-│   const envelope: MessageEnvelope = {                                   │
-│     from: userId,                                                       │
-│     payload: payload,    ← UNTOUCHED by server                          │
-│     sentAt: new Date().toISOString()                                    │
-│   };                                                                     │
-│                                                                          │
-│   // Check recipient status                                             │
-│   const recipientOnline = await isRecipientConnected(io, to);           │
-│                                                                          │
-│   if (recipientOnline) {                                                │
-│     // ONLINE: Deliver immediately                                      │
-│     io.to(to).emit('receive_message', envelope);                        │
-│   } else {                                                               │
-│     // OFFLINE: Queue & alert                                           │
-│     await offlineQueueService.enqueue(to, envelope);                    │
-│     await fcmService.sendPushNotification(                              │
-│       to,                                                                │
-│       userId,                                                            │
-│       'new_message'                                                     │
-│     );                                                                   │
-│   }                                                                      │
-│ })                                                                       │
-└─────────────────────────────────────────────────────────────────────────┘
-
-╔═══════════════════════════════════════════════════════════════════════════╗
-║                      RECIPIENT-SIDE MESSAGE DECRYPTION                     ║
-╚═══════════════════════════════════════════════════════════════════════════╝
-
-STEP 9: RECIPIENT RECEIVES MESSAGE
-┌─────────────────────────────────────────────────────────────────────────┐
-│ socket.on('receive_message', (envelope: MessageEnvelope) => {           │
-│   // envelope.from = sender fingerprint                                 │
-│   // envelope.payload = encrypted protobuf                              │
-│   // envelope.sentAt = timestamp                                        │
-│                                                                          │
-│   handleReceivedMessage(envelope);                                      │
-│ })                                                                       │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 10: LOAD RECIPIENT'S PRIVATE KEYS
-┌─────────────────────────────────────────────────────────────────────────┐
-│ Get from Room Database (encrypted by SQLCipher):                        │
-│ {                                                                        │
-│   mlKemPrivateKey: <2400_bytes>,  ← For decapsulation                   │
-│   ed25519PrivateKey: <32_bytes>,                                        │
-│   x25519PrivateKey: <32_bytes>                                          │
-│ }                                                                        │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 11: ML-KEM DECAPSULATION (Recover Shared Secret)
-┌─────────────────────────────────────────────────────────────────────────┐
-│ CryptoEngine.decapsulate(mlkem_ciphertext, mlKemPrivateKey)             │
-│                                                                          │
-│ Input:  1088-byte ciphertext from message + recipient's private key    │
-│ Process: ML-KEM-768 decapsulation algorithm                             │
-│ Output: 32-byte shared secret                                           │
-│                                                                          │
-│ ✅ SAME SECRET: Only recipient can recover this secret                   │
-│ (Sender's encapsulation + Recipient's decapsulation = Same secret)      │
-│                                                                          │
-│ Quantum Safety: Decapsulation resistant to quantum attacks              │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 12: KEY DERIVATION (DETERMINISTIC)
-┌─────────────────────────────────────────────────────────────────────────┐
-│ symmetricKey = KDF(sharedSecret, "message_key")                        │
-│                                                                          │
-│ Same shared secret → Same symmetric key deterministically               │
-│ (Sender derived this same key when encrypting)                          │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 13: AES-256-GCM DECRYPTION & VERIFICATION
-┌─────────────────────────────────────────────────────────────────────────┐
-│ CryptoManager.decrypt(ciphertext, symmetricKey)                         │
-│                                                                          │
-│ Verify:                                                                 │
-│ 1. ✅ Auth tag matches (message not tampered)                            │
-│ 2. ✅ AAD matches recipient fingerprint (right recipient)               │
-│ 3. ✅ Nonce is valid (replay protection)                                │
-│                                                                          │
-│ Decrypt: "Hello Bob!"                                                  │
-│                                                                          │
-│ If verification fails:                                                  │
-│   • Message is rejected                                                 │
-│   • Error logged                                                        │
-│   • User notified of failed decryption                                  │
-└──────────────────────────┬──────────────────────────────────────────────┘
-                           │
-                           ▼
-STEP 14: DISPLAY MESSAGE
-┌─────────────────────────────────────────────────────────────────────────┐
-│ ChatMessage {                                                            │
-│   from: "a3f2b8c1d4e5f6g7...",                                          │
-│   text: "Hello Bob!",                                                  │
-│   timestamp: "2026-04-28T14:30:45.123Z",                                │
-│   encrypted: ✅ (with PQC + AES-256)                                     │
-│ }                                                                        │
-│                                                                          │
-│ Store in Room Database (encrypted by SQLCipher)                         │
-│ Update UI to show message in chat                                       │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### Offline Message Queue Flow
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│ SENDER SENDS MESSAGE, RECIPIENT OFFLINE                      │
-└──────────────────────────────────────────────────────────────┘
-
-STEP 1: BACKEND ROUTES TO REDIS
-┌──────────────────────────────────────────────────────────────┐
-│ // Check if recipient is online                              │
-│ const recipientOnline = await isRecipientConnected(io, to);  │
-│                                                               │
-│ if (!recipientOnline) {                                       │
-│   // Queue in Redis with 24-hour TTL                         │
-│   await offlineQueueService.enqueue(to, envelope);           │
-│ }                                                             │
-└────────────────────┬─────────────────────────────────────────┘
-                     │
-                     ▼
-STEP 2: REDIS STORAGE (24-HOUR TTL)
-┌──────────────────────────────────────────────────────────────┐
-│ Redis List: "offline_queue:b4g3h8i2j5k6l7m8..."            │
-│                                                               │
-│ [                                                             │
-│   {from: "a3f2...", payload: <bytes>, sentAt: "..."},       │
-│   {from: "c5h9...", payload: <bytes>, sentAt: "..."},       │
-│   ...                                                         │
-│ ]                                                             │
-│                                                               │
-│ TTL: 86400 seconds (24 hours)                               │
-│ If no one collects within 24h, messages auto-delete          │
-└────────────────────┬─────────────────────────────────────────┘
-                     │
-                     ▼
-STEP 3: SEND FIREBASE PUSH NOTIFICATION
-┌──────────────────────────────────────────────────────────────┐
-│ Firebase Admin SDK sends to device:                          │
-│                                                               │
-│ {                                                             │
-│   token: "ExponentPushToken[...]",                           │
-│   data: {                                                     │
-│     type: "new_message",                                     │
-│     senderFingerprint: "a3f2b8c1d4e5f6g7..."               │
-│   },                                                          │
-│   android: {                                                 │
-│     priority: "high",                                        │
-│     ttl: 86400000  (24 hours)                               │
-│   }                                                           │
-│ }                                                             │
-│                                                               │
-│ ⚠️ ZERO-KNOWLEDGE: No message content in push!              │
-│    Only metadata (sender fingerprint)                        │
-└────────────────────┬─────────────────────────────────────────┘
-                     │
-                     ▼
-STEP 4: DEVICE RECEIVES PUSH & WAKES UP
-┌──────────────────────────────────────────────────────────────┐
-│ Android Device Notification:                                │
-│ "New message from a3f2b8c..."                              │
-│                                                               │
-│ User taps notification → App opens                           │
-└────────────────────┬─────────────────────────────────────────┘
-                     │
-                     ▼
-STEP 5: RECIPIENT RECONNECTS
-┌──────────────────────────────────────────────────────────────┐
-│ socket.io client reconnects with:                            │
-│ io('http://...', {                                           │
-│   query: {                                                    │
-│     userId: 'b4g3h8i2j5k6l7m8...'                          │
-│   }                                                           │
-│ })                                                            │
-│                                                               │
-│ Backend detects new connection                               │
-└────────────────────┬─────────────────────────────────────────┘
-                     │
-                     ▼
-STEP 6: DRAIN OFFLINE QUEUE
-┌──────────────────────────────────────────────────────────────┐
-│ socket.on('connect', async () => {                           │
-│   const userId = socket.handshake.query.userId;             │
-│   const messages = await offlineQueueService.drain(userId);  │
-│ })                                                            │
-│                                                               │
-│ // Retrieve all messages from Redis                          │
-│ const key = `offline_queue:${userId}`;                       │
-│ const raw = await redis.lrange(key, 0, -1);  // All items   │
-│                                                               │
-│ // Send each to socket                                       │
-│ for (const item of raw) {                                    │
-│   const envelope = JSON.parse(item);                         │
-│   socket.emit('receive_message', envelope);                 │
-│ }                                                             │
-│                                                               │
-│ // Delete the Redis key                                      │
-│ await redis.del(key);                                        │
-└────────────────────┬─────────────────────────────────────────┘
-                     │
-                     ▼
-STEP 7: CLIENT PROCESSES QUEUED MESSAGES
-┌──────────────────────────────────────────────────────────────┐
-│ socket.on('receive_message', (envelope) => {                │
-│   // Decrypt each message locally                            │
-│   handleReceivedMessage(envelope);                           │
-│ })                                                            │
-│                                                               │
-│ All queued messages displayed in chat history                │
-└──────────────────────────────────────────────────────────────┘
-```
-
----
-
-## COMPONENT INTEGRATION
-
-### Backend Service Layer Integration
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    EXPRESS ROUTES                               │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│ /health          → (no middleware) → Direct response            │
-│ /auth/*          → authMiddleware → AuthController              │
-│ /api/keys/*      → authMiddleware → KeyController               │
-│ WebSocket        → socketAuthMiddleware → SocketController      │
-│                                                                  │
-└────────────┬──────────────────────┬──────────────────┬──────────┘
-             │                      │                  │
-             ▼                      ▼                  ▼
-  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-  │ AuthController   │  │ KeyController    │  │SocketController  │
-  ├──────────────────┤  ├──────────────────┤  ├──────────────────┤
-  │ register()       │  │ upload()         │  │ handleConnection()
-  │ lookup()         │  │ getPaginated()   │  │ handleMessage()   │
-  │ registerFcm()    │  │                  │  │ handleDisconnect()
-  └────────┬─────────┘  └────────┬─────────┘  └────────┬──────────┘
-           │                     │                     │
-           ▼                     ▼                     ▼
-┌────────────────────────────────────────────────────────────────┐
-│                    SERVICE LAYER                               │
-├────────────────────────────────────────────────────────────────┤
-│                                                                │
-│ ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │
-│ │ UserRepository
- │  │ KeyRepository│  │ MessageService      │ │
-│ ├──────────────┤  ├──────────────┤  ├──────────────────────┤ │
-│ │ upsertUser() │  │ uploadKeys() │  │ queueOfflineMessage()│ │
-│ │ findByFP()   │  │ findKeys()   │  │ retrieveOffline()    │ │
-│ └──────────────┘  └──────────────┘  └──────────────────────┘ │
-│                                                                │
-│ ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │
-│ │ FcmService   │  │OfflineQueueSvc
- │  │ socketService       │ │
-│ ├──────────────┤  ├──────────────┤  ├──────────────────────┤ │
-│ │ upsertToken()│  │ enqueue()    │  │ registerHandlers()   │ │
-│ │ getToken()   │  │ drain()      │  │ isConnected()        │ │
-│ │ sendPush()   │  │ removeToken()│  │                      │ │
-│ └──────────────┘  └──────────────┘  └──────────────────────┘ │
-│                                                                │
-└────────────────┬─────────────────────┬──────────────┬─────────┘
-                 │                     │              │
-                 ▼                     ▼              ▼
-     ┌─────────────────────┐ ┌──────────────┐  ┌────────────────┐
-     │ Supabase PostgreSQL │ │ Redis Client │  │ Firebase Admin │
-     ├─────────────────────┤ ├──────────────┤  ├────────────────┤
-     │ users table         │ │ offline msgs │  │ FCM messaging  │
-     │ public_keys table   │ │ session data │  │                │
-     │ fcm_tokens table    │ │ Pub/Sub      │  │                │
-     └─────────────────────┘ └──────────────┘  └────────────────┘
-```
-
-### Android Architecture Integration
-
-```
-┌───────────────────────────────────────────────────────────┐
-│              PRESENTATION LAYER (UI)                      │
-│              Jetpack Compose                              │
-├───────────────────────────────────────────────────────────┤
-│                                                            │
-│  ChatScreen ────┐                                         │
-│                 ├──► ContacterScreen                       │
-│  LoginScreen ───┤                                         │
-│                 ├──► SettingsScreen                        │
-│                 │                                          │
-└────────────┬────┴─────────────────────────────────────────┘
-             │
-             ▼
-┌───────────────────────────────────────────────────────────┐
-│              VIEWMODEL LAYER                              │
-│              State Management                             │
-├───────────────────────────────────────────────────────────┤
-│                                                            │
-│  ChatViewModel    ─┐                                      │
-│  AuthViewModel     ├─► StateFlow / LiveData               │
-│  ContactViewModel ─┤                                      │
-│                    │                                      │
-└────────────┬───────┴─────────────────────────────────────┘
-             │
-             ▼
-┌───────────────────────────────────────────────────────────┐
-│              DOMAIN LAYER (Use Cases)                     │
-│              Business Logic                              │
-├───────────────────────────────────────────────────────────┤
-│                                                            │
-│  SendMessageUseCase                                       │
-│  DecryptMessageUseCase                                    │
-│  RegisterUserUseCase                                      │
-│                                                            │
-└────────────┬────────────────────────────────────────────┘
-             │
-             ▼
-┌───────────────────────────────────────────────────────────┐
-│              REPOSITORY LAYER                             │
-│              Data Abstraction                             │
-├───────────────────────────────────────────────────────────┤
-│                                                            │
-│  MessageRepository ─┐                                     │
-│  UserRepository    ├──► Network + Local                   │
-│  KeyRepository     ─┤    (Room + Socket.io)               │
-│                                                            │
-└────────────┬────────────────────────────────────────────┘
-             │
-             ├──────────────┬──────────────┬────────────────┐
-             │              │              │                │
-             ▼              ▼              ▼                ▼
-  ┌────────────────┐ ┌──────────┐ ┌─────────────┐ ┌──────────────┐
-  │ Crypto Engine  │ │ Network  │ │ Room DB     │ │ Socket.io    │
-  ├────────────────┤ ├──────────┤ ├─────────────┤ ├──────────────┤
-  │ ML-KEM-768     │ │ Retrofit │ │ Messages    │ │ send_message │
-  │ ML-DSA         │ │ OkHttp   │ │ Contacts    │ │ recv_message │
-  │ X25519         │ │ Protobuf │ │ Keys        │ │              │
-  │ Ed25519        │ │ JSON     │ │ Encrypted   │ │              │
-  │ AES-256-GCM    │ │          │ │ by SQLCipher│ │              │
-  │ Tink/Bouncy    │ │          │ │             │ │              │
-  │ liboqs/Tink    │ │          │ │             │ │              │
-  └────────────────┘ └──────────┘ └─────────────┘ └──────────────┘
-```
-
----
-
-## SECURITY IMPLEMENTATION
-
-### Multi-Layer Security Model
-
-```
-┌────────────────────────────────────────────────────────────┐
-│ LAYER 1: TRANSPORT SECURITY                                │
-├────────────────────────────────────────────────────────────┤
-│ ✅ HTTPS/TLS 1.3 for all REST calls                         │
-│ ✅ WSS (Secure WebSocket) for Socket.io                     │
-│ ✅ Certificate pinning (optional)                           │
-│ ✅ Helmet middleware (security headers)                     │
-│    - CSP (Content Security Policy)                          │
-│    - HSTS (HTTP Strict Transport Security)                  │
-│    - X-Frame-Options (Clickjacking protection)              │
-│    - X-Content-Type-Options (MIME sniffing protection)      │
-└────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────┐
-│ LAYER 2: AUTHENTICATION SECURITY                           │
-├────────────────────────────────────────────────────────────┤
-│ ✅ Zero-Knowledge registration (no passwords)               │
-│ ✅ Fingerprint = SHA-256(keys)                              │
-│ ✅ 64-character hex bearer token                            │
-│ ✅ Database lookup per request                              │
-│ ✅ No token expiration (permanent while registered)         │
-│ ✅ User deletion removes all associated data               │
-└────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────┐
-│ LAYER 3: ENCRYPTION SECURITY                               │
-├────────────────────────────────────────────────────────────┤
-│ CLIENT-SIDE ENCRYPTION:                                    │
-│                                                             │
-│ ✅ ML-KEM-768 encapsulation (NIST-approved PQC)            │
-│    - 1088-byte ciphertext                                   │
-│    - 32-byte shared secret                                  │
-│    - Quantum-resistant key encapsulation                    │
-│                                                             │
-│ ✅ KDF (Key Derivation Function)                            │
-│    - HMAC-SHA256 with personalization                       │
-│    - Deterministic symmetric key generation                 │
-│                                                             │
-│ ✅ AES-256-GCM encryption                                   │
-│    - 256-bit key (128-bit for AES-128, but using 256)      │
-│    - 96-bit random nonce per message                        │
-│    - Authenticated Associated Data (AAD)                    │
-│    - 128-bit authentication tag                             │
-│                                                             │
-│ ✅ Ed25519 & ML-DSA signatures                              │
-│    - Classical + Post-quantum signatures                    │
-│    - Signature over entire key bundle                       │
-│                                                             │
-│ ✅ X25519 for classical key exchange (fallback)             │
-│    - 32-byte elliptic curve                                 │
-│                                                             │
-│ ZERO-KNOWLEDGE PROPERTY:                                   │
-│    - Server never sees plaintext                            │
-│    - Server never sees private keys                         │
-│    - Server only relays encrypted envelopes                │
-│    - Message payload never logged/inspected                │
-└────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────┐
-│ LAYER 4: DATA AT REST SECURITY                             │
-├────────────────────────────────────────────────────────────┤
-│ MOBILE (Android):                                          │
-│    ✅ Room Database + SQLCipher                             │
-│    ✅ AES-256 encryption for local storage                  │
-│    ✅ Private keys never leave device                       │
-│    ✅ Biometric/PIN protection (optional)                   │
-│                                                             │
-│ BACKEND (PostgreSQL):                                      │
-│    ✅ Supabase PostgreSQL with SSL                          │
-│    ✅ SSH tunneling available                               │
-│    ✅ Database encryption at provider level                 │
-│    ✅ Row-Level Security (RLS) policies                     │
-│    ✅ Only public key material stored (no private keys)     │
-└────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────┐
-│ LAYER 5: RATE LIMITING & DDoS PROTECTION                   │
-├────────────────────────────────────────────────────────────┤
-│ ✅ Global limiter: 100 requests per 15 min per IP          │
-│ ✅ Upload limiter: 10 requests per min per IP               │
-│ ✅ Socket.io auto-reconnection with exponential backoff    │
-│ ✅ Invalid connection rejection (missing userId)           │
-└────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────┐
-│ LAYER 6: INPUT VALIDATION                                  │
-├────────────────────────────────────────────────────────────┤
-│ ✅ Zod schema validation on all endpoints                   │
-│ ✅ Fingerprint format validation (64-char hex)              │
-│ ✅ Base64 encoding validation for keys                      │
-│ ✅ FCM token length validation                              │
-│ ✅ Pagination limits enforcement (min/max)                  │
-│ ✅ Content-Type validation                                  │
-└────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────┐
-│ LAYER 7: ERROR HANDLING & LOGGING                          │
-├────────────────────────────────────────────────────────────┤
-│ ✅ Centralized error handler middleware                     │
-│ ✅ No sensitive data in error responses                     │
-│ ✅ Structured logging with Winston/Pino                     │
-│ ✅ Audit logging for security events                        │
-│ ✅ No password/private key logs                             │
-└────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────┐
-│ LAYER 8: PUSH NOTIFICATION SECURITY                        │
-├────────────────────────────────────────────────────────────┤
-│ ✅ Zero-knowledge push payloads                             │
-│    - No message content in push                             │
-│    - Only metadata (sender fingerprint)                     │
-│ ✅ FCM token encryption in database                         │
-│ ✅ Token invalidation/expiry handling                       │
-│ ✅ Device token rotation support                            │
-└────────────────────────────────────────────────────────────┘
-```
-
-### Cryptographic Key Lifecycle
-
-```
-┌────────────────────────────────────┐
-│ 1. KEY GENERATION (Mobile Only)     │
-├────────────────────────────────────┤
-│ • ML-KEM-768 (2400-byte private)    │
-│ • X25519 (32-byte private)          │
-│ • Ed25519 (32-byte private)         │
-│ • ML-DSA (private key)              │
-│                                    │
-│ Location: Room DB (SQLCipher)      │
-│ Encryption: AES-256 by SQLCipher   │
-│ Rotation: Once per registration    │
-└────────────────┬────────────────────┘
-                 │
-                 ▼
-┌────────────────────────────────────┐
-│ 2. FINGERPRINT DERIVATION           │
-├────────────────────────────────────┤
-│ FP = SHA-256(mlKemPk || x25519Pk) │
-│ Result: 64-char hex                │
-│ Used As: Identity & bearer token   │
-└────────────────┬────────────────────┘
-                 │
-                 ▼
-┌────────────────────────────────────┐
-│ 3. PUBLIC KEY UPLOAD                │
-├────────────────────────────────────┤
-│ POST /api/keys/upload               │
-│ {                                  │
-│   x25519PublicKey,                  │
-│   mlKemPublicKey,                   │
-│   ed25519Signature,                 │
-│   mlDsaSignature                    │
-│ }                                  │
-│                                    │
-│ Stored in: PostgreSQL (public_keys)│
-│ Keyed by: Fingerprint              │
-│ Visible: To all users (public)      │
-└────────────────┬────────────────────┘
-                 │
-                 ▼
-┌────────────────────────────────────┐
-│ 4. MESSAGE ENCRYPTION               │
-├────────────────────────────────────┤
-│ • Lookup recipient's public keys   │
-│ • ML-KEM encapsulate → shared key  │
-│ • KDF(sharedKey) → AES key         │
-│ • AES-256-GCM encrypt message      │
-│ • Send over WebSocket (encrypted)  │
-└────────────────┬────────────────────┘
-                 │
-                 ▼
-┌────────────────────────────────────┐
-│ 5. MESSAGE DECRYPTION               │
-├────────────────────────────────────┤
-│ • Receive encrypted envelope       │
-│ • Load recipient's private keys    │
-│ • ML-KEM decapsulate → shared key  │
-│ • KDF(sharedKey) → AES key         │
-│ • AES-256-GCM decrypt              │
-│ • Verify signatures                │
-│ • Display plaintext                │
-└────────────────┬────────────────────┘
-                 │
-                 ▼
-┌────────────────────────────────────┐
-│ 6. KEY DELETION (Account Removal)   │
-├────────────────────────────────────┤
-│ • Delete from users table          │
-│ • Delete from public_keys table    │
-│ • Delete from fcm_tokens table     │
-│ • Purge from Redis queue           │
-│ • All historical messages lost     │
-│   (privacy by design)              │
-└────────────────────────────────────┘
-```
-
----
-
-## DEPLOYMENT
-
-### Docker Compose Stack
-
-```yaml
-version: '3.8'
-
-services:
-  # Backend API Server
-  backend:
-    build:
-      context: ./Backend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_ADMIN_KEY=${SUPABASE_ADMIN_KEY}
-      - REDIS_URL=redis://redis:6379
-      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
-      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
-      - CLIENT_ORIGIN=http://localhost:3001
-    depends_on:
-      - redis
-    networks:
-      - quantum
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Redis Cache & Message Queue
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
-    networks:
-      - quantum
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-volumes:
-  redis_data:
-
-networks:
-  quantum:
-    driver: bridge
-```
-
-### Environment Variables
-
-```env
-# Backend (.env)
-NODE_ENV=production
-PORT=3000
-
-# Supabase Configuration
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_ADMIN_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-# Firebase Configuration
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----...
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxx@your-project.iam.gserviceaccount.com
-
-# Redis Configuration
-REDIS_URL=redis://redis:6379
-
-# API Configuration
-CLIENT_ORIGIN=http://localhost:3001
-API_PORT=3000
-
-# Logging
-LOG_LEVEL=info
-```
-
-### Production Deployment Checklist
-
-- [ ] Set `NODE_ENV=production`
-- [ ] Enable HTTPS/TLS for all endpoints
-- [ ] Configure proper CORS origins
-- [ ] Set strong SUPABASE_ADMIN_KEY
-- [ ] Use environment variables for all secrets
-- [ ] Enable database SSL connections
-- [ ] Set up Redis persistence (RDB)
-- [ ] Configure Redis memory limits
-- [ ] Set up monitoring and alerting
-- [ ] Enable logging and audit trails
-- [ ] Configure backups (PostgreSQL)
-- [ ] Set up rate limiting rules
-- [ ] Enable Socket.io Redis adapter
-- [ ] Configure firewall rules
-- [ ] Use strong passwords/keys everywhere
-- [ ] Implement DDoS protection
-- [ ] Set up SSL/TLS certificates
-- [ ] Configure log rotation
-- [ ] Enable database encryption
-- [ ] Set up disaster recovery procedures
-
----
-
-## UNIQUE INNOVATIONS
-
-| Feature | Implementation | Advantage |
-|---------|-----------------|-----------|
-| **Zero-Knowledge Auth** | Fingerprint = SHA-256(keys) | No passwords, accounts, or emails |
-| **Hybrid Cryptography** | Classical + Post-Quantum | Protected against quantum attacks |
-| **Post-Quantum Safe** | ML-KEM-768 + ML-DSA | NIST-approved algorithms |
-| **End-to-End Encryption** | Client-side only | Server cannot decrypt |
-| **Offline Messages** | Redis queue + 24h TTL | Messages survive disconnects |
-| **Zero-Knowledge Push** | Metadata-only notifications | Privacy-preserving alerts |
-| **Message Authenticity** | Ed25519 + ML-DSA signatures | Tamper-proof messages |
-| **Deterministic KDF** | HMAC-SHA256 personalization | Same secret = same key always |
-| **Perfect Forward Secrecy** | ML-KEM per-message | Future compromise doesn't break past |
-| **Opaque Relay** | Server never reads payload | True zero-knowledge server |
-
----
-
-## SUMMARY TABLE
-
-| Component | Technology | Purpose | Status |
-|-----------|-----------|---------|--------|
-| **Backend Framework** | Express.js 5.x | API & WebSocket | ✅ Production |
-| **Language (Backend)** | TypeScript | Type Safety | ✅ Production |
-| **Real-time** | Socket.io 4.x | Message Delivery | ✅ Production |
-| **Database** | PostgreSQL (Supabase) | Data Persistence | ✅ Production |
-| **Cache/Queue** | Redis | Offline Queue | ✅ Production |
-| **Notifications** | Firebase FCM | Push Alerts | ✅ Production |
-| **Mobile Framework** | Jetpack Compose | Android UI | ✅ Production |
-| **Mobile Language** | Kotlin | Type Safety | ✅ Production |
-| **PQC (Post-Quantum)** | liboqs | ML-KEM-768, ML-DSA | ✅ Production |
-| **Classical Crypto** | Bouncy Castle | X25519, Ed25519 | ✅ Production |
-| **Symmetric Crypto** | Tink | AES-256-GCM | ✅ Production |
-| **Local Storage** | Room + SQLCipher | Encrypted DB | ✅ Production |
-| **Serialization** | Protobuf | Message Format | ✅ Production |
-| **Authentication** | Custom Fingerprint | Zero-Knowledge | ✅ Production |
-| **Deployment** | Docker Compose | Containerization | ✅ Ready |
-
----
-
-**Generated: April 28, 2026**  
-**Status: ✅ COMPLETE & PRODUCTION READY**
