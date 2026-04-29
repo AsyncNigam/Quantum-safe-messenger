@@ -1,36 +1,29 @@
 // ─── Firebase Admin SDK Configuration ──────────────────────────────────────────
 // Initializes Firebase Admin for sending push notifications via FCM.
 //
-// Expects a service account key at FIREBASE_SERVICE_ACCOUNT_PATH env var,
+// Expects a Base64-encoded service account key in FIREBASE_SERVICE_ACCOUNT_BASE64 env var,
 // or uses Application Default Credentials if running on GCP.
 
 import * as admin from 'firebase-admin';
-import * as path from 'path';
-import * as fs from 'fs';
 
 let firebaseInitialized = false;
 
 export function initFirebase(): void {
   if (firebaseInitialized) return;
 
-  const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
 
-  if (!serviceAccountPath) {
-    console.warn('[Firebase] ⚠️ FIREBASE_SERVICE_ACCOUNT_PATH not set — push notifications disabled.');
-    return;
-  }
-
-  // Resolve relative to the project root (CWD), not the module location
-  const resolvedPath = path.resolve(process.cwd(), serviceAccountPath);
-
-  if (!fs.existsSync(resolvedPath)) {
-    console.warn(`[Firebase] ⚠️ Service account file not found at: ${resolvedPath}`);
-    console.warn('[Firebase] ⚠️ Push notifications disabled. Download from Firebase Console → Service Accounts.');
+  if (!serviceAccountBase64) {
+    console.warn('[Firebase] ⚠️ FIREBASE_SERVICE_ACCOUNT_BASE64 not set — push notifications disabled.');
     return;
   }
 
   try {
-    const serviceAccount = JSON.parse(fs.readFileSync(resolvedPath, 'utf-8'));
+    // Decode base64 string back to JSON
+    const serviceAccount = JSON.parse(
+      Buffer.from(serviceAccountBase64, 'base64').toString('utf8')
+    );
+
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });

@@ -33,7 +33,7 @@ services:
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       REDIS_URL: redis://redis:6379
       CLIENT_ORIGIN: "*"
-      FIREBASE_SERVICE_ACCOUNT_PATH: ./firebase-service-account.json
+      FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64}
     
     depends_on:
       redis:
