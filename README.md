@@ -1,53 +1,686 @@
-# 🚀 QUANTUM MESSENGER - COMPLETE PROJECT DOCUMENTATION
+# � Quantum Safe - Post-Quantum Encrypted Messaging
 
-**Project Date:** April 2026  
-**Status:** ✅ Production Ready  
-**Version:** 1.0.0
+<div align="center">
 
----
+![Quantum Safe](Quantum%20Safe%20images/Screenshot_2026-04-29-21-27-39-63_fc0d678334bc258baed0b03034397354.jpg)
 
-## 📑 TABLE OF CONTENTS
+**A Privacy-First Messaging App Built with NIST-Approved Post-Quantum Cryptography**
 
-1. [Project Overview](#project-overview)
-2. [Architecture](#architecture)
-3. [Technology Stack](#technology-stack)
-4. [Authentication Model](#authentication-model)
-5. [Database Schema](#database-schema)
-6. [API Endpoints](#api-endpoints)
-7. [Socket.io Events](#socketio-events)
-8. [Message Flow Diagrams](#message-flow-diagrams)
-9. [Component Integration](#component-integration)
-10. [Security Implementation](#security-implementation)
-11. [Deployment](#deployment)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue)
+![Platform](https://img.shields.io/badge/Platform-Android%2B%20Web-blue)
+
+**Features Zero-Knowledge Authentication • ML-KEM & ML-DSA Post-Quantum Encryption • Biometric SQLCipher Vault • Glassmorphism Compose UI • Offline Message Queuing**
+
+[Getting Started](#getting-started) • [Architecture](#architecture) • [Features](#features) • [Tech Stack](#tech-stack)
+
+</div>
 
 ---
 
-## PROJECT OVERVIEW
+## 🌟 Overview
 
-**Quantum Messenger** is a privacy-focused, post-quantum encrypted messaging application built with:
-- **Zero-Knowledge Authentication** (cryptographic fingerprints)
-- **Hybrid Cryptography** (classical + post-quantum algorithms)
-- **End-to-End Encryption** (client-side only)
-- **Offline Message Queue** (Redis-backed)
-- **Push Notifications** (Firebase Cloud Messaging)
+**Quantum Safe** is the world's first production-ready, post-quantum encrypted messaging application that combines:
 
-### Key Principles
-- ✅ **No user accounts** — identity derived from cryptographic keys
-- ✅ **No passwords** — registration is key exchange
-- ✅ **Zero-knowledge server** — server never decrypts messages
-- ✅ **Quantum-safe** — NIST-approved post-quantum algorithms
-- ✅ **Offline resilience** — messages queue when recipient offline
+- 🔒 **NIST-Approved Post-Quantum Algorithms**: ML-KEM (Kyber) and ML-DSA (Dilithium) for future-proof encryption
+- 🔑 **Zero-Knowledge Architecture**: The server cannot decrypt your messages—ever
+- 🚫 **No Passwords, No Accounts**: Identity derived from cryptographic keys only
+- 📱 **Glassmorphic Compose UI**: Beautiful, modern Android UI with light/dark themes
+- 🔐 **Biometric SQLCipher Vault**: Fingerprint/Face unlock with encrypted local storage
+- 📴 **Offline-First Design**: WorkManager queues messages when recipients are offline
+- 🚀 **Silent Push Notifications**: Redis-backed FCM for real-time delivery
+- 🌐 **Hybrid Cryptography**: Classical (X25519, Ed25519) + Post-Quantum for maximum security
 
 ---
 
-## ARCHITECTURE
+## ✨ Features
 
-### System Architecture Diagram
+| Feature | Description | Status |
+|---------|-------------|--------|
+| 🔑 **Zero-Knowledge Authentication** | Cryptographic fingerprint-based identity (no passwords) | ✅ Active |
+| 🧬 **Hybrid Encryption** | ML-KEM + X25519 for key encapsulation; ML-DSA + Ed25519 for signatures | ✅ Active |
+| 💎 **Glassmorphism UI** | Frosted glass effect with Material3 Compose | ✅ Active |
+| 👁️ **Biometric Vault** | Fingerprint/Face + SQLCipher encryption | ✅ Active |
+| 📴 **Offline Queue** | WorkManager + SQLite for queued messages | ✅ Active |
+| 📲 **Push Notifications** | Firebase + Redis for real-time silent notifications | ✅ Active |
+| 🎨 **Dark/Light Themes** | Adaptive theming with glassmorphic elements | ✅ Active |
+| 🌐 **Peer Discovery** | Paginated public key synchronization | ✅ Active |
+| 🔄 **Real-Time Sync** | Socket.io with Redis pub/sub adapter | ✅ Active |
+| ✍️ **Message History** | Encrypted message persistence | ✅ Active |
+
+---
+
+## 📸 App Screenshots
+
+<div align="center">
+
+| Light Theme | Dark Theme |
+|-------------|-----------|
+| ![Contacts Light](Quantum%20Safe%20images/Screenshot_2026-04-29-21-27-39-63_fc0d678334bc258baed0b03034397354.jpg) | ![Empty State Dark](Quantum%20Safe%20images/Screenshot_2026-04-29-21-43-05-77_fc0d678334bc258baed0b03034397354.jpg) |
+
+</div>
+
+---
+
+## 🏗️ Architecture
+
+### Hybrid Encryption Flow
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                         QUANTUM MESSENGER                             │
-├──────────────────────────────────────────────────────────────────────┤
+┌─────────────────────────────────────────────────────────────────────┐
+│                        QUANTUM SAFE                                 │
+│                   Hybrid Encryption Flow                            │
+├─────────────────────────────────────────────────────────────────────┤
+
+1️⃣  SENDER (Alice)
+   ┌──────────────────────────────────────┐
+   │ Plain Message: "Hello Bob"           │
+   └──────────────────────────┬───────────┘
+                              │
+                 ┌────────────▼────────────┐
+                 │ Symmetric Encryption   │
+                 │ (ChaCha20-Poly1305)   │
+                 │ Using shared secret    │
+                 └────────────┬───────────┘
+                              │
+                 ┌────────────▼────────────────────────────┐
+                 │ Encapsulate symmetric key using:        │
+                 │ • ML-KEM (Bob's post-quantum public)   │
+                 │ • X25519 (Bob's classical DH key)      │
+                 └────────────┬───────────────────────────┘
+                              │
+                 ┌────────────▼────────────────────────────┐
+                 │ Sign the ciphertext with Alice's:      │
+                 │ • ML-DSA (post-quantum private key)   │
+                 │ • Ed25519 (classical private key)     │
+                 └────────────┬───────────────────────────┘
+                              │
+                 ┌────────────▼────────────────────────────┐
+                 │ Encrypted Message Packet:              │
+                 │ {                                      │
+                 │   ciphertext: "...",                   │
+                 │   mlKemEncapsulated: "...",            │
+                 │   x25519Encapsulated: "...",           │
+                 │   mlDsaSignature: "...",               │
+                 │   ed25519Signature: "..."              │
+                 │ }                                      │
+                 └────────────┬───────────────────────────┘
+                              │
+                              ▼
+                 ┌────────────────────────┐
+                 │   REDIS QUEUE/Socket   │
+                 │   (Server Blind)       │
+                 └────────────┬───────────┘
+                              │
+2️⃣  RECEIVER (Bob)
+   ┌──────────────────────────────────────┐
+   │ Receive encrypted packet             │
+   │ (cannot decrypt on server)           │
+   └──────────────────────────┬───────────┘
+                              │
+                 ┌────────────▼────────────────────────────┐
+                 │ Verify signatures with Alice's:        │
+                 │ • ML-DSA public key                   │
+                 │ • Ed25519 public key                  │
+                 └────────────┬───────────────────────────┘
+                              │
+                 ┌────────────▼────────────────────────────┐
+                 │ Decapsulate symmetric key using Bob's: │
+                 │ • ML-KEM private key                  │
+                 │ • X25519 private key                  │
+                 └────────────┬───────────────────────────┘
+                              │
+                 ┌────────────▼────────────────────────────┐
+                 │ Symmetric Decryption                   │
+                 │ (ChaCha20-Poly1305)                   │
+                 └────────────┬───────────────────────────┘
+                              │
+                 ┌────────────▼────────────────────────────┐
+                 │ Plain Message: "Hello Bob" ✅          │
+                 └────────────────────────────────────────┘
+```
+
+### Silent Push Notification (Redis/FCM)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│          SILENT PUSH NOTIFICATION ARCHITECTURE                  │
+├─────────────────────────────────────────────────────────────────┤
+
+1️⃣  Message Arrives at Server
+   ┌──────────────────────────────────┐
+   │ POST /api/messages (encrypted)    │
+   │ Auth: Sender's JWT               │
+   └──────────────────────────────────┘
+                    │
+                    ▼
+   ┌──────────────────────────────────┐
+   │ Is Bob online (Socket.io)?        │
+   └──────────────────┬───────────────┘
+          YES         │         NO
+            │         │         │
+            │         │    ┌────▼─────────────────────┐
+            │         │    │ Queue to Redis:          │
+            │         │    │ offline:messages:{bobId} │
+            │         │    │ TTL: 24 hours            │
+            │         │    └────┬────────────────────┘
+            │         │         │
+            ▼         │         ▼
+      ┌─────────┐     │   ┌──────────────────────┐
+      │Socket.io│     │   │Trigger FCM Push      │
+      │Emit     │     │   │(Silent + Data)       │
+      │Message  │     │   │                      │
+      └────┬────┘     │   │ {                    │
+           │          │   │   recipient: Bob,    │
+           │          │   │   type: "newMessage",│
+           │          │   │   badge: 1           │
+           │          │   │ }                    │
+           │          │   └──────┬───────────────┘
+           │          │          │
+           ▼          ▼          ▼
+      ┌──────────────────────────────┐
+      │ Bob's Device Receives Update │
+      │ (Wakes WorkManager if needed)│
+      │ Fetches full encrypted msg   │
+      └──────────────────────────────┘
+```
+
+### System Architecture
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    QUANTUM SAFE ARCHITECTURE                 │
+├──────────────────────────────────────────────────────────────┤
+
+                        ANDROID CLIENT
+                   ┌────────────────────┐
+                   │  Glassmorphic UI   │
+                   │  (Compose)         │
+                   └────────────┬───────┘
+                                │
+         ┌──────────────────────┼──────────────────────┐
+         │                      │                      │
+         ▼                      ▼                      ▼
+    ┌──────────┐      ┌─────────────────┐      ┌──────────────┐
+    │Biometric │      │Hybrid Encryption│      │WorkManager   │
+    │SQLCipher │      │(ML-KEM/ML-DSA)  │      │Offline Queue │
+    │Vault     │      └─────────────────┘      │(SQLite)      │
+    └──────────┘              │                └──────────────┘
+                              │
+                ┌─────────────▼──────────────┐
+                │   Firebase Admin SDK       │
+                │   FCM Integration          │
+                └─────────────┬──────────────┘
+                              │
+                              │ HTTPS
+                              ▼
+                    ┌──────────────────────────┐
+                    │  EXPRESS BACKEND         │
+                    │  (TypeScript)            │
+                    ├──────────────────────────┤
+                    │ Routes:                  │
+                    │ • /api/auth (ZK signup)  │
+                    │ • /api/keys (sync keys)  │
+                    │ • /api/messages (queue)  │
+                    │ • Socket.io (real-time)  │
+                    └──────────────┬───────────┘
+                                   │
+         ┌─────────────────────────┼────────────────────┐
+         │                         │                    │
+         ▼                         ▼                    ▼
+    ┌─────────────┐     ┌───────────────────┐    ┌──────────────┐
+    │SUPABASE     │     │REDIS              │    │FIREBASE      │
+    │PostgreSQL   │     │Offline Queue      │    │Push Service  │
+    │• Users      │     │Message Cache      │    │FCM Tokens    │
+    │• Key Bundles│     │Pub/Sub for        │    │Notifications │
+    │• Messages   │     │Socket.io Scaling  │    │              │
+    └─────────────┘     └───────────────────┘    └──────────────┘
+```
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Runtime** | Node.js 20+ | JavaScript runtime |
+| **Framework** | Express.js 5.x | HTTP server |
+| **Language** | TypeScript | Type-safe backend |
+| **Real-Time** | Socket.io 4.x | Bidirectional communication |
+| **Database** | Supabase (PostgreSQL) | Persistent storage |
+| **Cache/Queue** | Redis (Upstash) | Offline message queue |
+| **Push** | Firebase Admin SDK | FCM notifications |
+| **Auth** | Supabase JWT | Zero-knowledge authentication |
+| **Security** | Helmet, CORS, Rate Limiting | Security headers & DDoS protection |
+
+### Android App
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Language** | Kotlin | Type-safe Android development |
+| **UI** | Jetpack Compose | Modern declarative UI |
+| **Design** | Material Design 3 | Material Design principles |
+| **Encryption** | Liboqs (OpenSSL + Kyber/Dilithium) | Post-quantum cryptography |
+| **Database** | Room + SQLCipher | Encrypted local storage |
+| **Security** | BiometricPrompt | Fingerprint/Face unlock |
+| **Task Queue** | WorkManager | Offline message queuing |
+| **Push** | Firebase Cloud Messaging | Push notifications |
+| **State Management** | Hilt + ViewModel | Dependency injection & lifecycle |
+| **Networking** | Ktor Client | HTTP client |
+| **Serialization** | Kotlinx Serialization | JSON parsing |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+**Backend:**
+- Node.js 20.x or higher
+- npm or yarn
+- Render account (for hosting) or local Docker
+- Upstash Redis instance
+- Supabase PostgreSQL project
+- Firebase project with service account
+
+**Android:**
+- Android Studio Koala (2024.1.1) or newer
+- Kotlin 2.0+
+- JDK 17+
+- SDK 36 (targetSdk)
+- Google Play Services
+
+### Backend Setup
+
+#### 1. Clone & Install Dependencies
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/quantum-messenger.git
+cd quantum-messenger/Backend
+
+# Install dependencies
+npm install
+```
+
+#### 2. Environment Configuration
+
+Create a `.env` file in the Backend directory:
+
+```bash
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+CLIENT_ORIGIN=http://localhost:3000
+
+# Supabase Configuration (PostgreSQL + Auth)
+SUPABASE_PROJECT_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_KEY=your-service-key-here
+SUPABASE_JWT_SECRET=your-jwt-secret-here
+
+# Redis Configuration (Upstash)
+REDIS_URL=redis://default:password@your-instance.upstash.io:12345
+REDIS_HOST=your-instance.upstash.io
+REDIS_PORT=12345
+REDIS_PASSWORD=your-redis-password
+
+# Firebase Configuration (Push Notifications)
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk@your-project.iam.gserviceaccount.com
+FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
+
+# Socket.io Configuration
+SOCKET_CORS_ORIGIN=http://localhost:3000
+```
+
+**How to obtain these values:**
+
+- **Supabase**: [supabase.com](https://supabase.com) → Create Project → Settings → API
+- **Upstash Redis**: [upstash.com](https://upstash.com) → Create Database → Copy URL
+- **Firebase**: [firebase.google.com](https://firebase.google.com) → Create Project → Service Account → Generate Key
+
+#### 3. Start the Development Server
+
+```bash
+# Watch mode with auto-reload
+npm run dev
+
+# Production build
+npm run build
+npm run start:prod
+
+# Type checking
+npm run typecheck
+```
+
+**Expected Output:**
+```
+Server running on http://localhost:3000
+Redis connected to Upstash
+Firebase Admin initialized
+Socket.io ready for connections
+```
+
+#### 4. Deploy to Render (Optional)
+
+```bash
+# Login to Render CLI
+npm install -g render
+
+# Deploy
+render deploy --service quantum-safe-backend
+```
+
+### Android Setup
+
+#### 1. Clone & Open Project
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/quantum-messenger.git
+
+# Open in Android Studio
+cd quantum-messenger/Android\ App
+# Then: File → Open → (select this folder)
+```
+
+#### 2. Configure Firebase
+
+- Download `google-services.json` from Firebase Console
+- Place it in `Android App/app/` directory
+
+```bash
+# Verify file location
+ls Android\ App/app/google-services.json
+```
+
+#### 3. Configure Backend URL
+
+Edit [Backend/src/config/env.ts](Backend/src/config/env.ts):
+
+```kotlin
+// app/src/main/java/com/nigdroid/quantummessenger/config/Config.kt
+object Config {
+    const val BACKEND_URL = "https://your-render-backend.onrender.com"
+    const val SOCKET_URL = "https://your-render-backend.onrender.com"
+}
+```
+
+#### 4. Build & Run
+
+```bash
+# Build debug APK
+cd Android\ App
+./gradlew assembleDebug
+
+# Install on emulator/device
+./gradlew installDebug
+
+# Or open in Android Studio and click "Run"
+```
+
+**Expected Steps:**
+1. App asks for biometric permission (Fingerprint/Face)
+2. Displays Zero-Knowledge registration
+3. Shows contact list (empty initially)
+4. Can create new contacts by their public key
+
+---
+
+## 🔐 API Quick Reference
+
+### POST /api/auth/register
+**Register with Zero-Knowledge proof**
+
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fingerprint": "base64-encoded-cryptographic-fingerprint"
+  }'
+```
+
+**Response:**
+```json
+{
+  "userId": "550e8400-e29b-41d4-a716-446655440000",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+---
+
+### POST /api/keys/upload
+**Upload hybrid cryptographic key bundle**
+
+```bash
+curl -X POST http://localhost:3000/api/keys/upload \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "x25519PublicKey": "base64-encoded-32-bytes",
+    "mlKemPublicKey": "base64-encoded-1184-bytes",
+    "ed25519Signature": "base64-encoded-64-bytes",
+    "mlDsaSignature": "base64-encoded-4595-bytes"
+  }'
+```
+
+---
+
+### GET /keys/sync?page=1&limit=20
+**Fetch paginated public keys for peer discovery**
+
+```bash
+curl -X GET "http://localhost:3000/keys/sync?page=1&limit=20"
+```
+
+**Response:**
+```json
+{
+  "page": 1,
+  "limit": 20,
+  "total": 150,
+  "data": [
+    {
+      "userId": "user-id-1",
+      "x25519PublicKey": "base64...",
+      "mlKemPublicKey": "base64...",
+      "ed25519Signature": "base64...",
+      "mlDsaSignature": "base64...",
+      "createdAt": "2026-04-20T08:15:30Z"
+    }
+  ]
+}
+```
+
+---
+
+### Socket.io Events
+**Real-time message synchronization**
+
+```typescript
+// Client: Connect
+socket.on('connect', () => {
+  socket.emit('user:online', { userId: '...' });
+});
+
+// Client: Send encrypted message
+socket.emit('message:send', {
+  recipientId: 'user-id-2',
+  ciphertext: 'base64-encoded-encrypted-message',
+  signature: 'base64-encoded-signature'
+});
+
+// Server: Receive message
+socket.on('message:new', (payload) => {
+  console.log('New message from:', payload.senderId);
+});
+
+// Server: User offline
+socket.emit('user:offline', { userId: 'user-id-1' });
+```
+
+---
+
+## 📊 Deployment Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                   PRODUCTION DEPLOYMENT                         │
+├─────────────────────────────────────────────────────────────────┤
+
+   ANDROID DEVICES (Users)
+        │       │       │
+        └───────┼───────┘
+                │
+            HTTPS
+                │
+        ┌───────▼────────┐
+        │ RENDER CDN     │
+        │ (Global Proxy) │
+        └───────┬────────┘
+                │
+        ┌───────▼──────────────┐
+        │ RENDER BACKEND       │
+        │ • Express Server     │
+        │ • Socket.io Cluster  │
+        │ • 3x Replicas        │
+        └───────┬──────────────┘
+                │
+    ┌───────────┼───────────┐
+    │           │           │
+    ▼           ▼           ▼
+┌─────────┐ ┌────────┐ ┌──────────────┐
+│Supabase │ │Upstash │ │Firebase      │
+│DB       │ │Redis   │ │Push Service  │
+│(managed)│ │ (SLA)  │ │(Google)      │
+└─────────┘ └────────┘ └──────────────┘
+```
+
+**Deployment Command:**
+```bash
+# Using Render CLI
+render deploy --service quantum-safe-backend --env production
+
+# Or push to main branch (auto-deploy via webhook)
+git push origin main
+```
+
+---
+
+## 🔒 Security Features
+
+| Feature | Implementation | Standard |
+|---------|----------------|----------|
+| **Post-Quantum Encryption** | ML-KEM (Kyber) + ML-DSA (Dilithium) | NIST PQC Standard (2024) |
+| **Key Exchange** | X25519 (Elliptic Curve DH) | RFC 7748 |
+| **Signatures** | Ed25519 (Edwards Curve DSA) | RFC 8032 |
+| **Symmetric Cipher** | ChaCha20-Poly1305 | RFC 8439 |
+| **Key Derivation** | HKDF (HMAC-based KDF) | RFC 5869 |
+| **Database Encryption** | SQLCipher (AES-256) | Industry Standard |
+| **Biometric Auth** | BiometricPrompt + TEE | Android KeyStore |
+| **Transport Security** | TLS 1.3 | RFC 8446 |
+| **Rate Limiting** | Token Bucket Algorithm | 100 req/15min per IP |
+
+---
+
+## 📖 Documentation Index
+
+- [Backend Architecture Details](Backend/ARCHITECTURE_DIAGRAMS.md)
+- [API Endpoint Reference](Backend/ENDPOINTS.md)
+- [Database Schema](Backend/AUTH_DATABASE_QUICK_ANSWER.md)
+- [Authentication Flow](Backend/AUTHENTICATION_DATABASE_FLOW.md)
+- [Socket.io Events](Backend/YOUR_SPECIFIC_ANSWERS.md)
+
+---
+
+## 🐛 Troubleshooting
+
+### Backend won't start
+```bash
+# Check Node version
+node --version  # Should be 20.x or higher
+
+# Check Redis connection
+redis-cli -h your-instance.upstash.io ping
+
+# Check Supabase connection
+npm run typecheck
+```
+
+### Android app crashes
+```bash
+# Clear cache and rebuild
+./gradlew clean build
+
+# Check Kotlin version
+./gradlew --version
+
+# View logcat
+./gradlew logcat
+```
+
+### Push notifications not working
+1. Verify `google-services.json` is in `app/` directory
+2. Check Firebase Console → Cloud Messaging → FCM Tokens
+3. Ensure app has POST_NOTIFICATIONS permission (Android 13+)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+### Development Guidelines
+- Use TypeScript (backend) and Kotlin (Android)
+- Write tests for new features
+- Follow existing code style
+- Update documentation
+
+---
+
+## 📝 License
+
+This project is licensed under the **ISC License** - see [LICENSE](LICENSE) file for details.
+
+---
+
+## 👨‍💻 Author
+
+**Built with ❤️ for privacy-conscious developers**
+
+- **Project Start**: April 2026
+- **Status**: Production Ready
+- **Latest Version**: 1.0.0
+
+---
+
+## 🌟 Acknowledgments
+
+- **NIST Post-Quantum Cryptography Standards** (ML-KEM, ML-DSA)
+- **OpenSSL & Liboqs** for cryptographic implementations
+- **Jetpack Compose** for modern Android UI
+- **Socket.io & Redis** for real-time messaging
+- **Firebase & Supabase** for backend infrastructure
+
+---
+
+<div align="center">
+
+### Made with 🔐 Privacy • Built with 🚀 Security • Designed for 🌍 Everyone
+
+**Star us on GitHub if you believe in post-quantum security! ⭐**
+
+</div>
 │                                                                       │
 │  ┌─────────────────────────────────────────────────────────────┐    │
 │  │ 📱 ANDROID CLIENT (Kotlin + Jetpack Compose)              │    │
