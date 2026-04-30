@@ -3,12 +3,14 @@ package com.nigdroid.quantummessenger.network
 import com.nigdroid.quantummessenger.util.Constants
 import io.socket.client.IO
 import io.socket.client.Socket
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import com.nigdroid.quantummessenger.proto.ChatMessage as ProtoMessage
 import org.json.JSONObject
 
@@ -16,7 +18,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 sealed class SocketEvent {
-    data class MessageReceived(val message: ProtoMessage) : SocketEvent()
     data class UserDeleted(val fingerprint: String) : SocketEvent()
     data object Connected : SocketEvent()
     data object Disconnected : SocketEvent()
@@ -36,6 +37,11 @@ class WebSocketManager @Inject constructor() {
 
     private val _events = MutableSharedFlow<SocketEvent>(extraBufferCapacity = 64)
     val events: SharedFlow<SocketEvent> = _events.asSharedFlow()
+
+    // Channel.UNLIMITED guarantees NO messages are ever dropped.
+    // Unlike SharedFlow(replay=0), a Channel buffers indefinitely until consumed.
+    private val _incomingMessages = Channel<ProtoMessage>(Channel.UNLIMITED)
+    val incomingMessages = _incomingMessages.receiveAsFlow()
 
     private val recentMessageIds = LinkedHashSet<String>(MAX_RECENT_IDS)
 
@@ -83,10 +89,7 @@ class WebSocketManager @Inject constructor() {
                         is ByteArray -> ProtoMessage.parseFrom(raw)
                         is JSONObject -> parseEnvelopeJson(raw)
                         is String -> parseEnvelopeJson(JSONObject(raw))
-                        else -> {
-                            _events.tryEmit(SocketEvent.Error("Unknown message format: ${raw?.javaClass?.name}"))
-                            null
-                        }
+                        else -> null
                     }
 
                     if (protoMessage != null) {
@@ -104,11 +107,9 @@ class WebSocketManager @Inject constructor() {
                             recentMessageIds.add(dedupKey)
                         }
 
-                        _events.tryEmit(SocketEvent.MessageReceived(protoMessage))
+                        _incomingMessages.trySend(protoMessage)
                     }
-                } catch (e: Exception) {
-                    _events.tryEmit(SocketEvent.Error("Parse error: ${e.message}"))
-                }
+                } catch (_: Exception) {}
             }
 
             on("user_deleted") { args ->
@@ -146,10 +147,6 @@ class WebSocketManager @Inject constructor() {
             }
             socket?.emit("message_ack", json)
         } catch (_: Exception) {}
-    }
-
-    fun requestDrain() {
-        socket?.emit("request_drain")
     }
 
     fun disconnect() {

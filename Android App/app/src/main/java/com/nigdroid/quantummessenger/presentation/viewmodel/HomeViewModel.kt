@@ -5,12 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.nigdroid.quantummessenger.data.local.ChatMessageDao
 import com.nigdroid.quantummessenger.data.local.ContactDao
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
-import com.nigdroid.quantummessenger.domain.model.InboxItem
 import com.nigdroid.quantummessenger.domain.usecase.GetInboxUseCase
 import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageResult
 import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SyncContactsUseCase
-import com.nigdroid.quantummessenger.network.SocketEvent
 import com.nigdroid.quantummessenger.network.WebSocketManager
 import com.nigdroid.quantummessenger.network.fcm.FcmTokenManager
 import com.nigdroid.quantummessenger.network.notification.NotificationSoundManager
@@ -52,18 +50,15 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
 
-            // Start collecting incoming messages FIRST
+            // Start collecting incoming messages.
+            // Uses Channel.UNLIMITED internally — messages are buffered until
+            // this collector processes them, so nothing is ever lost even if
+            // the server drains the offline queue before this starts.
             observeIncomingMessages()
 
-            // Connect WebSocket (does NOT auto-drain on server)
             if (!webSocketManager.isConnected()) {
                 webSocketManager.connect(currentUserId!!)
             }
-
-            // Wait for the socket to actually connect, then request drain.
-            // The server only drains when the client emits 'request_drain',
-            // ensuring the collector above is ready to process the messages.
-            waitForConnectionAndDrain()
 
             syncFcmToken()
 
@@ -132,16 +127,6 @@ class HomeViewModel @Inject constructor(
                         notificationSoundManager.playNotification()
                     }
                 }
-        }
-    }
-
-    private fun waitForConnectionAndDrain() {
-        viewModelScope.launch {
-            webSocketManager.events
-                .filterIsInstance<SocketEvent.Connected>()
-                .first()
-
-            webSocketManager.requestDrain()
         }
     }
 

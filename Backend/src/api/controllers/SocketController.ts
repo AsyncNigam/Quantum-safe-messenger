@@ -23,14 +23,9 @@ export class SocketController {
     socket.join(fingerprint);
     console.log(`[Socket] Connected    | socket=${socket.id} | fp=${fingerprint.slice(0, 12)}…`);
 
-    // Do NOT auto-drain on connect. The client emits 'request_drain' when its
-    // message collector is ready. This prevents messages from being lost when
-    // the SharedFlow has no active subscribers yet.
-    socket.on('request_drain', () => {
-      if (redisAvailable) {
-        this.drainOfflineQueue(fingerprint, socket);
-      }
-    });
+    if (redisAvailable) {
+      this.drainOfflineQueue(fingerprint, socket);
+    }
 
     socket.on('send_message', async (data: any) => {
       try {

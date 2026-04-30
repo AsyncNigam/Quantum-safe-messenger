@@ -4,12 +4,10 @@ import com.nigdroid.quantummessenger.data.repository.ChatRepositoryImpl
 import com.nigdroid.quantummessenger.domain.model.ChatMessage as DomainChatMessage
 import com.nigdroid.quantummessenger.domain.model.MessageType
 import com.nigdroid.quantummessenger.domain.repository.ChatRepository
-import com.nigdroid.quantummessenger.network.SocketEvent
 import com.nigdroid.quantummessenger.network.WebSocketManager
 import com.nigdroid.quantummessenger.proto.ChatMessage as ProtoMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.mapNotNull
 import java.security.MessageDigest
 import java.util.Collections
@@ -28,11 +26,9 @@ class ReceiveMessageUseCase @Inject constructor(
     )
 
     operator fun invoke(): Flow<ReceiveMessageResult> {
-        return webSocketManager.events
-            .filterIsInstance<SocketEvent.MessageReceived>()
-            .mapNotNull { event ->
+        return webSocketManager.incomingMessages
+            .mapNotNull { protoMessage ->
                 try {
-                    val protoMessage = event.message
                     val payloadString = String(protoMessage.payload.toByteArray(), Charsets.UTF_8)
 
                     val messageUuid = generateDedupUuid(
