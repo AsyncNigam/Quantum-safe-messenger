@@ -14,6 +14,7 @@ import com.nigdroid.quantummessenger.R
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import com.nigdroid.quantummessenger.network.api.AuthenticationService
 import com.nigdroid.quantummessenger.network.api.FcmTokenRequest
+import com.nigdroid.quantummessenger.util.AppLifecycleTracker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -73,16 +74,14 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
+        // If the app is in the foreground, the in-app sound (NotificationSoundManager)
+        // already handles alerting the user via the WebSocket flow.
+        // Skip the system notification to avoid double sounds.
+        if (AppLifecycleTracker.isAppInForeground) return
+
         val data = message.data
         val type = data["type"] ?: "new_message"
         val senderFingerprint = data["senderFingerprint"] ?: "unknown"
-
-        // DO NOT connect WebSocket here. The server drains the offline queue
-        // on socket connect, but no collector (HomeViewModel) is alive yet
-        // to process the messages — they'd be lost from the SharedFlow.
-        // Instead, just show the notification. When the user taps it and
-        // opens the app, HomeViewModel.init connects the socket and the
-        // server drains the queue with a live collector ready to save them.
 
         when (type) {
             "new_message" -> showMessageNotification(senderFingerprint)

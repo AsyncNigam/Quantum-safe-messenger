@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.nigdroid.quantummessenger.network.fcm.QuantumFirebaseMessagingService
+import com.nigdroid.quantummessenger.util.AppLifecycleTracker
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -15,6 +16,7 @@ class QuantumMessengerApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        AppLifecycleTracker.init()
         QuantumFirebaseMessagingService.createNotificationChannel(this)
     }
 

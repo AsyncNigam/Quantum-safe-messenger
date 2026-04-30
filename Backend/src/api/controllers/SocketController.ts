@@ -63,19 +63,19 @@ export class SocketController {
 
         if (recipientOnline) {
           io.to(to).emit('receive_message', envelope);
-        }
-
-        if (!recipientOnline && redisAvailable) {
-          try {
-            const buf = Buffer.from(JSON.stringify(envelope));
-            await this.messageService.queueOfflineMessage(to, buf);
-          } catch (err) {
-            console.warn(`[Socket] Redis queue failed:`, (err as Error).message);
+        } else {
+          if (redisAvailable) {
+            try {
+              const buf = Buffer.from(JSON.stringify(envelope));
+              await this.messageService.queueOfflineMessage(to, buf);
+            } catch (err) {
+              console.warn(`[Socket] Redis queue failed:`, (err as Error).message);
+            }
           }
-        }
 
-        this.fcmService.sendPushNotification(to, fingerprint, 'new_message')
-          .catch((err) => console.warn(`[Socket] FCM push failed:`, (err as Error).message));
+          this.fcmService.sendPushNotification(to, fingerprint, 'new_message')
+            .catch((err) => console.warn(`[Socket] FCM push failed:`, (err as Error).message));
+        }
 
       } catch (err: unknown) {
         console.error(`[Socket] send_message error:`, (err as Error).message);
