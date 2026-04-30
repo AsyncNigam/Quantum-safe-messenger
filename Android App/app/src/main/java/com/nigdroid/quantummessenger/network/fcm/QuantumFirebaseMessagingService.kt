@@ -12,7 +12,6 @@ import com.google.firebase.messaging.RemoteMessage
 import com.nigdroid.quantummessenger.MainActivity
 import com.nigdroid.quantummessenger.R
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
-import com.nigdroid.quantummessenger.network.WebSocketManager
 import com.nigdroid.quantummessenger.network.api.AuthenticationService
 import com.nigdroid.quantummessenger.network.api.FcmTokenRequest
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,7 +28,6 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
 
     @Inject lateinit var sessionManager: SessionManager
     @Inject lateinit var authService: AuthenticationService
-    @Inject lateinit var webSocketManager: WebSocketManager
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -79,24 +77,16 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
         val type = data["type"] ?: "new_message"
         val senderFingerprint = data["senderFingerprint"] ?: "unknown"
 
-        // Trigger background WebSocket connect to pull queued messages from Redis.
-        // This ensures messages arrive even when the app was killed.
-        triggerBackgroundSync()
+        // DO NOT connect WebSocket here. The server drains the offline queue
+        // on socket connect, but no collector (HomeViewModel) is alive yet
+        // to process the messages — they'd be lost from the SharedFlow.
+        // Instead, just show the notification. When the user taps it and
+        // opens the app, HomeViewModel.init connects the socket and the
+        // server drains the queue with a live collector ready to save them.
 
         when (type) {
             "new_message" -> showMessageNotification(senderFingerprint)
             "contact_request" -> showContactRequestNotification(senderFingerprint)
-        }
-    }
-
-    private fun triggerBackgroundSync() {
-        serviceScope.launch {
-            try {
-                val fingerprint = sessionManager.textFingerprint.firstOrNull() ?: return@launch
-                if (!webSocketManager.isConnected()) {
-                    webSocketManager.connect(fingerprint)
-                }
-            } catch (_: Exception) {}
         }
     }
 

@@ -148,6 +148,10 @@ class WebSocketManager @Inject constructor() {
         } catch (_: Exception) {}
     }
 
+    fun requestDrain() {
+        socket?.emit("request_drain")
+    }
+
     fun disconnect() {
         _connectionState.value = false
         currentFingerprint = null

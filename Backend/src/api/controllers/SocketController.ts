@@ -23,9 +23,14 @@ export class SocketController {
     socket.join(fingerprint);
     console.log(`[Socket] Connected    | socket=${socket.id} | fp=${fingerprint.slice(0, 12)}…`);
 
-    if (redisAvailable) {
-      this.drainOfflineQueue(fingerprint, socket);
-    }
+    // Do NOT auto-drain on connect. The client emits 'request_drain' when its
+    // message collector is ready. This prevents messages from being lost when
+    // the SharedFlow has no active subscribers yet.
+    socket.on('request_drain', () => {
+      if (redisAvailable) {
+        this.drainOfflineQueue(fingerprint, socket);
+      }
+    });
 
     socket.on('send_message', async (data: any) => {
       try {
@@ -69,9 +74,6 @@ export class SocketController {
           }
         }
 
-        // Always send FCM push — covers both cases:
-        // 1. Recipient offline: wakes the app to show notification
-        // 2. Recipient online but app killed before processing: ensures notification
         this.fcmService.sendPushNotification(to, fingerprint, 'new_message')
           .catch((err) => console.warn(`[Socket] FCM push failed:`, (err as Error).message));
 
