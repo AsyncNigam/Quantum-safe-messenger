@@ -48,7 +48,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Supabase OAuth login-callback removed — auth is now ZK fingerprint-based -->
         </activity>
 
         <!-- Firebase Cloud Messaging Service -->

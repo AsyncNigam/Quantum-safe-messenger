@@ -13,42 +13,31 @@ import { errorHandler, generalLimiter, socketAuthMiddleware } from './api/middle
 import { socketController }                                  from './api/controllers';
 import { authRoutes, keyRoutes, healthRoutes }                from './api/routes';
 
-// ─── Express ──────────────────────────────────────────────────────────────────
-
 const app = express();
 
-// Security headers (CSP, HSTS, X-Frame-Options, etc.)
 app.use(helmet());
-
 app.use(cors({ origin: appConfig.clientOrigin }));
 
-// Global rate limiter: 100 req / 15 min per IP
+// Health check MUST be before the rate limiter — Render's health checker
+// and cron pings hit this frequently and must never be rate-limited.
+app.use('/health', healthRoutes);
+
+// Rate limiter applied to all other routes
 app.use(generalLimiter);
 
-// Body parsers
 app.use(express.json());
 app.use(express.raw({ type: 'application/octet-stream', limit: '5mb' }));
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
-
-app.use('/health', healthRoutes);
-app.use('/api/auth',   authRoutes);   // ZK identity registration
-app.use('/api/keys',   keyRoutes);    // Post-quantum key bundles
-
-// ─── Global Error Handler ─────────────────────────────────────────────────────
+app.use('/api/auth',   authRoutes);
+app.use('/api/keys',   keyRoutes);
 
 app.use(errorHandler);
 
-// ─── Bootstrap ────────────────────────────────────────────────────────────────
-
 async function bootstrap(): Promise<void> {
-  // ─── Firebase Admin SDK (for push notifications) ────────────────────────────
   initFirebase();
 
-  // ─── HTTP Server ────────────────────────────────────────────────────────────
   const httpServer = http.createServer(app);
 
-  // ─── Socket.io ──────────────────────────────────────────────────────────────
   const io = new SocketIOServer(httpServer, {
     cors: {
       origin:  appConfig.clientOrigin,
@@ -56,7 +45,6 @@ async function bootstrap(): Promise<void> {
     },
   });
 
-  // Try to connect Redis — Socket.io adapter is optional
   const redisOk = await connectRedis();
   if (redisOk) {
     io.adapter(createAdapter(pubClient, subClient));
@@ -65,13 +53,8 @@ async function bootstrap(): Promise<void> {
     console.warn('[Socket.io] Running WITHOUT Redis adapter (single-instance only).');
   }
 
-  // Fingerprint authentication on every socket connection
   io.use(socketAuthMiddleware);
-
-  // Delegate all connection/event logic to SocketController
   io.on('connection', (socket) => socketController.handleConnection(io, socket));
-
-  // ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
   const gracefulShutdown = async (signal: string): Promise<void> => {
     console.log(`\n[Shutdown] ${signal} received — shutting down gracefully…`);
@@ -94,14 +77,11 @@ async function bootstrap(): Promise<void> {
   process.on('SIGTERM', () => void gracefulShutdown('SIGTERM'));
   process.on('SIGINT',  () => void gracefulShutdown('SIGINT'));
 
-  // ─── Start ──────────────────────────────────────────────────────────────────
-
   httpServer.listen(appConfig.port, '0.0.0.0', () => {
     console.log(`✅  Quantum Messenger API  →  http://localhost:${appConfig.port}`);
     console.log(`🔌  Socket.io              →  ws://localhost:${appConfig.port}`);
     console.log(`🛡️  Helmet + Rate Limiting  →  active`);
     console.log(`🔐  Socket JWT Auth         →  active`);
-    console.log(`🛑  Press Ctrl+C to stop`);
   });
 }
 

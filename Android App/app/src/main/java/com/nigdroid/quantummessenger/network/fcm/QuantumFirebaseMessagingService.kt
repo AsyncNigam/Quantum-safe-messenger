@@ -6,13 +6,13 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.nigdroid.quantummessenger.MainActivity
 import com.nigdroid.quantummessenger.R
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
+import com.nigdroid.quantummessenger.network.WebSocketManager
 import com.nigdroid.quantummessenger.network.api.AuthenticationService
 import com.nigdroid.quantummessenger.network.api.FcmTokenRequest
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,11 +29,11 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
 
     @Inject lateinit var sessionManager: SessionManager
     @Inject lateinit var authService: AuthenticationService
+    @Inject lateinit var webSocketManager: WebSocketManager
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     companion object {
-        private const val TAG = "QuantumFCM"
         const val CHANNEL_ID = "quantum_messages"
         const val CHANNEL_NAME = "Quantum Messages"
         const val CHANNEL_DESC = "Encrypted message notifications"
@@ -55,32 +55,22 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d(TAG, "New FCM token received")
         serviceScope.launch {
             try {
                 sessionManager.setFcmToken(token)
 
                 val fingerprint = sessionManager.textFingerprint.firstOrNull()
                 if (fingerprint != null) {
-                    val response = authService.registerFcmToken(
+                    authService.registerFcmToken(
                         "Bearer $fingerprint",
                         FcmTokenRequest(fcmToken = token)
                     )
-                    if (response.isSuccessful) {
-                        Log.d(TAG, "FCM token synced with backend")
-                    } else {
-                        Log.w(TAG, "Failed to sync FCM token: ${response.code()}")
-                    }
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error syncing FCM token: ${e.message}")
-            }
+            } catch (_: Exception) {}
         }
     }
-
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
@@ -89,10 +79,24 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
         val type = data["type"] ?: "new_message"
         val senderFingerprint = data["senderFingerprint"] ?: "unknown"
 
+        // Trigger background WebSocket connect to pull queued messages from Redis.
+        // This ensures messages arrive even when the app was killed.
+        triggerBackgroundSync()
+
         when (type) {
             "new_message" -> showMessageNotification(senderFingerprint)
             "contact_request" -> showContactRequestNotification(senderFingerprint)
-            else -> Log.w(TAG, "Unknown push type: $type")
+        }
+    }
+
+    private fun triggerBackgroundSync() {
+        serviceScope.launch {
+            try {
+                val fingerprint = sessionManager.textFingerprint.firstOrNull() ?: return@launch
+                if (!webSocketManager.isConnected()) {
+                    webSocketManager.connect(fingerprint)
+                }
+            } catch (_: Exception) {}
         }
     }
 
@@ -111,7 +115,7 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.qlogo)
-            .setContentTitle("🔐 New Encrypted Message")
+            .setContentTitle("\uD83D\uDD10 New Encrypted Message")
             .setContentText("From: $shortFp…")
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -136,7 +140,7 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.qlogo)
-            .setContentTitle("🤝 New Contact Request")
+            .setContentTitle("\uD83E\uDD1D New Contact Request")
             .setContentText("From: $shortFp…")
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

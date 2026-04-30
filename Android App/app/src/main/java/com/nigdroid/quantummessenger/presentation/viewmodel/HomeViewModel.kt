@@ -11,6 +11,7 @@ import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageResult
 import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SyncContactsUseCase
 import com.nigdroid.quantummessenger.network.WebSocketManager
+import com.nigdroid.quantummessenger.network.fcm.FcmTokenManager
 import com.nigdroid.quantummessenger.network.notification.NotificationSoundManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -26,7 +27,8 @@ class HomeViewModel @Inject constructor(
     private val contactDao: ContactDao,
     private val webSocketManager: WebSocketManager,
     private val receiveMessageUseCase: ReceiveMessageUseCase,
-    private val notificationSoundManager: NotificationSoundManager
+    private val notificationSoundManager: NotificationSoundManager,
+    private val fcmTokenManager: FcmTokenManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -49,14 +51,13 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
 
-            // Start the centralized message receiver.
-            // The ReceiveMessageUseCase handles deduplication internally,
-            // so even if multiple collectors exist, messages are only saved once.
             observeIncomingMessages()
 
             if (!webSocketManager.isConnected()) {
                 webSocketManager.connect(currentUserId!!)
             }
+
+            syncFcmToken()
 
             combine(
                 getInboxUseCase(currentUserId!!),
@@ -123,6 +124,14 @@ class HomeViewModel @Inject constructor(
                         notificationSoundManager.playNotification()
                     }
                 }
+        }
+    }
+
+    private fun syncFcmToken() {
+        viewModelScope.launch {
+            try {
+                fcmTokenManager.syncToken()
+            } catch (_: Exception) {}
         }
     }
 }
