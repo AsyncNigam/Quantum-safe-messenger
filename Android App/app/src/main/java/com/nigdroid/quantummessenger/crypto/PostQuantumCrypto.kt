@@ -37,26 +37,6 @@ object PostQuantumCrypto {
             throw CryptoException("Failed to decapsulate ML-KEM", e)
         }
     }
-
-    // ML-DSA stubs — not yet included in liboqs binding
-
-    fun generateMLDsaKeypair(): Pair<ByteArray, ByteArray> {
-        val dummyPublic = ByteArray(32) { 1.toByte() }
-        val dummyPrivate = ByteArray(32) { 2.toByte() }
-        return Pair(dummyPublic, dummyPrivate)
-    }
-
-    fun signWithMLDsa(message: ByteArray, privateKey: ByteArray): ByteArray {
-        return ByteArray(64) { 3.toByte() }
-    }
-
-    fun verifyMLDsaSignature(
-        message: ByteArray,
-        signature: ByteArray,
-        publicKey: ByteArray
-    ): Boolean {
-        return false
-    }
 }
 
 class CryptoException(message: String, cause: Throwable? = null) :

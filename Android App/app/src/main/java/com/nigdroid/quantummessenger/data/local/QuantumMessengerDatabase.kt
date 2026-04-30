@@ -3,9 +3,6 @@ package com.nigdroid.quantummessenger.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
-/**
- * Encrypted Room database using SQLCipher for storing chat messages.
- */
 @Database(
     entities = [ChatMessageEntity::class, ContactEntity::class],
     version = 4,

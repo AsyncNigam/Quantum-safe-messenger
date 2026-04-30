@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import com.nigdroid.quantummessenger.proto.ChatMessage as ProtoMessage
-import com.nigdroid.quantummessenger.proto.EncryptedEnvelope
 import org.json.JSONObject
 
 import javax.inject.Inject
@@ -18,7 +17,6 @@ import javax.inject.Singleton
 
 sealed class SocketEvent {
     data class MessageReceived(val message: ProtoMessage) : SocketEvent()
-    data class EncryptedMessageReceived(val envelope: EncryptedEnvelope) : SocketEvent()
     data class UserDeleted(val fingerprint: String) : SocketEvent()
     data object Connected : SocketEvent()
     data object Disconnected : SocketEvent()
@@ -39,11 +37,6 @@ class WebSocketManager @Inject constructor() {
     private val _events = MutableSharedFlow<SocketEvent>(extraBufferCapacity = 64)
     val events: SharedFlow<SocketEvent> = _events.asSharedFlow()
 
-    /**
-     * In-memory set of recently received message IDs to prevent processing
-     * the same message twice during reconnection window.
-     * Bounded to prevent memory leaks.
-     */
     private val recentMessageIds = LinkedHashSet<String>(MAX_RECENT_IDS)
 
     fun connect(fingerprint: String) {
@@ -70,35 +63,26 @@ class WebSocketManager @Inject constructor() {
             on(Socket.EVENT_CONNECT) {
                 _connectionState.value = true
                 _events.tryEmit(SocketEvent.Connected)
-                android.util.Log.d("WebSocket", "Connected to server")
             }
 
             on(Socket.EVENT_DISCONNECT) {
                 _connectionState.value = false
                 _events.tryEmit(SocketEvent.Disconnected)
-                android.util.Log.d("WebSocket", "Disconnected from server")
             }
 
             on(Socket.EVENT_CONNECT_ERROR) { args ->
                 _connectionState.value = false
                 val error = args.getOrNull(0)?.toString() ?: "Connection error"
                 _events.tryEmit(SocketEvent.Error(error))
-                android.util.Log.e("WebSocket", "Connection error: $error")
             }
 
             on("receive_message") { args ->
                 try {
                     val raw = args[0]
                     val protoMessage: ProtoMessage? = when (raw) {
-                        is ByteArray -> {
-                            ProtoMessage.parseFrom(raw)
-                        }
-                        is JSONObject -> {
-                            parseEnvelopeJson(raw)
-                        }
-                        is String -> {
-                            parseEnvelopeJson(JSONObject(raw))
-                        }
+                        is ByteArray -> ProtoMessage.parseFrom(raw)
+                        is JSONObject -> parseEnvelopeJson(raw)
+                        is String -> parseEnvelopeJson(JSONObject(raw))
                         else -> {
                             _events.tryEmit(SocketEvent.Error("Unknown message format: ${raw?.javaClass?.name}"))
                             null
@@ -106,14 +90,10 @@ class WebSocketManager @Inject constructor() {
                     }
 
                     if (protoMessage != null) {
-                        // Generate a dedup key from the protobuf content
                         val dedupKey = "${protoMessage.senderId}|${protoMessage.recipientId}|${protoMessage.timestamp}"
 
                         synchronized(recentMessageIds) {
-                            if (recentMessageIds.contains(dedupKey)) {
-                                android.util.Log.d("WebSocket", "Skipping duplicate message: $dedupKey")
-                                return@on
-                            }
+                            if (recentMessageIds.contains(dedupKey)) return@on
                             if (recentMessageIds.size >= MAX_RECENT_IDS) {
                                 val iterator = recentMessageIds.iterator()
                                 if (iterator.hasNext()) {
@@ -131,16 +111,6 @@ class WebSocketManager @Inject constructor() {
                 }
             }
 
-            on("receive_encrypted_message") { args ->
-                try {
-                    val bytes = args[0] as ByteArray
-                    val envelope = EncryptedEnvelope.parseFrom(bytes)
-                    _events.tryEmit(SocketEvent.EncryptedMessageReceived(envelope))
-                } catch (e: Exception) {
-                    _events.tryEmit(SocketEvent.Error("Encrypted message parse error: ${e.message}"))
-                }
-            }
-
             on("user_deleted") { args ->
                 try {
                     val json = args[0] as JSONObject
@@ -153,10 +123,6 @@ class WebSocketManager @Inject constructor() {
         }
     }
 
-    /**
-     * Parses a server envelope JSON { from, payload, sentAt } into a ProtoMessage.
-     * The payload field is a base64-encoded protobuf.
-     */
     private fun parseEnvelopeJson(json: JSONObject): ProtoMessage {
         val payloadB64 = json.getString("payload")
         val payloadBytes = android.util.Base64.decode(payloadB64, android.util.Base64.NO_WRAP)
@@ -173,23 +139,13 @@ class WebSocketManager @Inject constructor() {
         socket?.emit("send_message", json)
     }
 
-    fun sendEncryptedMessage(envelope: EncryptedEnvelope) {
-        socket?.emit("send_encrypted_message", envelope.toByteArray())
-    }
-
-    /**
-     * Emits an acknowledgment to the server that a message was successfully processed.
-     * The server can use this to remove messages from the offline queue.
-     */
     fun emitAck(messageUuid: String) {
         try {
             val json = JSONObject().apply {
                 put("messageUuid", messageUuid)
             }
             socket?.emit("message_ack", json)
-        } catch (e: Exception) {
-            android.util.Log.w("WebSocket", "Failed to emit ACK: ${e.message}")
-        }
+        } catch (_: Exception) {}
     }
 
     fun disconnect() {

@@ -7,9 +7,6 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 
-/**
- * Hilt module for providing repository dependencies.
- */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {

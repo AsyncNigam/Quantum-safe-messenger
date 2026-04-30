@@ -73,21 +73,17 @@ class ChatRepositoryImpl @Inject constructor(
         return chatMessageDao.existsByUuid(uuid)
     }
 
-
     private suspend fun decryptEntity(entity: ChatMessageEntity): ChatMessage {
         val decryptedContent = try {
-            // Primary path: Base64-encoded encrypted content (new format)
             val encryptedBytes = android.util.Base64.decode(entity.content, android.util.Base64.NO_WRAP)
             val decryptedBytes = cryptoManager.decrypt(encryptedBytes)
             String(decryptedBytes, Charsets.UTF_8)
         } catch (e: Exception) {
             try {
-                // Fallback: Legacy ISO_8859_1 encoded content (old format)
                 val encryptedBytes = entity.content.toByteArray(Charsets.ISO_8859_1)
                 val decryptedBytes = cryptoManager.decrypt(encryptedBytes)
                 String(decryptedBytes, Charsets.UTF_8)
             } catch (e2: Exception) {
-                // Final fallback: show a clean placeholder instead of encrypted garbage
                 "\uD83D\uDD12 Message"
             }
         }

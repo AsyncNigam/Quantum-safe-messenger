@@ -8,12 +8,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-/**
- * Hilt DI module for authentication repositories
- *
- * Provides:
- * - AuthRepository interface binding
- */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AuthRepositoryModule {
@@ -22,4 +16,3 @@ abstract class AuthRepositoryModule {
     @Singleton
     abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
 }
-

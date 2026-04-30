@@ -14,17 +14,15 @@ import kotlinx.coroutines.flow.mapNotNull
 import java.security.MessageDigest
 import java.util.Collections
 import javax.inject.Inject
+import javax.inject.Singleton
 
 
+@Singleton
 class ReceiveMessageUseCase @Inject constructor(
     private val chatRepository: ChatRepository,
     private val webSocketManager: WebSocketManager
 ) {
 
-    /**
-     * In-memory set of recently processed message UUIDs to provide fast dedup
-     * before hitting the database. Bounded to prevent memory leaks.
-     */
     private val recentlyProcessed: MutableSet<String> = Collections.synchronizedSet(
         LinkedHashSet<String>(MAX_DEDUP_CACHE)
     )
@@ -35,11 +33,8 @@ class ReceiveMessageUseCase @Inject constructor(
             .mapNotNull { event ->
                 try {
                     val protoMessage = event.message
-
                     val payloadString = String(protoMessage.payload.toByteArray(), Charsets.UTF_8)
 
-                    // Generate a deterministic UUID from message content for deduplication.
-                    // Same sender + same timestamp + same content hash = same UUID.
                     val messageUuid = generateDedupUuid(
                         protoMessage.senderId,
                         protoMessage.recipientId,
@@ -47,12 +42,10 @@ class ReceiveMessageUseCase @Inject constructor(
                         payloadString
                     )
 
-                    // Fast in-memory dedup check
                     if (recentlyProcessed.contains(messageUuid)) {
                         return@mapNotNull null
                     }
 
-                    // Database-level dedup check
                     val repo = chatRepository as? ChatRepositoryImpl
                     if (repo?.existsByUuid(messageUuid) == true) {
                         recentlyProcessed.addBounded(messageUuid)
@@ -71,15 +64,12 @@ class ReceiveMessageUseCase @Inject constructor(
 
                     val insertedId = chatRepository.sendMessage(domainMessage)
 
-                    // insertMessage with IGNORE returns -1 if the row was skipped (duplicate)
                     if (insertedId == -1L) {
                         recentlyProcessed.addBounded(messageUuid)
                         return@mapNotNull null
                     }
 
                     recentlyProcessed.addBounded(messageUuid)
-
-                    // Emit ACK back to server so it knows we processed this message
                     webSocketManager.emitAck(messageUuid)
 
                     ReceiveMessageResult.Success(domainMessage)
@@ -92,11 +82,6 @@ class ReceiveMessageUseCase @Inject constructor(
             }
     }
 
-    /**
-     * Generates a deterministic UUID from message attributes for deduplication.
-     * Uses SHA-256 hash of sender + recipient + timestamp + content to produce
-     * a consistent identifier that survives WebSocket reconnections and offline queue drains.
-     */
     private fun generateDedupUuid(
         senderId: String,
         recipientId: String,
@@ -109,9 +94,6 @@ class ReceiveMessageUseCase @Inject constructor(
         return hash.joinToString("") { "%02x".format(it) }.take(32)
     }
 
-    /**
-     * Adds to the set while maintaining a bounded size to prevent memory leaks.
-     */
     private fun MutableSet<String>.addBounded(element: String) {
         if (size >= MAX_DEDUP_CACHE) {
             val iterator = iterator()

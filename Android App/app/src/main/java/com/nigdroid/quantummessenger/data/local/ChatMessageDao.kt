@@ -7,11 +7,6 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Data Access Object for chat messages.
- * Uses IGNORE conflict strategy on inserts to silently skip duplicates
- * (deduplication is keyed on the unique messageUuid index).
- */
 @Dao
 interface ChatMessageDao {
 

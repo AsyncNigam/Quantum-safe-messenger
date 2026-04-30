@@ -17,9 +17,6 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 
-/**
- * Background worker to retry sending messages that failed to send immediately.
- */
 @HiltWorker
 class SendMessageWorker @AssistedInject constructor(
     @Assisted context: Context,
@@ -39,7 +36,6 @@ class SendMessageWorker @AssistedInject constructor(
         }
 
         try {
-            // Priority 1: WebSocket if currently connected
             if (webSocketManager.isConnected()) {
                 val protoMessage = ProtoMessage.parseFrom(payload)
                 webSocketManager.sendMessage(protoMessage)
@@ -47,7 +43,6 @@ class SendMessageWorker @AssistedInject constructor(
                 return@withContext Result.success()
             }
 
-            // Priority 2: Fallback REST endpoint
             val requestBody = payload.toRequestBody("application/x-protobuf".toMediaType())
             val response = messageApiService.sendMessage(requestBody)
 
@@ -55,11 +50,9 @@ class SendMessageWorker @AssistedInject constructor(
                 chatMessageDao.updateMessageStatus(messageId, MessageStatus.SENT)
                 Result.success()
             } else {
-                // Server error, retry later
                 Result.retry()
             }
         } catch (e: Exception) {
-            // Network or parsing error
             if (runAttemptCount < 3) {
                 Result.retry()
             } else {

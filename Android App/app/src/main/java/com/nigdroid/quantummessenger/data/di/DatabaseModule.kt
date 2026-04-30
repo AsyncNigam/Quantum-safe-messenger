@@ -20,8 +20,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
-    // Creates a fresh SupportFactory with a fresh passphrase clone on every Room open,
-    // preventing the "passphrase appears to be cleared" crash from SQLCipher 4.5.x.
     private class ReusableSupportFactory(
         private val passphrase: ByteArray
     ) : SupportSQLiteOpenHelper.Factory {
