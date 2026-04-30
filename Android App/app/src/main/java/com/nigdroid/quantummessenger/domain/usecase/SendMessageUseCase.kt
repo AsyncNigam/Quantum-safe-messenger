@@ -11,6 +11,7 @@ import com.nigdroid.quantummessenger.network.WebSocketManager
 import com.nigdroid.quantummessenger.proto.ChatMessage as ProtoMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import javax.inject.Inject
 
 class SendMessageUseCase @Inject constructor(
@@ -26,13 +27,16 @@ class SendMessageUseCase @Inject constructor(
         messageType: MessageType = MessageType.TEXT
     ) {
         withContext(Dispatchers.IO) {
+            val messageUuid = UUID.randomUUID().toString().replace("-", "")
+
             val domainMessage = ChatMessage(
                 senderId = senderId,
                 receiverId = receiverId,
                 content = plainTextContent,
                 timestamp = System.currentTimeMillis(),
                 messageType = messageType,
-                status = MessageStatus.PENDING
+                status = MessageStatus.PENDING,
+                messageUuid = messageUuid
             )
 
             val messageId = chatRepository.sendMessage(domainMessage)

@@ -49,6 +49,9 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
 
+            // Start the centralized message receiver.
+            // The ReceiveMessageUseCase handles deduplication internally,
+            // so even if multiple collectors exist, messages are only saved once.
             observeIncomingMessages()
 
             if (!webSocketManager.isConnected()) {

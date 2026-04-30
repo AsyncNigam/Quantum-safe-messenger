@@ -39,6 +39,13 @@ class WebSocketManager @Inject constructor() {
     private val _events = MutableSharedFlow<SocketEvent>(extraBufferCapacity = 64)
     val events: SharedFlow<SocketEvent> = _events.asSharedFlow()
 
+    /**
+     * In-memory set of recently received message IDs to prevent processing
+     * the same message twice during reconnection window.
+     * Bounded to prevent memory leaks.
+     */
+    private val recentMessageIds = LinkedHashSet<String>(MAX_RECENT_IDS)
+
     fun connect(fingerprint: String) {
         if (socket?.connected() == true && currentFingerprint == fingerprint) return
 
@@ -82,27 +89,42 @@ class WebSocketManager @Inject constructor() {
             on("receive_message") { args ->
                 try {
                     val raw = args[0]
-                    when (raw) {
+                    val protoMessage: ProtoMessage? = when (raw) {
                         is ByteArray -> {
-                            val message = ProtoMessage.parseFrom(raw)
-                            _events.tryEmit(SocketEvent.MessageReceived(message))
+                            ProtoMessage.parseFrom(raw)
                         }
                         is JSONObject -> {
-                            val payloadB64 = raw.getString("payload")
-                            val payloadBytes = android.util.Base64.decode(payloadB64, android.util.Base64.NO_WRAP)
-                            val message = ProtoMessage.parseFrom(payloadBytes)
-                            _events.tryEmit(SocketEvent.MessageReceived(message))
+                            parseEnvelopeJson(raw)
                         }
                         is String -> {
-                            val json = JSONObject(raw)
-                            val payloadB64 = json.getString("payload")
-                            val payloadBytes = android.util.Base64.decode(payloadB64, android.util.Base64.NO_WRAP)
-                            val message = ProtoMessage.parseFrom(payloadBytes)
-                            _events.tryEmit(SocketEvent.MessageReceived(message))
+                            parseEnvelopeJson(JSONObject(raw))
                         }
                         else -> {
                             _events.tryEmit(SocketEvent.Error("Unknown message format: ${raw?.javaClass?.name}"))
+                            null
                         }
+                    }
+
+                    if (protoMessage != null) {
+                        // Generate a dedup key from the protobuf content
+                        val dedupKey = "${protoMessage.senderId}|${protoMessage.recipientId}|${protoMessage.timestamp}"
+
+                        synchronized(recentMessageIds) {
+                            if (recentMessageIds.contains(dedupKey)) {
+                                android.util.Log.d("WebSocket", "Skipping duplicate message: $dedupKey")
+                                return@on
+                            }
+                            if (recentMessageIds.size >= MAX_RECENT_IDS) {
+                                val iterator = recentMessageIds.iterator()
+                                if (iterator.hasNext()) {
+                                    iterator.next()
+                                    iterator.remove()
+                                }
+                            }
+                            recentMessageIds.add(dedupKey)
+                        }
+
+                        _events.tryEmit(SocketEvent.MessageReceived(protoMessage))
                     }
                 } catch (e: Exception) {
                     _events.tryEmit(SocketEvent.Error("Parse error: ${e.message}"))
@@ -131,6 +153,16 @@ class WebSocketManager @Inject constructor() {
         }
     }
 
+    /**
+     * Parses a server envelope JSON { from, payload, sentAt } into a ProtoMessage.
+     * The payload field is a base64-encoded protobuf.
+     */
+    private fun parseEnvelopeJson(json: JSONObject): ProtoMessage {
+        val payloadB64 = json.getString("payload")
+        val payloadBytes = android.util.Base64.decode(payloadB64, android.util.Base64.NO_WRAP)
+        return ProtoMessage.parseFrom(payloadBytes)
+    }
+
     fun sendMessage(message: ProtoMessage) {
         val json = JSONObject().apply {
             put("to", message.recipientId)
@@ -145,12 +177,30 @@ class WebSocketManager @Inject constructor() {
         socket?.emit("send_encrypted_message", envelope.toByteArray())
     }
 
+    /**
+     * Emits an acknowledgment to the server that a message was successfully processed.
+     * The server can use this to remove messages from the offline queue.
+     */
+    fun emitAck(messageUuid: String) {
+        try {
+            val json = JSONObject().apply {
+                put("messageUuid", messageUuid)
+            }
+            socket?.emit("message_ack", json)
+        } catch (e: Exception) {
+            android.util.Log.w("WebSocket", "Failed to emit ACK: ${e.message}")
+        }
+    }
+
     fun disconnect() {
         _connectionState.value = false
         currentFingerprint = null
         socket?.off()
         socket?.disconnect()
         socket = null
+        synchronized(recentMessageIds) {
+            recentMessageIds.clear()
+        }
     }
 
     fun isConnected(): Boolean = socket?.connected() ?: false
@@ -159,5 +209,9 @@ class WebSocketManager @Inject constructor() {
         if (!isConnected()) {
             connect(fingerprint)
         }
+    }
+
+    companion object {
+        private const val MAX_RECENT_IDS = 200
     }
 }

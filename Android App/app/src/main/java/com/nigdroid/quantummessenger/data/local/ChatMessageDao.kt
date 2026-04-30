@@ -9,18 +9,23 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Data Access Object for chat messages.
+ * Uses IGNORE conflict strategy on inserts to silently skip duplicates
+ * (deduplication is keyed on the unique messageUuid index).
  */
 @Dao
 interface ChatMessageDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertMessage(message: ChatMessageEntity): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertMessages(messages: List<ChatMessageEntity>)
 
     @Update
     suspend fun updateMessage(message: ChatMessageEntity)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM chat_messages WHERE messageUuid = :uuid LIMIT 1)")
+    suspend fun existsByUuid(uuid: String): Boolean
 
     @Query("SELECT * FROM chat_messages WHERE (senderId = :userId AND receiverId = :otherUserId) OR (senderId = :otherUserId AND receiverId = :userId) ORDER BY timestamp ASC")
     fun getMessagesBetweenUsers(userId: String, otherUserId: String): Flow<List<ChatMessageEntity>>

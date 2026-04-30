@@ -7,7 +7,9 @@ export class MessageService {
   constructor(private readonly redisClient: Redis) {}
 
   /**
-   * Stores an encrypted binary payload in a Redis list.
+   * Stores an encrypted binary payload in a Redis list (FIFO order).
+   * Uses rpush to append to the end, so retrieveAndClearOfflineMessages
+   * returns messages in the order they were sent (oldest first).
    * Sets a 24-hour TTL on the key.
    */
   async queueOfflineMessage(recipientId: string, payload: Buffer): Promise<void> {
@@ -16,8 +18,8 @@ export class MessageService {
     // Use multi() to queue and set TTL atomically
     const multi = this.redisClient.multi();
     
-    // We use lpush to queue the buffer
-    multi.lpush(key, payload);
+    // rpush appends to end → FIFO when read with lrange(0, -1)
+    multi.rpush(key, payload);
     multi.expire(key, 86400); // 24 hours in seconds
     
     const results = await multi.exec();
@@ -29,6 +31,7 @@ export class MessageService {
 
   /**
    * Fetches all messages from the list and deletes the key atomically.
+   * Returns messages in FIFO order (oldest first).
    */
   async retrieveAndClearOfflineMessages(userId: string): Promise<Buffer[]> {
     const key = `offline:messages:${userId}`;

@@ -21,13 +21,15 @@ class ChatRepositoryImpl @Inject constructor(
     override suspend fun sendMessage(message: ChatMessage): Long {
         val encryptedContent = cryptoManager.encrypt(
             message.content.toByteArray(Charsets.UTF_8)
-        ).toString(Charsets.ISO_8859_1) // Store as string for Room
+        )
+        val encodedContent = android.util.Base64.encodeToString(encryptedContent, android.util.Base64.NO_WRAP)
 
         val entity = ChatMessageEntity(
             id = message.id,
+            messageUuid = message.messageUuid,
             senderId = message.senderId,
             receiverId = message.receiverId,
-            content = encryptedContent,
+            content = encodedContent,
             timestamp = message.timestamp,
             messageType = message.messageType.toLocalMessageType(),
             isRead = message.isRead,
@@ -67,18 +69,32 @@ class ChatRepositoryImpl @Inject constructor(
         chatMessageDao.updateMessageStatus(messageId, status)
     }
 
+    suspend fun existsByUuid(uuid: String): Boolean {
+        return chatMessageDao.existsByUuid(uuid)
+    }
+
 
     private suspend fun decryptEntity(entity: ChatMessageEntity): ChatMessage {
         val decryptedContent = try {
-            val encryptedBytes = entity.content.toByteArray(Charsets.ISO_8859_1)
+            // Primary path: Base64-encoded encrypted content (new format)
+            val encryptedBytes = android.util.Base64.decode(entity.content, android.util.Base64.NO_WRAP)
             val decryptedBytes = cryptoManager.decrypt(encryptedBytes)
             String(decryptedBytes, Charsets.UTF_8)
         } catch (e: Exception) {
-            "[Decryption failed]"
+            try {
+                // Fallback: Legacy ISO_8859_1 encoded content (old format)
+                val encryptedBytes = entity.content.toByteArray(Charsets.ISO_8859_1)
+                val decryptedBytes = cryptoManager.decrypt(encryptedBytes)
+                String(decryptedBytes, Charsets.UTF_8)
+            } catch (e2: Exception) {
+                // Final fallback: show a clean placeholder instead of encrypted garbage
+                "\uD83D\uDD12 Message"
+            }
         }
 
         return ChatMessage(
             id = entity.id,
+            messageUuid = entity.messageUuid,
             senderId = entity.senderId,
             receiverId = entity.receiverId,
             content = decryptedContent,

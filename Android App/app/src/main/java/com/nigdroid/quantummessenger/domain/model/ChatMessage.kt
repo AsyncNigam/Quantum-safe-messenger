@@ -6,6 +6,7 @@ package com.nigdroid.quantummessenger.domain.model
  */
 data class ChatMessage(
     val id: Long = 0,
+    val messageUuid: String = "",
     val senderId: String,
     val receiverId: String,
     val content: String, // Plain text content (decrypted)

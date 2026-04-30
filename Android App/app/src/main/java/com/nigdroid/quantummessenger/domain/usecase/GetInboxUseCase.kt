@@ -28,11 +28,20 @@ class GetInboxUseCase @Inject constructor(
                 val unreadCount = unreadMessages.count { it.senderId == otherUserId }
 
                 val decryptedContent = try {
-                    val encryptedBytes = lastMsg.content.toByteArray(Charsets.ISO_8859_1)
+                    // Primary path: Base64-encoded encrypted content (new format)
+                    val encryptedBytes = android.util.Base64.decode(lastMsg.content, android.util.Base64.NO_WRAP)
                     val decryptedBytes = cryptoManager.decrypt(encryptedBytes)
                     String(decryptedBytes, Charsets.UTF_8)
                 } catch (e: Exception) {
-                    lastMsg.content.take(20) + "…"
+                    try {
+                        // Fallback: Legacy ISO_8859_1 encoded content (old format)
+                        val encryptedBytes = lastMsg.content.toByteArray(Charsets.ISO_8859_1)
+                        val decryptedBytes = cryptoManager.decrypt(encryptedBytes)
+                        String(decryptedBytes, Charsets.UTF_8)
+                    } catch (e2: Exception) {
+                        // Clean user-friendly placeholder — NEVER show encrypted text
+                        "New message"
+                    }
                 }
                 
                 InboxItem(

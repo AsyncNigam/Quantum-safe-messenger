@@ -3,6 +3,7 @@ import { MessageService } from '../../services/MessageService';
 import { FcmService } from '../../services/fcmService';
 import { UserRepository } from '../../repositories/UserRepository';
 import { redisAvailable } from '../../config/redis';
+import { randomUUID } from 'crypto';
 
 export class SocketController {
   constructor(
@@ -32,23 +33,7 @@ export class SocketController {
 
     // ── Drain offline queue on connect ──────────────────────────────────────
     if (redisAvailable) {
-      this.messageService.retrieveAndClearOfflineMessages(fingerprint)
-        .then((buffers: Buffer[]) => {
-          if (buffers.length > 0) {
-            console.log(`[Socket] Draining ${buffers.length} offline message(s) → fp=${fingerprint.slice(0, 12)}…`);
-            buffers.forEach((buf) => {
-              try {
-                const envelope = JSON.parse(buf.toString());
-                socket.emit('receive_message', envelope);
-              } catch (e) {
-                console.warn(`[Socket] Failed to parse offline message | fp=${fingerprint.slice(0, 12)}…`);
-              }
-            });
-          }
-        })
-        .catch((err: Error) =>
-          console.error(`[Socket] Drain error | fp=${fingerprint.slice(0, 12)}… |`, err.message),
-        );
+      this.drainOfflineQueue(fingerprint, socket);
     }
 
     // ── send_message ────────────────────────────────────────────────────────
@@ -79,21 +64,29 @@ export class SocketController {
           return;
         }
 
+        // Generate a unique message ID for deduplication on the client side
+        const messageId = randomUUID().replace(/-/g, '').slice(0, 16);
+
         const recipientOnline = await this.isOnline(io, to);
 
-        // Build the envelope to relay — include sender fingerprint
-        const envelope = { from: fingerprint, payload, sentAt: new Date().toISOString() };
+        // Build the envelope to relay — include sender fingerprint and message ID
+        const envelope = {
+          from: fingerprint,
+          payload,
+          sentAt: new Date().toISOString(),
+          messageId,
+        };
 
         if (recipientOnline) {
           io.to(to).emit('receive_message', envelope);
-          console.log(`[Socket] Delivered (online)  | from=fp:${fingerprint.slice(0, 8)} | to=fp:${to.slice(0, 8)}`);
+          console.log(`[Socket] Delivered (online)  | from=fp:${fingerprint.slice(0, 8)} | to=fp:${to.slice(0, 8)} | msgId=${messageId}`);
         } else {
           // Queue offline message in Redis (if available)
           if (redisAvailable) {
             try {
               const buf = Buffer.from(JSON.stringify(envelope));
               await this.messageService.queueOfflineMessage(to, buf);
-              console.log(`[Socket] Queued   (offline)  | from=fp:${fingerprint.slice(0, 8)} | to=fp:${to.slice(0, 8)}`);
+              console.log(`[Socket] Queued   (offline)  | from=fp:${fingerprint.slice(0, 8)} | to=fp:${to.slice(0, 8)} | msgId=${messageId}`);
             } catch (err) {
               console.warn(`[Socket] Redis queue failed:`, (err as Error).message);
             }
@@ -110,10 +103,44 @@ export class SocketController {
       }
     });
 
+    // ── message_ack ─────────────────────────────────────────────────────────
+    // Client acknowledges successful processing of a message.
+    // Currently logged for diagnostics; could be used for delivery receipts.
+    socket.on('message_ack', (data: any) => {
+      const messageUuid = data?.messageUuid;
+      if (messageUuid) {
+        console.log(`[Socket] ACK received | fp=${fingerprint.slice(0, 8)} | uuid=${messageUuid}`);
+      }
+    });
+
     // ── disconnect ──────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
       console.log(`[Socket] Disconnected | socket=${socket.id} | fp=${fingerprint.slice(0, 12)}…`);
     });
   };
-}
 
+  /**
+   * Drains offline messages from Redis and delivers them to the connected socket.
+   * Messages are delivered in FIFO order and the queue is cleared atomically.
+   */
+  private drainOfflineQueue(fingerprint: string, socket: Socket): void {
+    this.messageService.retrieveAndClearOfflineMessages(fingerprint)
+      .then((buffers: Buffer[]) => {
+        if (buffers.length > 0) {
+          console.log(`[Socket] Draining ${buffers.length} offline message(s) → fp=${fingerprint.slice(0, 12)}…`);
+          // Deliver in FIFO order (oldest first)
+          for (const buf of buffers) {
+            try {
+              const envelope = JSON.parse(buf.toString());
+              socket.emit('receive_message', envelope);
+            } catch (e) {
+              console.warn(`[Socket] Failed to parse offline message | fp=${fingerprint.slice(0, 12)}…`);
+            }
+          }
+        }
+      })
+      .catch((err: Error) =>
+        console.error(`[Socket] Drain error | fp=${fingerprint.slice(0, 12)}… |`, err.message),
+      );
+  }
+}

@@ -10,8 +10,6 @@ import com.nigdroid.quantummessenger.domain.model.ChatMessage
 import com.nigdroid.quantummessenger.domain.model.MessageType
 import com.nigdroid.quantummessenger.domain.usecase.AddContactUseCase
 import com.nigdroid.quantummessenger.domain.usecase.GetChatHistoryUseCase
-import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageResult
-import com.nigdroid.quantummessenger.domain.usecase.ReceiveMessageUseCase
 import com.nigdroid.quantummessenger.domain.usecase.SendMessageUseCase
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import com.nigdroid.quantummessenger.network.SocketEvent
@@ -24,7 +22,6 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
-    private val receiveMessageUseCase: ReceiveMessageUseCase,
     private val getChatHistoryUseCase: GetChatHistoryUseCase,
     private val addContactUseCase: AddContactUseCase,
     private val sessionManager: SessionManager,
@@ -115,43 +112,10 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    private fun observeIncomingMessages() {
-        viewModelScope.launch {
-            receiveMessageUseCase()
-                .collect { result ->
-                    when (result) {
-                        is ReceiveMessageResult.Success -> {
-                            if (!isNotificationsMuted) {
-                                notificationSoundManager.playNotification()
-                            }
-                        }
-                        is ReceiveMessageResult.Error -> {
-                            _uiState.update { currentState ->
-                                when (currentState) {
-                                    is ChatUiState.Success -> {
-                                        ChatUiState.Error(
-                                            message = result.message,
-                                            messages = currentState.messages
-                                        )
-                                    }
-                                    else -> {
-                                        ChatUiState.Error(message = result.message)
-                                    }
-                                }
-                            }
-
-                            val currentMessages = (_uiState.value as? ChatUiState.Success)?.messages
-                            if (currentMessages != null && currentMessages.isNotEmpty()) {
-                                delay(3000)
-                                _uiState.update {
-                                    ChatUiState.Success(messages = currentMessages)
-                                }
-                            }
-                        }
-                    }
-                }
-        }
-    }
+    // Message reception is handled centrally by HomeViewModel's observeIncomingMessages().
+    // Chat history updates arrive reactively via the Room Flow in loadChatHistory().
+    // This eliminates the duplicate message processing that occurred when both
+    // HomeViewModel and ChatViewModel independently subscribed to ReceiveMessageUseCase.
 
     fun sendMessage(plainTextContent: String) {
         if (plainTextContent.isBlank()) return
