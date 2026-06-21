@@ -16,8 +16,8 @@ android {
         applicationId = "com.nigdroid.quantummessenger"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -134,7 +134,8 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
-    implementation(libs.sqlcipher)
+    implementation(libs.sqlcipher.android)
+    implementation(libs.sqlite.ktx)
     implementation(libs.protobuf.javalite)
 
     implementation(libs.androidx.lifecycle.viewmodel)
@@ -159,8 +160,8 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.4.2")
     implementation("androidx.camera:camera-view:1.4.2")
 
-    // ML Kit Barcode Scanning — on-device QR code detection
-    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    // ML Kit Barcode Scanning — unbundled (native lib served by Google Play Services, 16 KB compliant)
+    implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1")
 
     // Firebase Cloud Messaging (Push Notifications)
     implementation(platform(libs.firebase.bom))

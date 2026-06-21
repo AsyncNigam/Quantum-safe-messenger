@@ -23,7 +23,8 @@ retrofit = "2.11.0"
 socketio = "2.1.2"
 hiltAndroid = "2.59.2"
 room = "2.7.1"
-sqlcipher = "4.5.4"
+sqlcipherAndroid = "4.15.0"
+sqliteKtx = "2.6.2"
 lifecycleViewmodel = "2.10.0"
 securityCrypto = "1.1.0-alpha06"
 kotlinxSerialization = "1.7.3"
@@ -67,7 +68,8 @@ hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hil
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
-sqlcipher = { module = "net.zetetic:android-database-sqlcipher", version.ref = "sqlcipher" }
+sqlcipher-android = { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipherAndroid" }
+sqlite-ktx = { module = "androidx.sqlite:sqlite-ktx", version.ref = "sqliteKtx" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodel" }
 androidx-lifecycle-viewmodel-hilt = { module = "androidx.hilt:hilt-lifecycle-viewmodel", version = "1.0.0-alpha03" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version = "1.2.0" }
