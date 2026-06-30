@@ -11,6 +11,7 @@ plugins {
 android {
     namespace = "com.nigdroid.quantummessenger"
     compileSdk = 36
+    ndkVersion = "30.0.14904198"
 
     defaultConfig {
         applicationId = "com.nigdroid.quantummessenger"

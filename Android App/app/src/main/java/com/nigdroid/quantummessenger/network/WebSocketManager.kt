@@ -1,5 +1,6 @@
 package com.nigdroid.quantummessenger.network
 
+import java.util.WeakHashMap
 import com.nigdroid.quantummessenger.util.Constants
 import io.socket.client.IO
 import io.socket.client.Socket
@@ -45,6 +46,11 @@ class WebSocketManager @Inject constructor() {
 
     private val recentMessageIds = LinkedHashSet<String>(MAX_RECENT_IDS)
 
+    // Maps ProtoMessage → backend-generated messageId for ACK flow
+    private val _backendMessageIds = WeakHashMap<ProtoMessage, String>()
+
+    fun getBackendMessageId(message: ProtoMessage): String? = _backendMessageIds[message]
+
     fun connect(fingerprint: String) {
         if (socket?.connected() == true && currentFingerprint == fingerprint) return
 
@@ -89,10 +95,30 @@ class WebSocketManager @Inject constructor() {
                         is ByteArray -> ProtoMessage.parseFrom(raw)
                         is JSONObject -> parseEnvelopeJson(raw)
                         is String -> parseEnvelopeJson(JSONObject(raw))
-                        else -> null
+                        else -> {
+                            android.util.Log.w("WebSocketManager", "receive_message: unknown type ${raw?.javaClass?.name}")
+                            null
+                        }
                     }
 
                     if (protoMessage != null) {
+                        // Extract backend messageId for ACK (if present in the envelope)
+                        val backendMessageId: String? = try {
+                            when (raw) {
+                                is JSONObject -> if (raw.has("messageId")) raw.getString("messageId") else null
+                                is String -> {
+                                    val j = JSONObject(raw)
+                                    if (j.has("messageId")) j.getString("messageId") else null
+                                }
+                                else -> null
+                            }
+                        } catch (_: Exception) { null }
+
+                        // Attach backend messageId as a tag for the ACK flow
+                        if (backendMessageId != null) {
+                            _backendMessageIds[protoMessage] = backendMessageId
+                        }
+
                         val dedupKey = "${protoMessage.senderId}|${protoMessage.recipientId}|${protoMessage.timestamp}"
 
                         synchronized(recentMessageIds) {
@@ -109,7 +135,9 @@ class WebSocketManager @Inject constructor() {
 
                         _incomingMessages.trySend(protoMessage)
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {
+                    android.util.Log.e("WebSocketManager", "receive_message parse error", e)
+                }
             }
 
             on("user_deleted") { args ->

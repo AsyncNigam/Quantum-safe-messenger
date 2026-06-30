@@ -3,18 +3,18 @@
 /** 
  * Version of liboqs as a string. Equivalent to {MAJOR}.{MINOR}.{PATCH}{PRE_RELEASE} 
  */
-#define OQS_VERSION_TEXT "0.15.0"
+#define OQS_VERSION_TEXT "0.16.0-rc1"
 /** 
  * Version levels of liboqs as integers.
  */
 #define OQS_VERSION_MAJOR 0
-#define OQS_VERSION_MINOR 15
+#define OQS_VERSION_MINOR 16
 #define OQS_VERSION_PATCH 0
 /** 
  * OQS_VERSION_PRE_RELEASE is defined if this is a pre-release version of liboqs, otherwise it is undefined.
  * Examples: "-dev" or "-rc1".
  */
-/* #undef OQS_VERSION_PRE_RELEASE */
+#define OQS_VERSION_PRE_RELEASE "-rc1"
 
 #define OQS_COMPILE_BUILD_TARGET "aarch64-Windows-10.0.26200"
 #define OQS_DIST_BUILD 1
@@ -133,10 +133,10 @@
 #define OQS_ENABLE_KEM_classic_mceliece_8192128f 1
 /* #undef OQS_ENABLE_KEM_classic_mceliece_8192128f_avx2 */
 
-/* #undef OQS_ENABLE_KEM_HQC */
-/* #undef OQS_ENABLE_KEM_hqc_128 */
-/* #undef OQS_ENABLE_KEM_hqc_192 */
-/* #undef OQS_ENABLE_KEM_hqc_256 */
+#define OQS_ENABLE_KEM_HQC 1
+#define OQS_ENABLE_KEM_hqc_1 1
+#define OQS_ENABLE_KEM_hqc_3 1
+#define OQS_ENABLE_KEM_hqc_5 1
 
 #define OQS_ENABLE_KEM_KYBER 1
 #define OQS_ENABLE_KEM_kyber_512 1

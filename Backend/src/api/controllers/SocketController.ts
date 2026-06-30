@@ -53,16 +53,26 @@ export class SocketController {
           messageId,
         };
 
+        // ── Belt-and-suspenders: ALWAYS queue to offline storage ──
+        // This guarantees the message survives even if the live delivery
+        // silently fails (e.g. stale WebSocket after Render cold start).
+        // The Android app has deduplication, so duplicates are harmless.
+        try {
+          const buf = Buffer.from(JSON.stringify(envelope));
+          await this.messageService.queueOfflineMessage(to, buf);
+        } catch (err) {
+          console.warn(`[Socket] Queue offline message failed:`, (err as Error).message);
+        }
+
+        // ── Attempt live delivery if recipient appears online ──
         if (recipientOnline) {
           io.to(to).emit('receive_message', envelope);
-        } else {
-          try {
-            const buf = Buffer.from(JSON.stringify(envelope));
-            await this.messageService.queueOfflineMessage(to, buf);
-          } catch (err) {
-            console.warn(`[Socket] Queue offline message failed:`, (err as Error).message);
-          }
+        }
 
+        // ── Always send FCM push when recipient is NOT online ──
+        // Even if they ARE online, the socket may be stale, so we send
+        // the push as a fallback wake-up signal.
+        if (!recipientOnline) {
           this.fcmService.sendPushNotification(to, fingerprint, 'new_message')
             .catch((err) => console.warn(`[Socket] FCM push failed:`, (err as Error).message));
         }
@@ -73,11 +83,11 @@ export class SocketController {
     });
 
     socket.on('message_ack', async (data: any) => {
-      const messageUuid = data?.messageUuid;
-      if (messageUuid) {
-        console.log(`[Socket] ACK received | fp=${fingerprint.slice(0, 8)} | uuid=${messageUuid}`);
+      const ackId = data?.messageUuid || data?.messageId;
+      if (ackId) {
+        console.log(`[Socket] ACK received | fp=${fingerprint.slice(0, 8)} | id=${ackId}`);
         try {
-          await this.messageService.deleteOfflineMessage(fingerprint, messageUuid);
+          await this.messageService.deleteOfflineMessage(fingerprint, ackId);
         } catch (err) {
           console.warn(`[Socket] Failed to delete acknowledged message:`, (err as Error).message);
         }
@@ -99,7 +109,7 @@ export class SocketController {
               const envelope = JSON.parse(buf.toString());
               socket.emit('receive_message', envelope);
             } catch (e) {
-              console.warn(`[Socket] Failed to parse offline message`);
+              console.warn(`[Socket] Failed to parse offline message:`, (e as Error).message);
             }
           }
         }

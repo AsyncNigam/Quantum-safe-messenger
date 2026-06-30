@@ -66,7 +66,13 @@ class ReceiveMessageUseCase @Inject constructor(
                     }
 
                     recentlyProcessed.addBounded(messageUuid)
-                    webSocketManager.emitAck(messageUuid)
+
+                    // Use backend-generated messageId for ACK if available,
+                    // falling back to the local dedup UUID.
+                    // The backend stores messages keyed by its own messageId,
+                    // so we must echo that back for proper deletion.
+                    val backendId = webSocketManager.getBackendMessageId(protoMessage)
+                    webSocketManager.emitAck(backendId ?: messageUuid)
 
                     ReceiveMessageResult.Success(domainMessage)
                 } catch (e: Exception) {
