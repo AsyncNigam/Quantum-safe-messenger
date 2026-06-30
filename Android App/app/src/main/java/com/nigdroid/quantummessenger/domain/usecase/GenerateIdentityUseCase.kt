@@ -49,7 +49,7 @@ class GenerateIdentityUseCase @Inject constructor(
         }
 
     @VisibleForTesting
-    internal fun generateMLKemKey(): KeyPair {
+    internal suspend fun generateMLKemKey(): KeyPair {
         return try {
             val (publicKey, privateKey) = PostQuantumCrypto.generateMLKemKeypair()
             storeKeyInKeystore("ml_kem", privateKey)
@@ -60,7 +60,7 @@ class GenerateIdentityUseCase @Inject constructor(
     }
 
     @VisibleForTesting
-    internal fun generateX25519Key(): KeyPair {
+    internal suspend fun generateX25519Key(): KeyPair {
         return try {
             val keyGen  = KeyPairGenerator.getInstance("X25519")
             val keyPair = keyGen.generateKeyPair()
@@ -74,11 +74,11 @@ class GenerateIdentityUseCase @Inject constructor(
     }
 
     @VisibleForTesting
-    internal fun storeKeyInKeystore(keyType: String, keyMaterial: ByteArray) {
+    internal suspend fun storeKeyInKeystore(keyType: String, keyMaterial: ByteArray) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val aad = "private_key_$keyType".toByteArray(Charsets.UTF_8)
 
-        val encrypted = runBlocking { cryptoManager.encrypt(keyMaterial, aad) }
+        val encrypted = cryptoManager.encrypt(keyMaterial, aad)
         val encoded = Base64.encodeToString(encrypted, Base64.NO_WRAP)
 
         prefs.edit().putString("encrypted_pk_$keyType", encoded).apply()

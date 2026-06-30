@@ -1,5 +1,6 @@
 package com.nigdroid.quantummessenger.data.crypto
 
+import android.app.KeyguardManager
 import android.content.Context
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
@@ -47,17 +48,25 @@ class CryptoManager @Inject constructor(
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(256)
-                .setUserAuthenticationRequired(true)
-                .setInvalidatedByBiometricEnrollment(true)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                specBuilder.setUserAuthenticationParameters(
-                    15,
-                    KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL
-                )
+            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+            val isSecure = keyguardManager.isDeviceSecure
+
+            if (isSecure) {
+                specBuilder.setUserAuthenticationRequired(true)
+                specBuilder.setInvalidatedByBiometricEnrollment(true)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    specBuilder.setUserAuthenticationParameters(
+                        15,
+                        KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    specBuilder.setUserAuthenticationValidityDurationSeconds(15)
+                }
             } else {
-                @Suppress("DEPRECATION")
-                specBuilder.setUserAuthenticationValidityDurationSeconds(15)
+                specBuilder.setUserAuthenticationRequired(false)
             }
 
             keyGenerator.init(specBuilder.build())

@@ -59,7 +59,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onStart(owner: LifecycleOwner) {
-            if (!biometricTriggeredThisResume && viewModel.lockState.value == LockState.Locked) {
+            if (!biometricTriggeredThisResume && 
+                viewModel.lockState.value == LockState.Locked && 
+                viewModel.startDestination.value == HomeRoute
+            ) {
                 biometricTriggeredThisResume = true
                 triggerBiometricUnlock()
             }
@@ -84,8 +87,11 @@ class MainActivity : AppCompatActivity() {
                     val lockState by viewModel.lockState.collectAsState()
                     val startDestination by viewModel.startDestination.collectAsState()
 
-                    LaunchedEffect(lockState) {
-                        if (lockState == LockState.Locked && !biometricTriggeredThisResume) {
+                    LaunchedEffect(lockState, startDestination) {
+                        if (lockState == LockState.Locked && 
+                            startDestination == HomeRoute && 
+                            !biometricTriggeredThisResume
+                        ) {
                             biometricTriggeredThisResume = true
                             triggerBiometricUnlock()
                         }

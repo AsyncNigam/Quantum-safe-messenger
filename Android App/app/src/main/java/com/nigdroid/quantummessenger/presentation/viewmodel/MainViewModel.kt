@@ -90,6 +90,9 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             sessionManager.isUserRegistered.collect { isRegistered ->
                 _startDestination.value = if (isRegistered) HomeRoute else AuthRoute
+                if (!isRegistered) {
+                    _lockState.value = LockState.Unlocked
+                }
             }
         }
     }
