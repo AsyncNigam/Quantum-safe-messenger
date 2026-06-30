@@ -72,8 +72,20 @@ export class FcmService {
     }
 
     try {
+      const shortFp = senderFingerprint.slice(0, 8).toUpperCase();
+      const notificationTitle = type === 'contact_request' 
+        ? '🤝 New Contact Request' 
+        : '🔒 New Encrypted Message';
+      const notificationBody = type === 'contact_request'
+        ? `Contact request from ${shortFp}…`
+        : `From: ${shortFp}…`;
+
       const message = {
         token,
+        notification: {
+          title: notificationTitle,
+          body: notificationBody,
+        },
         data: {
           type,
           senderFingerprint,
@@ -81,6 +93,10 @@ export class FcmService {
         android: {
           priority: 'high' as const,
           ttl: 86400000, // 24 hours
+          notification: {
+            channelId: 'quantum_messages',
+            icon: 'qlogo',
+          }
         },
       };
 

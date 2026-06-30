@@ -56,7 +56,7 @@ export async function connectRedis(): Promise<boolean> {
     return true;
   } catch (err) {
     redisAvailable = false;
-    console.warn('[Redis] ⚠️  Not available — offline message queue disabled.');
+    console.warn('[Redis] ⚠️  Not available — using Supabase fallback for offline messages.');
     return false;
   }
 }

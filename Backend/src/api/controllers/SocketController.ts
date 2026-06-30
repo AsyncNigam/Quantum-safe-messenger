@@ -2,7 +2,6 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { MessageService } from '../../services/MessageService';
 import { FcmService } from '../../services/fcmService';
 import { UserRepository } from '../../repositories/UserRepository';
-import { redisAvailable } from '../../config/redis';
 import { randomUUID } from 'crypto';
 
 export class SocketController {
@@ -23,9 +22,7 @@ export class SocketController {
     socket.join(fingerprint);
     console.log(`[Socket] Connected    | socket=${socket.id} | fp=${fingerprint.slice(0, 12)}…`);
 
-    if (redisAvailable) {
-      this.drainOfflineQueue(fingerprint, socket);
-    }
+    this.drainOfflineQueue(fingerprint, socket);
 
     socket.on('send_message', async (data: any) => {
       try {
@@ -59,13 +56,11 @@ export class SocketController {
         if (recipientOnline) {
           io.to(to).emit('receive_message', envelope);
         } else {
-          if (redisAvailable) {
-            try {
-              const buf = Buffer.from(JSON.stringify(envelope));
-              await this.messageService.queueOfflineMessage(to, buf);
-            } catch (err) {
-              console.warn(`[Socket] Redis queue failed:`, (err as Error).message);
-            }
+          try {
+            const buf = Buffer.from(JSON.stringify(envelope));
+            await this.messageService.queueOfflineMessage(to, buf);
+          } catch (err) {
+            console.warn(`[Socket] Queue offline message failed:`, (err as Error).message);
           }
 
           this.fcmService.sendPushNotification(to, fingerprint, 'new_message')

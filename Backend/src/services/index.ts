@@ -6,9 +6,9 @@ import { FcmService }     from './fcmService';
 
 /**
  * Singleton MessageService instance.
- * Receives the dedicated Redis store client via constructor injection.
+ * Receives the dedicated Redis store client and Supabase admin client.
  */
-export const messageService = new MessageService(storeClient);
+export const messageService = new MessageService(storeClient, supabaseAdmin);
 
 /**
  * Singleton FcmService instance — handles push notifications.
