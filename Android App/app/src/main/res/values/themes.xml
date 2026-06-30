@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.QuantumMessenger" parent="Theme.AppCompat.DayNight.NoActionBar" />
+    <!-- Base theme — dark background to eliminate the white flash on launch -->
+    <style name="Theme.QuantumMessenger" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/quantum_background_dark</item>
+        <item name="android:statusBarColor">@color/quantum_background_dark</item>
+        <item name="android:navigationBarColor">@color/quantum_background_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
 </resources>

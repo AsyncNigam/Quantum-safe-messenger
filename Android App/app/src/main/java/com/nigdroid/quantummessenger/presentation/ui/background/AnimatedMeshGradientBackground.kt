@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.tooling.preview.Preview
 import com.nigdroid.quantummessenger.presentation.ui.theme.QuantumColors
 import kotlin.math.cos
 import kotlin.math.sin
@@ -46,19 +47,17 @@ fun AnimatedMeshGradientBackground(
             val h = size.height
 
             if (isDarkTheme) {
-                // ── DARK: Whiskey Barrel — rich espresso & amber blobs ───────
-                // Strongly visible blobs that punch through the dark background
+                // ── DARK: Volcanic Noir — ember glows & molten gold on obsidian ──
 
-                // Blob 1 — Burnished copper/amber, upper-right (the warm hearth glow)
-                // FIXED: alpha raised from 0.38f → 0.65f for visibility
+                // Blob 1 — Ember orange-red, upper-right (the volcanic glow)
                 val b1x = w * (0.72f + 0.16f * sin(phase1.toDouble()).toFloat())
                 val b1y = h * (0.18f + 0.14f * cos(phase1.toDouble()).toFloat())
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFFBF7030).copy(alpha = 0.65f),   // strong amber core
-                            Color(0xFF905020).copy(alpha = 0.28f),   // deep copper mid
-                            Color(0xFF602C0A).copy(alpha = 0.08f),   // mahogany edge
+                            Color(0xFFE85C3A).copy(alpha = 0.50f),   // ember core
+                            Color(0xFFC44028).copy(alpha = 0.22f),   // deep crimson mid
+                            Color(0xFF6A1A08).copy(alpha = 0.06f),   // dark lava edge
                             Color.Transparent
                         ),
                         center = Offset(b1x, b1y),
@@ -68,15 +67,14 @@ fun AnimatedMeshGradientBackground(
                     radius = w * 0.62f
                 )
 
-                // Blob 2 — Deep rose-mahogany, lower-left (ember shadow)
-                // FIXED: alpha raised from 0.22f → 0.45f
+                // Blob 2 — Deep crimson-maroon, lower-left (lava shadow)
                 val b2x = w * (0.18f + 0.16f * cos(phase2.toDouble()).toFloat())
                 val b2y = h * (0.74f + 0.13f * sin(phase2.toDouble()).toFloat())
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF8C5040).copy(alpha = 0.45f),   // dark ember-rose core
-                            Color(0xFF6A3828).copy(alpha = 0.18f),
+                            Color(0xFF8A2010).copy(alpha = 0.38f),   // deep lava core
+                            Color(0xFF501008).copy(alpha = 0.14f),
                             Color.Transparent
                         ),
                         center = Offset(b2x, b2y),
@@ -86,15 +84,14 @@ fun AnimatedMeshGradientBackground(
                     radius = w * 0.55f
                 )
 
-                // Blob 3 — Golden haze, center-left warmth
-                // FIXED: alpha raised from 0.10f → 0.30f
+                // Blob 3 — Molten gold haze, center-left warmth
                 val b3x = w * (0.38f + 0.14f * sin((phase3 + 0.8f).toDouble()).toFloat())
                 val b3y = h * (0.45f + 0.12f * cos((phase3 * 0.6f).toDouble()).toFloat())
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFFD4904A).copy(alpha = 0.30f),   // warm gold
-                            Color(0xFF905020).copy(alpha = 0.10f),
+                            Color(0xFFE8A848).copy(alpha = 0.22f),   // warm gold
+                            Color(0xFFC88030).copy(alpha = 0.08f),
                             Color.Transparent
                         ),
                         center = Offset(b3x, b3y),
@@ -104,13 +101,13 @@ fun AnimatedMeshGradientBackground(
                     radius = w * 0.46f
                 )
 
-                // Blob 4 — Cool dark-teal accent, top-left corner (depth)
+                // Blob 4 — Cool ash accent, top-left corner (depth contrast)
                 val b4x = w * (0.08f + 0.08f * cos(phase2.toDouble()).toFloat())
                 val b4y = h * (0.14f + 0.10f * sin(phase3.toDouble()).toFloat())
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF4A6850).copy(alpha = 0.20f),
+                            Color(0xFF484848).copy(alpha = 0.15f),
                             Color.Transparent
                         ),
                         center = Offset(b4x, b4y),
@@ -120,12 +117,12 @@ fun AnimatedMeshGradientBackground(
                     radius = w * 0.35f
                 )
 
-                // Vignette — draws focus inward, keeps edges deep
+                // Vignette — deep obsidian edges
                 drawRect(
                     brush = Brush.radialGradient(
                         colors = listOf(
                             Color.Transparent,
-                            Color(0xFF050200).copy(alpha = 0.60f)
+                            Color(0xFF050504).copy(alpha = 0.60f)
                         ),
                         center = Offset(w / 2f, h / 2f),
                         radius = w * 0.80f
@@ -135,9 +132,9 @@ fun AnimatedMeshGradientBackground(
                 drawRect(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF080400).copy(alpha = 0.40f),
+                            Color(0xFF060604).copy(alpha = 0.40f),
                             Color.Transparent,
-                            Color(0xFF050200).copy(alpha = 0.50f)
+                            Color(0xFF050504).copy(alpha = 0.50f)
                         )
                     )
                 )

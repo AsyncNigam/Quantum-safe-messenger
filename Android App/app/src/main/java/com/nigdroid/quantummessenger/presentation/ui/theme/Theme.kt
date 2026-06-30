@@ -12,47 +12,47 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 
-// ─── Dark color scheme — Whiskey Barrel (matched to Image 2) ─────────────────
+// ─── Dark color scheme — "Volcanic Noir" ─────────────────────────────────────
 
 private val QuantumDarkColorScheme = darkColorScheme(
-    primary              = Color(0xFFBF7030),   // burnished copper
-    onPrimary            = Color(0xFFEEE4D4),
-    primaryContainer     = Color(0xFF905020),
-    onPrimaryContainer   = Color(0xFFD4904A),
-    secondary            = Color(0xFF8C5A68),
-    onSecondary          = Color(0xFF0E0A04),
-    secondaryContainer   = Color(0xFFAA7888).copy(alpha = 0.22f),
-    onSecondaryContainer = Color(0xFFAA7888),
-    tertiary             = Color(0xFF6A9882),
-    onTertiary           = Color(0xFF0E0A04),
-    tertiaryContainer    = Color(0xFF4E7860).copy(alpha = 0.22f),
-    onTertiaryContainer  = Color(0xFF6A9882),
-    error                = Color(0xFFE05A60),
-    onError              = Color(0xFF0E0A04),
-    errorContainer       = Color(0xFFE05A60).copy(alpha = 0.12f),
-    onErrorContainer     = Color(0xFFE05A60),
-    background           = Color(0xFF0E0A04),   // espresso black
-    onBackground         = Color(0xFFEEE4D4),
-    surface              = Color(0xFF1A1208),   // warm dark-brown
-    onSurface            = Color(0xFFEEE4D4),
-    surfaceVariant       = Color(0xFF241A0C),   // mocha elevated
-    onSurfaceVariant     = Color(0xFFAA9880),
-    outline              = Color(0x28D4904A),   // amber-tinted border
-    outlineVariant       = Color(0x18D4904A),
-    scrim                = Color(0xFF0E0A04).copy(alpha = 0.70f),
-    inverseSurface       = Color(0xFFEEE4D4),
-    inverseOnSurface     = Color(0xFF0E0A04),
-    inversePrimary       = Color(0xFF905020),
+    primary              = Color(0xFFE85C3A),   // ember orange-red
+    onPrimary            = Color(0xFFEAE6E2),
+    primaryContainer     = Color(0xFFC44028),
+    onPrimaryContainer   = Color(0xFFF07850),
+    secondary            = Color(0xFFE8A848),   // molten gold
+    onSecondary          = Color(0xFF0A0A0C),
+    secondaryContainer   = Color(0xFFE8A848).copy(alpha = 0.15f),
+    onSecondaryContainer = Color(0xFFF0C478),
+    tertiary             = Color(0xFF48B888),   // ash green
+    onTertiary           = Color(0xFF0A0A0C),
+    tertiaryContainer    = Color(0xFF309868).copy(alpha = 0.15f),
+    onTertiaryContainer  = Color(0xFF48B888),
+    error                = Color(0xFFE85C3A),
+    onError              = Color(0xFF0A0A0C),
+    errorContainer       = Color(0xFFE85C3A).copy(alpha = 0.12f),
+    onErrorContainer     = Color(0xFFE85C3A),
+    background           = Color(0xFF0A0A0C),   // pure obsidian
+    onBackground         = Color(0xFFEAE6E2),
+    surface              = Color(0xFF161618),   // charcoal
+    onSurface            = Color(0xFFEAE6E2),
+    surfaceVariant       = Color(0xFF1E1E22),   // elevated
+    onSurfaceVariant     = Color(0xFF9A9490),
+    outline              = Color(0x20E85C3A),   // ember border
+    outlineVariant       = Color(0x14E85C3A),
+    scrim                = Color(0xFF0A0A0C).copy(alpha = 0.70f),
+    inverseSurface       = Color(0xFFEAE6E2),
+    inverseOnSurface     = Color(0xFF0A0A0C),
+    inversePrimary       = Color(0xFFC44028),
 )
 
-// ─── Light color scheme — Blushed Silk (matched to Image 1) ──────────────────
+// ─── Light color scheme — "Blushed Silk" (unchanged) ─────────────────────────
 
 private val QuantumLightColorScheme = lightColorScheme(
-    primary              = Color(0xFFC05878),   // deep dusty rose
+    primary              = Color(0xFFC05878),
     onPrimary            = Color(0xFFFFFFFF),
     primaryContainer     = Color(0xFFD47890).copy(alpha = 0.28f),
     onPrimaryContainer   = Color(0xFF9A3858),
-    secondary            = Color(0xFF8868AA),   // soft lavender
+    secondary            = Color(0xFF8868AA),
     onSecondary          = Color(0xFFFFFFFF),
     secondaryContainer   = Color(0xFFAA98CC).copy(alpha = 0.22f),
     onSecondaryContainer = Color(0xFF8868AA),
@@ -64,13 +64,13 @@ private val QuantumLightColorScheme = lightColorScheme(
     onError              = Color(0xFFFFFFFF),
     errorContainer       = Color(0xFFB82850).copy(alpha = 0.10f),
     onErrorContainer     = Color(0xFFB82850),
-    background           = Color(0xFFF0D4CC),   // warm blush-peach (Image 1 bg)
+    background           = Color(0xFFF0D4CC),
     onBackground         = Color(0xFF281418),
-    surface              = Color(0xFFFFFAF8),   // milky white card
+    surface              = Color(0xFFFFFAF8),
     onSurface            = Color(0xFF281418),
     surfaceVariant       = Color(0xFFF8EDE8),
     onSurfaceVariant     = Color(0xFF583040),
-    outline              = Color(0x30C05878),   // rose-tinted border
+    outline              = Color(0x30C05878),
     outlineVariant       = Color(0x18C05878),
     scrim                = Color(0xFF281418).copy(alpha = 0.38f),
     inverseSurface       = Color(0xFF281418),

@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 /**
  * Glassmorphism — dual-mode
  *
- * DARK  → Autumn Dusk: amber-tinted frosted glass
+ * DARK  → Volcanic Noir: ember-tinted frosted glass on obsidian
  * LIGHT → Blush Petal: rose-tinted frosted glass, white card feel
  *
  * Three-layer system:
@@ -39,8 +39,8 @@ fun Modifier.glassmorphism(
     val overlayBrush = when {
         usePrimaryTint && isDark -> Brush.radialGradient(
             colors = listOf(
-                Color(0xFFC87840).copy(alpha = overlayAlpha * 1.4f),
-                Color(0xFF985820).copy(alpha = overlayAlpha * 0.30f),
+                Color(0xFFE85C3A).copy(alpha = overlayAlpha * 1.4f),   // ember tint
+                Color(0xFFC44028).copy(alpha = overlayAlpha * 0.30f),  // deep crimson edge
             ),
             center = Offset(size.width * 0.35f, size.height * 0.25f),
             radius = size.maxDimension * 0.75f
@@ -106,7 +106,7 @@ fun Modifier.glassmorphism(
 }
 
 /**
- * Own message bubble — warm copper dark / soft blush light.
+ * Own message bubble — ember-charcoal dark / soft blush light.
  */
 fun Modifier.glassmorphismBubbleOwn(): Modifier = this.drawBehind {
     val cr   = 18.dp.toPx()
@@ -115,8 +115,8 @@ fun Modifier.glassmorphismBubbleOwn(): Modifier = this.drawBehind {
     drawRoundRect(
         brush = if (dark) Brush.linearGradient(
             colors = listOf(
-                Color(0xFFC87840).copy(alpha = 0.60f),
-                Color(0xFF985820).copy(alpha = 0.75f),
+                Color(0xFFE85C3A).copy(alpha = 0.50f),   // ember core
+                Color(0xFFC44028).copy(alpha = 0.65f),   // deep crimson
             ),
             start = Offset(0f, 0f),
             end   = Offset(size.width, size.height)

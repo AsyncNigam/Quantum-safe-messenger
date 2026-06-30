@@ -2,84 +2,77 @@ package com.nigdroid.quantummessenger.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ─── DARK palette — Whiskey Barrel (matched to Image 2) ──────────────────────
-// Image 2: Deep espresso #1A1008, warm copper/amber highlights, mocha surfaces
-// Chats list bg is ~#1C1208, story rings are amber-orange, bubbles are #2A1A0E
+// ─── DARK palette — "Volcanic Noir" ──────────────────────────────────────────
+// Pure obsidian black base. Ember orange-red (#E85C3A) as the signature accent.
+// Pale platinum text. Think: raw power, volcanic energy, Tesla dark mode.
+// No blue, no purple, no cyan — bold and aggressive.
 
 private object Dark {
-    // Burnished copper — the amber story rings & active accents in Image 2
-    val Primary         = Color(0xFFBF7030)   // richer, darker amber than before
-    val PrimaryLight    = Color(0xFFD4904A)
-    val PrimaryDark     = Color(0xFF905020)
+    // Ember — molten lava accent for buttons, toggles, active states
+    val Primary         = Color(0xFFE85C3A)
+    val PrimaryLight    = Color(0xFFF07850)
+    val PrimaryDark     = Color(0xFFC44028)
 
-    // Muted dusty mauve — secondary accent
-    val Accent          = Color(0xFF8C5A68)
-    val AccentSoft      = Color(0xFFAA7888)
+    // Molten gold — warm secondary for highlights, badges
+    val Accent          = Color(0xFFE8A848)
+    val AccentSoft      = Color(0xFFF0C478)
 
-    // Sage teal (keep, used sparingly)
-    val Teal            = Color(0xFF6A9882)
-    val TealDark        = Color(0xFF4E7860)
+    // Deep forest ash — success states
+    val Teal            = Color(0xFF48B888)
+    val TealDark        = Color(0xFF309868)
 
-    // KEY: Match Image 2 — deep espresso-black, nearly #100C06
-    val Background      = Color(0xFF0E0A04)   // espresso black
-    val Surface         = Color(0xFF1A1208)   // warm dark-brown card (matches Image 2 chat bg)
-    val SurfaceElevated = Color(0xFF241A0C)   // slightly lighter mocha card
-    val SurfaceInput    = Color(0xFF1E1610)   // input field surface
+    // Pure obsidian — true black with zero color tint for OLED
+    val Background      = Color(0xFF0A0A0C)   // near-true black
+    val Surface         = Color(0xFF161618)   // charcoal card
+    val SurfaceElevated = Color(0xFF1E1E22)   // elevated panels
+    val SurfaceInput    = Color(0xFF1A1A1E)   // input field fill
 
-    // Glass overlays — warm amber-tinted glass (not cold white)
-    val GlassWhite12       = Color(0x1EFFF5E8)   // warm amber-tinted glass
-    val GlassWhite08       = Color(0x14FFF0DC)
-    val GlassWhite20       = Color(0x33FFEDCC)
-    val GlassBorder        = Color(0x28D4904A)   // warm amber border
-    val GlassBorderBright  = Color(0x44D4904A)
+    // Smoke-tinted glass overlays
+    val GlassWhite12       = Color(0x1EFFFFFF)
+    val GlassWhite08       = Color(0x14FFFFFF)
+    val GlassWhite20       = Color(0x33FFFFFF)
+    val GlassBorder        = Color(0x20E85C3A)   // ember-tinted border
+    val GlassBorderBright  = Color(0x38E85C3A)
 
-    // Text — warm cream stack (Image 2 uses near-white #EEE0CC on dark bg)
-    val TextPrimary     = Color(0xFFEEE4D4)
-    val TextSecondary   = Color(0xFFAA9880)
-    val TextTertiary    = Color(0xFF6E5E48)
-    val TextDisabled    = Color(0xFF3A2E20)
+    // Text — pale platinum/silver stack
+    val TextPrimary     = Color(0xFFEAE6E2)   // warm platinum white
+    val TextSecondary   = Color(0xFF9A9490)   // muted stone
+    val TextTertiary    = Color(0xFF5C5856)   // dark ash
+    val TextDisabled    = Color(0xFF2E2C2A)
 
-    val Success         = Color(0xFF5EC898)
-    val Warning         = Color(0xFFF0B84A)
-    val Error           = Color(0xFFE05A60)
+    val Success         = Color(0xFF48B888)
+    val Warning         = Color(0xFFE8A848)   // molten gold
+    val Error           = Color(0xFFE85C3A)   // ember (same as primary for cohesion)
 
-    // Chat bubbles — Image 2: own = warm dark amber, other = very dark mocha
-    val BubbleOwn       = Color(0xFF3A2410)   // dark warm amber bubble (own)
-    val BubbleOther     = Color(0xFF201508)   // near-black mocha (other)
+    // Chat bubbles — volcanic theme
+    val BubbleOwn       = Color(0xFF3A1810)   // deep ember charcoal (your msgs)
+    val BubbleOther     = Color(0xFF1C1A18)   // dark volcanic ash (their msgs)
 }
 
-// ─── LIGHT palette — Blushed Silk (matched to Image 1) ───────────────────────
-// Image 1: Background is warm blush-peach ~#F2D8D0, cards are milky #FFF8F6,
-// accent is dusty rose #C4607A, lavender is ~#9B7BB8, bottom bar is glass-white
+// ─── LIGHT palette — "Blushed Silk" (unchanged per user approval) ────────────
 
 private object Light {
-    // Dusty rose — the "Connect" button & active icons in Image 1
-    val Primary         = Color(0xFFC05878)   // deep dusty rose
+    val Primary         = Color(0xFFC05878)
     val PrimaryLight    = Color(0xFFD47890)
     val PrimaryDark     = Color(0xFF9A3858)
 
-    // Soft lavender — the left-panel bleed in Image 1
     val Accent          = Color(0xFF8868AA)
     val AccentSoft      = Color(0xFFAA98CC)
 
-    // Sage (consistent)
     val Teal            = Color(0xFF60A090)
     val TealDark        = Color(0xFF407870)
 
-    // KEY: Match Image 1 — warm peach-salmon background ~#F0D4CC
-    val Background      = Color(0xFFF8EAE6)   // warm blush-peach (matches Image 1 bg)
-    val Surface         = Color(0xFFFFFAF8)   // milky white card (Image 1 cards)
-    val SurfaceElevated = Color(0xFFF8EDE8)   // slightly tinted elevated surface
-    val SurfaceInput    = Color(0xFFF4E4DE)   // warm peach input
+    val Background      = Color(0xFFF8EAE6)
+    val Surface         = Color(0xFFFFFAF8)
+    val SurfaceElevated = Color(0xFFF8EDE8)
+    val SurfaceInput    = Color(0xFFF4E4DE)
 
-    // Rose-tinted glass — strong enough to be visible on peach bg
     val GlassWhite12       = Color(0x28FFFFFF)
     val GlassWhite08       = Color(0x1CFFFFFF)
     val GlassWhite20       = Color(0x40FFFFFF)
     val GlassBorder        = Color(0x38FFFFFF)
     val GlassBorderBright  = Color(0x60FFFFFF)
 
-    // Text — warm deep brown on blush (Image 1 uses #2A1018 on peach)
     val TextPrimary     = Color(0xFF281418)
     val TextSecondary   = Color(0xFF583040)
     val TextTertiary    = Color(0xFF886068)
@@ -89,9 +82,8 @@ private object Light {
     val Warning         = Color(0xFFCA8818)
     val Error           = Color(0xFFB82850)
 
-    // Bubbles — Image 1 aesthetic: own = warm blush, other = soft lavender-white
-    val BubbleOwn       = Color(0xFFF4A8B8)   // warm rose bubble
-    val BubbleOther     = Color(0xFFE8DCFF)   // soft lavender bubble
+    val BubbleOwn       = Color(0xFFF4A8B8)
+    val BubbleOther     = Color(0xFFE8DCFF)
 }
 
 // ─── Unified semantic object — use this everywhere ───────────────────────────

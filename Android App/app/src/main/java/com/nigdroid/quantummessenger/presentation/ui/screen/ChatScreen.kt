@@ -399,13 +399,13 @@ private fun ChatScreenContent(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF2D1B1B))
+                        .background(QuantumColors.Error.copy(alpha = 0.12f))
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "⚠️ This account has been deleted",
-                        color = Color(0xFFFF6B6B),
+                        color = QuantumColors.Error,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                     )
