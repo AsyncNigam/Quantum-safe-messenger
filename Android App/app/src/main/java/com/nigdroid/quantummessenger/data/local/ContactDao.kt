@@ -22,4 +22,7 @@ interface ContactDao {
 
     @Query("DELETE FROM contacts WHERE userId = :userId")
     suspend fun deleteContact(userId: String)
+
+    @Query("UPDATE contacts SET isBlocked = :isBlocked WHERE userId = :userId")
+    suspend fun updateContactBlockedStatus(userId: String, isBlocked: Boolean)
 }

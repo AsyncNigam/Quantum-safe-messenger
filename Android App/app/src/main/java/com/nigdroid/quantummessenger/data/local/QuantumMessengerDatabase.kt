@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [ChatMessageEntity::class, ContactEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class QuantumMessengerDatabase : RoomDatabase() {

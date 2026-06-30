@@ -41,35 +41,17 @@ class CryptoManager @Inject constructor(
                 KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore"
             )
 
-            val specBuilder = KeyGenParameterSpec.Builder(
+            val spec = KeyGenParameterSpec.Builder(
                 MASTER_KEY_ALIAS,
                 KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
             )
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(256)
+                .setUserAuthenticationRequired(false) // Must be false for Tink automated operations (FCM/sending/decryption)
+                .build()
 
-            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-            val isSecure = keyguardManager.isDeviceSecure
-
-            if (isSecure) {
-                specBuilder.setUserAuthenticationRequired(true)
-                specBuilder.setInvalidatedByBiometricEnrollment(true)
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    specBuilder.setUserAuthenticationParameters(
-                        15,
-                        KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL
-                    )
-                } else {
-                    @Suppress("DEPRECATION")
-                    specBuilder.setUserAuthenticationValidityDurationSeconds(15)
-                }
-            } else {
-                specBuilder.setUserAuthenticationRequired(false)
-            }
-
-            keyGenerator.init(specBuilder.build())
+            keyGenerator.init(spec)
             keyGenerator.generateKey()
         }
     }
@@ -99,13 +81,36 @@ class CryptoManager @Inject constructor(
     }
 
     private val aead: Aead by lazy {
+        try {
+            initAead()
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "AEAD initialization failed: ${e.message}. Wiping and recreating keyset...")
+            try {
+                // Wipe the shared preferences file containing the Tink keyset
+                context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE).edit().clear().commit()
+                
+                // Remove the master key from Android Keystore
+                val keyStore = KeyStore.getInstance("AndroidKeyStore")
+                keyStore.load(null)
+                if (keyStore.containsAlias(MASTER_KEY_ALIAS)) {
+                    keyStore.deleteEntry(MASTER_KEY_ALIAS)
+                }
+            } catch (clearEx: Exception) {
+                android.util.Log.e(TAG, "Failed to clear corrupted key resources: ${clearEx.message}")
+            }
+            // Retry once
+            initAead()
+        }
+    }
+
+    private fun initAead(): Aead {
         ensureAuthBoundMasterKey()
         val keysetManager = AndroidKeysetManager.Builder()
             .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
             .withKeyTemplate(AeadKeyTemplates.AES256_GCM)
             .withMasterKeyUri("android-keystore://$MASTER_KEY_ALIAS")
             .build()
-        keysetManager.keysetHandle.getPrimitive(Aead::class.java)
+        return keysetManager.keysetHandle.getPrimitive(Aead::class.java)
     }
 
     suspend fun encrypt(plaintext: ByteArray, associatedData: ByteArray? = null): ByteArray =
@@ -206,9 +211,9 @@ class CryptoManager @Inject constructor(
 
     companion object {
         private const val TAG = "CryptoManager"
-        private const val KEYSET_NAME      = "quantum_messenger_keyset_v3"
-        private const val PREF_FILE_NAME   = "quantum_messenger_prefs_v3"
-        const val MASTER_KEY_ALIAS         = "quantum_messenger_master_key_v3"
+        private const val KEYSET_NAME      = "quantum_messenger_keyset_v4"
+        private const val PREF_FILE_NAME   = "quantum_messenger_prefs_v4"
+        const val MASTER_KEY_ALIAS         = "quantum_messenger_master_key_v4"
         private const val DB_PASSPHRASE_KEY_V1 = "db_passphrase_ciphertext_v1"
         private const val DB_PASSPHRASE_KEY_V2 = "db_passphrase_ciphertext_v2"
         private val DB_AAD = "sqlcipher_passphrase".toByteArray(Charsets.UTF_8)

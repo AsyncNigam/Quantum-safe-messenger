@@ -137,4 +137,39 @@ class HomeViewModel @Inject constructor(
             } catch (_: Exception) {}
         }
     }
+
+    fun deleteContact(userId: String) {
+        viewModelScope.launch {
+            try {
+                contactDao.deleteContact(userId)
+                if (currentUserId != null) {
+                    chatMessageDao.deleteConversation(currentUserId!!, userId)
+                }
+            } catch (e: Exception) {
+                // Ignore or handle
+            }
+        }
+    }
+
+    fun clearChat(userId: String) {
+        viewModelScope.launch {
+            try {
+                if (currentUserId != null) {
+                    chatMessageDao.deleteConversation(currentUserId!!, userId)
+                }
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
+    }
+
+    fun toggleBlockContact(userId: String, isCurrentlyBlocked: Boolean) {
+        viewModelScope.launch {
+            try {
+                contactDao.updateContactBlockedStatus(userId, !isCurrentlyBlocked)
+            } catch (e: Exception) {
+                // Ignore or handle
+            }
+        }
+    }
 }

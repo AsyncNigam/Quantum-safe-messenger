@@ -14,6 +14,9 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.MoreVert
@@ -315,7 +318,8 @@ fun ChatScreen(
             contactNameInput = (uiState as? ChatUiState.Success)?.contactName ?: ""
             showRenameContactDialog = true
         },
-        onMuteNotifications = { viewModel.toggleMuteNotifications() }
+        onMuteNotifications = { viewModel.toggleMuteNotifications() },
+        onDeleteContact     = { viewModel.deleteContact() }
     )
 }
 
@@ -337,7 +341,8 @@ private fun ChatScreenContent(
     onClearChat   : () -> Unit = {},
     onSaveContact : () -> Unit = {},
     onRenameContact : () -> Unit = {},
-    onMuteNotifications : () -> Unit = {}
+    onMuteNotifications : () -> Unit = {},
+    onDeleteContact     : () -> Unit = {}
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -363,7 +368,8 @@ private fun ChatScreenContent(
                 onRenameContact    = onRenameContact,
                 isContactSaved     = isContactSaved,
                 onMuteNotifications = onMuteNotifications,
-                isNotificationsMuted = isNotificationsMuted
+                isNotificationsMuted = isNotificationsMuted,
+                onDeleteContact = onDeleteContact
             )
 
             // ── Content ──────────────────────────────────────────────────────
@@ -436,7 +442,8 @@ private fun ChatHeader(
     onRenameContact      : () -> Unit = {},
     isContactSaved       : Boolean = false,
     onMuteNotifications  : () -> Unit = {},
-    isNotificationsMuted : Boolean = false
+    isNotificationsMuted : Boolean = false,
+    onDeleteContact      : () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -496,17 +503,32 @@ private fun ChatHeader(
                     fontWeight = FontWeight.Bold
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(7.dp)
-                            .background(QuantumColors.Success, CircleShape)
-                    )
-                    Spacer(Modifier.width(5.dp))
-                    Text(
-                        text  = "End-to-end encrypted",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = QuantumColors.TextTertiary
-                    )
+                    if (isNotificationsMuted) {
+                        Icon(
+                            imageVector = Icons.Default.Block,
+                            contentDescription = "Blocked",
+                            tint = QuantumColors.Error,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text(
+                            text  = "Blocked $participantName",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = QuantumColors.Error
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .background(QuantumColors.Success, CircleShape)
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text(
+                            text  = "End-to-end encrypted",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = QuantumColors.TextTertiary
+                        )
+                    }
                 }
             }
 
@@ -529,12 +551,18 @@ private fun ChatHeader(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                if (isNotificationsMuted) "Unmute Notifications" else "Mute Notifications",
-                                color = QuantumColors.TextPrimary
+                                if (isNotificationsMuted) "Unblock" else "Block",
+                                color = if (isNotificationsMuted) QuantumColors.Primary else QuantumColors.Error
                             )
                         },
                         onClick     = { showMenu = false; onMuteNotifications() },
-                        leadingIcon = { Icon(Icons.Default.AccessTime, null, tint = QuantumColors.Primary) }
+                        leadingIcon = { 
+                            Icon(
+                                if (isNotificationsMuted) Icons.Default.CheckCircle else Icons.Default.Block,
+                                null, 
+                                tint = if (isNotificationsMuted) QuantumColors.Primary else QuantumColors.Error
+                            ) 
+                        }
                     )
                     // ── FIX: restored missing if/else for Save vs Rename ──────
                     if (!isContactSaved) {
@@ -550,6 +578,11 @@ private fun ChatHeader(
                             leadingIcon = { Icon(Icons.Default.Edit, null, tint = QuantumColors.Primary) }
                         )
                     }
+                    DropdownMenuItem(
+                        text        = { Text("Delete Contact", color = QuantumColors.Error) },
+                        onClick     = { showMenu = false; onDeleteContact() },
+                        leadingIcon = { Icon(Icons.Default.Delete, null, tint = QuantumColors.Error) }
+                    )
                     DropdownMenuItem(
                         text        = { Text("Clear Chat", color = QuantumColors.Error) },
                         onClick     = { showMenu = false; onClearChat() },

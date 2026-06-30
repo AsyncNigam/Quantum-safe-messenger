@@ -13,6 +13,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PersonAdd
@@ -62,7 +65,10 @@ fun HomeScreen(
         onChatClick    = onChatClick,
         onNewChatClick = onNewChatClick,
         onRetry        = { viewModel.syncContacts() },
-        onSearchQuery  = { viewModel.updateSearchQuery(it) }
+        onSearchQuery  = { viewModel.updateSearchQuery(it) },
+        onBlockContact = { userId, isBlocked -> viewModel.toggleBlockContact(userId, isBlocked) },
+        onDeleteContact = { userId -> viewModel.deleteContact(userId) },
+        onClearChat = { userId -> viewModel.clearChat(userId) }
     )
 }
 
@@ -77,7 +83,10 @@ private fun HomeScreenContent(
     onChatClick: (String) -> Unit,
     onNewChatClick: () -> Unit,
     onRetry: () -> Unit,
-    onSearchQuery: (String) -> Unit = {}
+    onSearchQuery: (String) -> Unit = {},
+    onBlockContact: (String, Boolean) -> Unit = { _, _ -> },
+    onDeleteContact: (String) -> Unit = {},
+    onClearChat: (String) -> Unit = {}
 ) {
     var showSearch by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
@@ -273,7 +282,10 @@ private fun HomeScreenContent(
                                     } else {
                                         ContactsTabList(
                                             contacts = uiState.allContacts,
-                                            onChatClick = onChatClick
+                                            onChatClick = onChatClick,
+                                            onBlockContact = onBlockContact,
+                                            onDeleteContact = onDeleteContact,
+                                            onClearChat = onClearChat
                                         )
                                     }
                                 }
@@ -324,7 +336,7 @@ private fun HomeTopBar(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
-                    painter = painterResource(id = R.drawable.qlogo),
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Logo",
                     modifier = Modifier
                         .size(42.dp)
@@ -509,8 +521,18 @@ private fun HomeConversationList(
 // Contact item card (no messages yet)
 // ─────────────────────────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ContactListItem(contact: ContactEntity, onClick: () -> Unit) {
+private fun ContactListItem(
+    contact: ContactEntity, 
+    onClick: () -> Unit,
+    onBlockClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
+    onClearChatClick: () -> Unit = {}
+) {
+    var showMenu by remember { mutableStateOf(false) }
+    val isBlocked = contact.isBlocked
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -520,7 +542,10 @@ private fun ContactListItem(contact: ContactEntity, onClick: () -> Unit) {
                 shape = RoundedCornerShape(20.dp)
             )
             .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { showMenu = true }
+            )
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -561,11 +586,45 @@ private fun ContactListItem(contact: ContactEntity, onClick: () -> Unit) {
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text  = "Tap to start chatting",
+                    text  = if (isBlocked) "Blocked" else "Tap to start chatting",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = QuantumColors.TextTertiary
+                    color = if (isBlocked) QuantumColors.Error else QuantumColors.TextTertiary
                 )
             }
+        }
+
+        DropdownMenu(
+            expanded         = showMenu,
+            onDismissRequest = { showMenu = false },
+            containerColor   = QuantumColors.Surface,
+            shape            = RoundedCornerShape(16.dp)
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        if (isBlocked) "Unblock" else "Block",
+                        color = if (isBlocked) QuantumColors.Primary else QuantumColors.Error
+                    )
+                },
+                onClick     = { showMenu = false; onBlockClick() },
+                leadingIcon = { 
+                    Icon(
+                        if (isBlocked) Icons.Default.CheckCircle else Icons.Default.Block,
+                        null, 
+                        tint = if (isBlocked) QuantumColors.Primary else QuantumColors.Error
+                    ) 
+                }
+            )
+            DropdownMenuItem(
+                text        = { Text("Delete Contact", color = QuantumColors.Error) },
+                onClick     = { showMenu = false; onDeleteClick() },
+                leadingIcon = { Icon(Icons.Default.Delete, null, tint = QuantumColors.Error) }
+            )
+            DropdownMenuItem(
+                text        = { Text("Clear Chat", color = QuantumColors.Error) },
+                onClick     = { showMenu = false; onClearChatClick() },
+                leadingIcon = { Icon(Icons.Default.Close, null, tint = QuantumColors.Error) }
+            )
         }
     }
 }
@@ -890,7 +949,10 @@ private fun HomeTabSelector(
 @Composable
 private fun ContactsTabList(
     contacts: List<ContactEntity>,
-    onChatClick: (String) -> Unit
+    onChatClick: (String) -> Unit,
+    onBlockContact: (String, Boolean) -> Unit,
+    onDeleteContact: (String) -> Unit,
+    onClearChat: (String) -> Unit
 ) {
     LazyColumn(
         modifier       = Modifier.fillMaxSize(),
@@ -905,7 +967,10 @@ private fun ContactsTabList(
         items(contacts, key = { "ctab_${it.userId}" }) { contact ->
             ContactListItem(
                 contact = contact,
-                onClick = { onChatClick(contact.userId) }
+                onClick = { onChatClick(contact.userId) },
+                onBlockClick = { onBlockContact(contact.userId, contact.isBlocked) },
+                onDeleteClick = { onDeleteContact(contact.userId) },
+                onClearChatClick = { onClearChat(contact.userId) }
             )
         }
     }

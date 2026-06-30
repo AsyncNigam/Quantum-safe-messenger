@@ -24,9 +24,14 @@ class VaultWipeManager @Inject constructor(
         private val TINK_PREF_FILES    = listOf(
             "quantum_messenger_prefs_v2",
             "quantum_messenger_prefs_v3",
+            "quantum_messenger_prefs_v4",
             "quantum_messenger_keys_v1"
         )
-        private val MASTER_KEY_ALIASES = listOf("quantum_messenger_master_key_v2", "quantum_messenger_master_key_v3")
+        private val MASTER_KEY_ALIASES = listOf(
+            "quantum_messenger_master_key_v2",
+            "quantum_messenger_master_key_v3",
+            "quantum_messenger_master_key_v4"
+        )
         private const val KEYSTORE_PREFIX   = "quantum_messenger_"
     }
 

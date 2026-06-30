@@ -1,5 +1,6 @@
 package com.nigdroid.quantummessenger.domain.usecase
 
+import com.nigdroid.quantummessenger.data.local.ContactDao
 import com.nigdroid.quantummessenger.data.repository.ChatRepositoryImpl
 import com.nigdroid.quantummessenger.domain.model.ChatMessage as DomainChatMessage
 import com.nigdroid.quantummessenger.domain.model.MessageType
@@ -18,7 +19,8 @@ import javax.inject.Singleton
 @Singleton
 class ReceiveMessageUseCase @Inject constructor(
     private val chatRepository: ChatRepository,
-    private val webSocketManager: WebSocketManager
+    private val webSocketManager: WebSocketManager,
+    private val contactDao: ContactDao
 ) {
 
     private val recentlyProcessed: MutableSet<String> = Collections.synchronizedSet(
@@ -30,6 +32,15 @@ class ReceiveMessageUseCase @Inject constructor(
             .mapNotNull { protoMessage ->
                 try {
                     val payloadString = String(protoMessage.payload.toByteArray(), Charsets.UTF_8)
+
+                    // ── Block check: silently drop messages from blocked contacts ──
+                    val senderContact = contactDao.getContactById(protoMessage.senderId)
+                    if (senderContact?.isBlocked == true) {
+                        // ACK the message so the server removes it, but don't save locally
+                        val backendId = webSocketManager.getBackendMessageId(protoMessage)
+                        webSocketManager.emitAck(backendId ?: "")
+                        return@mapNotNull null
+                    }
 
                     val messageUuid = generateDedupUuid(
                         protoMessage.senderId,

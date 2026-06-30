@@ -9,5 +9,6 @@ data class ContactEntity(
     val displayName: String? = null,
     val mlKemPublicKey: String,
     val x25519PublicKey: String,
-    val addedAt: Long = System.currentTimeMillis()
+    val addedAt: Long = System.currentTimeMillis(),
+    val isBlocked: Boolean = false
 )

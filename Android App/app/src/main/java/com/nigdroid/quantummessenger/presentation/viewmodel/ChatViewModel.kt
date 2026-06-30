@@ -38,7 +38,7 @@ class ChatViewModel @Inject constructor(
     private var recipientUserId: String = ""
     private var contactName: String? = null
     private var isContactSaved: Boolean = false
-    private var isNotificationsMuted: Boolean = false
+    private var isBlocked: Boolean = false
 
     fun initialize(userId: String, participantId: String) {
         recipientUserId = participantId
@@ -54,6 +54,7 @@ class ChatViewModel @Inject constructor(
             val contact = contactDao.getContactById(recipientUserId)
             contactName = contact?.displayName
             isContactSaved = contact != null
+            isBlocked = contact?.isBlocked ?: false
 
             if (!webSocketManager.isConnected()) {
                 webSocketManager.connect(currentUserId)
@@ -84,7 +85,7 @@ class ChatViewModel @Inject constructor(
                                 currentUserId = currentUserId,
                                 contactName = contactName,
                                 isContactSaved = isContactSaved,
-                                isNotificationsMuted = isNotificationsMuted
+                                isNotificationsMuted = isBlocked
                             )
                         }
                     }
@@ -306,14 +307,41 @@ class ChatViewModel @Inject constructor(
     }
 
     fun toggleMuteNotifications() {
-        isNotificationsMuted = !isNotificationsMuted
-        notificationSoundManager.setMuted(isNotificationsMuted)
-        
-        _uiState.update { currentState ->
-            if (currentState is ChatUiState.Success) {
-                currentState.copy(isNotificationsMuted = isNotificationsMuted)
-            } else {
-                currentState
+        viewModelScope.launch {
+            try {
+                contactDao.updateContactBlockedStatus(recipientUserId, !isBlocked)
+                isBlocked = !isBlocked
+                
+                _uiState.update { currentState ->
+                    if (currentState is ChatUiState.Success) {
+                        currentState.copy(isNotificationsMuted = isBlocked)
+                    } else {
+                        currentState
+                    }
+                }
+            } catch (e: Exception) {
+                // handle
+            }
+        }
+    }
+
+    fun deleteContact() {
+        viewModelScope.launch {
+            try {
+                contactDao.deleteContact(recipientUserId)
+                chatMessageDao.deleteConversation(currentUserId, recipientUserId)
+                isContactSaved = false
+                contactName = null
+                
+                _uiState.update { currentState ->
+                    if (currentState is ChatUiState.Success) {
+                        currentState.copy(isContactSaved = false, contactName = null)
+                    } else {
+                        currentState
+                    }
+                }
+            } catch (e: Exception) {
+                // handle
             }
         }
     }

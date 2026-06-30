@@ -11,6 +11,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.nigdroid.quantummessenger.MainActivity
 import com.nigdroid.quantummessenger.R
+import com.nigdroid.quantummessenger.data.local.ContactDao
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import com.nigdroid.quantummessenger.network.api.AuthenticationService
 import com.nigdroid.quantummessenger.network.api.FcmTokenRequest
@@ -29,6 +30,7 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
 
     @Inject lateinit var sessionManager: SessionManager
     @Inject lateinit var authService: AuthenticationService
+    @Inject lateinit var contactDao: ContactDao
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -83,9 +85,14 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
         val type = data["type"] ?: "new_message"
         val senderFingerprint = data["senderFingerprint"] ?: "unknown"
 
-        when (type) {
-            "new_message" -> showMessageNotification(senderFingerprint)
-            "contact_request" -> showContactRequestNotification(senderFingerprint)
+        serviceScope.launch {
+            val contact = contactDao.getContactById(senderFingerprint)
+            if (contact?.isBlocked == true) return@launch
+            
+            when (type) {
+                "new_message" -> showMessageNotification(senderFingerprint)
+                "contact_request" -> showContactRequestNotification(senderFingerprint)
+            }
         }
     }
 
@@ -103,7 +110,7 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
         val shortFp = senderFingerprint.take(8).uppercase()
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.qlogo)
+            .setSmallIcon(R.drawable.logo)
             .setContentTitle("\uD83D\uDD10 New Encrypted Message")
             .setContentText("From: $shortFp…")
             .setAutoCancel(true)
@@ -128,7 +135,7 @@ class QuantumFirebaseMessagingService : FirebaseMessagingService() {
         val shortFp = senderFingerprint.take(8).uppercase()
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.qlogo)
+            .setSmallIcon(R.drawable.logo)
             .setContentTitle("\uD83E\uDD1D New Contact Request")
             .setContentText("From: $shortFp…")
             .setAutoCancel(true)
