@@ -254,7 +254,7 @@ private fun WarningOrb() {
 // Previews
 // ─────────────────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Vault Compromised")
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Vault Compromised")
 @Composable
 private fun PreviewVaultCompromised() {
     QuantumMessengerTheme {
@@ -262,7 +262,7 @@ private fun PreviewVaultCompromised() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Vault Wiping")
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Vault Wiping")
 @Composable
 private fun PreviewVaultWiping() {
     QuantumMessengerTheme {

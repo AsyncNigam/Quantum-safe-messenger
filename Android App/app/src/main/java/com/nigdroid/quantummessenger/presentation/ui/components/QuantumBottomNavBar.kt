@@ -79,7 +79,7 @@ fun QuantumBottomNavBar(
 
     val tabPositions = remember { mutableStateMapOf<BottomNavTab, Pair<Float, Float>>() }
 
-    val accentColor = if (isDark) Color(0xFFBF7030) else Color(0xFFC05878)
+    val accentColor = if (isDark) Color(0xFFE85C3A) else Color(0xFFC05878)
     val indicatorX by animateFloatAsState(
         targetValue   = tabPositions[currentTab]?.first ?: 0f,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
@@ -127,14 +127,14 @@ fun QuantumBottomNavBar(
                 .drawBehind {
                     drawRoundRect(
                         color        = if (isDark)
-                            Color(0xFF1A1208).copy(alpha = 0.85f)
+                            Color(0xFF0E0E10).copy(alpha = 0.92f)
                         else
                             Color(0xFFFFFAF8).copy(alpha = 0.80f),
                         cornerRadius = CornerRadius(32.dp.toPx())
                     )
                     drawRoundRect(
                         color        = if (isDark)
-                            Color(0xFFBF7030).copy(alpha = 0.06f)
+                            Color(0xFFE85C3A).copy(alpha = 0.06f)
                         else
                             Color(0xFFC05878).copy(alpha = 0.06f),
                         cornerRadius = CornerRadius(32.dp.toPx())
@@ -151,7 +151,7 @@ fun QuantumBottomNavBar(
                     )
                     drawRoundRect(
                         color        = if (isDark)
-                            Color(0xFFD4904A).copy(alpha = 0.14f)
+                            Color(0xFFE85C3A).copy(alpha = 0.14f)
                         else
                             Color(0xFFC05878).copy(alpha = 0.14f),
                         cornerRadius = CornerRadius(32.dp.toPx()),
@@ -244,7 +244,7 @@ private fun NavItem(
     modifier: Modifier = Modifier
 ) {
     val inactiveIconColor = if (isDark)
-        Color(0xFFAA9880).copy(alpha = 0.45f)
+        Color(0xFF9A9490).copy(alpha = 0.50f)
     else
         Color(0xFF281418).copy(alpha = 0.35f)
 
@@ -369,7 +369,7 @@ private fun NavItem(
 }
 
 
-@Preview(backgroundColor = 0xFF0E0A04, showBackground = true, widthDp = 390, name = "Dark — Chats")
+@Preview(backgroundColor = 0xFF0A0A0C, showBackground = true, widthDp = 390, name = "Dark — Chats")
 @Composable
 fun PreviewDarkChats() {
     QuantumMessengerTheme(darkTheme = true) {
@@ -377,7 +377,7 @@ fun PreviewDarkChats() {
     }
 }
 
-@Preview(backgroundColor = 0xFF0E0A04, showBackground = true, widthDp = 390, name = "Dark — Add")
+@Preview(backgroundColor = 0xFF0A0A0C, showBackground = true, widthDp = 390, name = "Dark — Add")
 @Composable
 fun PreviewDarkAdd() {
     QuantumMessengerTheme(darkTheme = true) {
@@ -385,7 +385,7 @@ fun PreviewDarkAdd() {
     }
 }
 
-@Preview(backgroundColor = 0xFF0E0A04, showBackground = true, widthDp = 390, name = "Dark — Profile")
+@Preview(backgroundColor = 0xFF0A0A0C, showBackground = true, widthDp = 390, name = "Dark — Profile")
 @Composable
 fun PreviewDarkProfile() {
     QuantumMessengerTheme(darkTheme = true) {
@@ -393,7 +393,7 @@ fun PreviewDarkProfile() {
     }
 }
 
-@Preview(backgroundColor = 0xFFF0D4CC, showBackground = true, widthDp = 390, name = "Light")
+@Preview(backgroundColor = 0xFFF8EAE6, showBackground = true, widthDp = 390, name = "Light")
 @Composable
 fun PreviewLight() {
     QuantumMessengerTheme(darkTheme = false) {

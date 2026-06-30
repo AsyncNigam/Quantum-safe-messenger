@@ -1,6 +1,8 @@
 package com.nigdroid.quantummessenger.domain.usecase
 
 import android.content.Context
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
 import android.util.Base64
 import androidx.annotation.VisibleForTesting
 import com.nigdroid.quantummessenger.crypto.CryptoException
@@ -13,6 +15,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.security.KeyPairGenerator
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 import javax.inject.Inject
 
 class GenerateIdentityUseCase @Inject constructor(
@@ -73,33 +80,111 @@ class GenerateIdentityUseCase @Inject constructor(
         }
     }
 
+    /**
+     * Stores private key material using a NON-auth-bound AES key.
+     *
+     * Previously this used `cryptoManager.encrypt()` which relies on an
+     * auth-bound Tink AEAD master key.  On a fresh install the user has
+     * NOT yet biometrically authenticated, so the auth-bound key throws
+     * `UserNotAuthenticatedException`.
+     *
+     * Fix: use a dedicated, non-auth-bound AES-GCM key stored in
+     * Android Keystore, just like `CryptoManager.ensureDbPassphraseKey()`.
+     */
     @VisibleForTesting
-    internal suspend fun storeKeyInKeystore(keyType: String, keyMaterial: ByteArray) {
+    internal fun storeKeyInKeystore(keyType: String, keyMaterial: ByteArray) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val aad = "private_key_$keyType".toByteArray(Charsets.UTF_8)
 
-        val encrypted = cryptoManager.encrypt(keyMaterial, aad)
+        val encrypted = encryptWithKeyStoreKey(keyMaterial)
         val encoded = Base64.encodeToString(encrypted, Base64.NO_WRAP)
 
-        prefs.edit().putString("encrypted_pk_$keyType", encoded).apply()
+        prefs.edit().putString("encrypted_pk_v2_$keyType", encoded).apply()
     }
 
-    suspend fun retrievePrivateKey(keyType: String): ByteArray? {
+    fun retrievePrivateKey(keyType: String): ByteArray? {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val encoded = prefs.getString("encrypted_pk_$keyType", null) ?: return null
-        val aad = "private_key_$keyType".toByteArray(Charsets.UTF_8)
 
+        // Try new v2 format first (non-auth-bound)
+        val v2Encoded = prefs.getString("encrypted_pk_v2_$keyType", null)
+        if (v2Encoded != null) {
+            return try {
+                val cipherBytes = Base64.decode(v2Encoded, Base64.NO_WRAP)
+                decryptWithKeyStoreKey(cipherBytes)
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Failed to decrypt v2 $keyType key: ${e.message}")
+                null
+            }
+        }
+
+        // Fall back to old v1 format (auth-bound Tink) for existing installs
+        val v1Encoded = prefs.getString("encrypted_pk_$keyType", null) ?: return null
         return try {
-            val ciphertext = Base64.decode(encoded, Base64.NO_WRAP)
-            cryptoManager.decrypt(ciphertext, aad)
+            val ciphertext = Base64.decode(v1Encoded, Base64.NO_WRAP)
+            val aad = "private_key_$keyType".toByteArray(Charsets.UTF_8)
+            runBlocking { cryptoManager.decrypt(ciphertext, aad) }
         } catch (e: Exception) {
-            android.util.Log.e("GenerateIdentity", "Failed to decrypt $keyType key: ${e.message}")
+            android.util.Log.e(TAG, "Failed to decrypt v1 $keyType key: ${e.message}")
             null
         }
     }
 
+    // ── Non-auth-bound AES-GCM encryption ─────────────────────────────────────
+
+    private fun ensureKeyStoreKey() {
+        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+        keyStore.load(null)
+
+        if (!keyStore.containsAlias(PK_KEY_ALIAS)) {
+            val keyGenerator = KeyGenerator.getInstance(
+                KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore"
+            )
+            val spec = KeyGenParameterSpec.Builder(
+                PK_KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .setUserAuthenticationRequired(false)   // ← no biometric needed
+                .build()
+
+            keyGenerator.init(spec)
+            keyGenerator.generateKey()
+        }
+    }
+
+    private fun encryptWithKeyStoreKey(plaintext: ByteArray): ByteArray {
+        ensureKeyStoreKey()
+        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+        keyStore.load(null)
+        val key = keyStore.getKey(PK_KEY_ALIAS, null) as SecretKey
+
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, key)
+        val iv = cipher.iv
+        val encrypted = cipher.doFinal(plaintext)
+        return iv + encrypted   // 12-byte IV + ciphertext+tag
+    }
+
+    private fun decryptWithKeyStoreKey(data: ByteArray): ByteArray {
+        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+        keyStore.load(null)
+        val key = keyStore.getKey(PK_KEY_ALIAS, null) as SecretKey
+
+        val iv = data.sliceArray(0 until GCM_IV_LENGTH)
+        val ciphertext = data.sliceArray(GCM_IV_LENGTH until data.size)
+
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(GCM_TAG_BIT_LENGTH, iv))
+        return cipher.doFinal(ciphertext)
+    }
+
     companion object {
+        private const val TAG = "GenerateIdentity"
         private const val PREFS_NAME = "quantum_messenger_keys_v1"
+        private const val PK_KEY_ALIAS = "quantum_messenger_pk_storage_v1"
+        private const val GCM_IV_LENGTH = 12
+        private const val GCM_TAG_BIT_LENGTH = 128
     }
 }
 

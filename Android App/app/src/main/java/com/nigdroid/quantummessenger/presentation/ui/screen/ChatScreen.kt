@@ -933,7 +933,7 @@ private val sampleMessages = listOf(
     ChatMessage(id = 4L, senderId = "current_user", receiverId = "other", content = "Exactly. That's the whole point 🛡️",                              timestamp = System.currentTimeMillis() -  30_000, status = MessageStatus.PENDING, messageType = MessageType.TEXT),
 )
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Chat — Messages", widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Chat — Messages", widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewChatMessages() {
     QuantumMessengerTheme {
@@ -951,7 +951,7 @@ private fun PreviewChatMessages() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Chat — Empty", widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Chat — Empty", widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewChatEmpty() {
     QuantumMessengerTheme {
@@ -969,7 +969,7 @@ private fun PreviewChatEmpty() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Chat — Loading", widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Chat — Loading", widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewChatLoading() {
     QuantumMessengerTheme {

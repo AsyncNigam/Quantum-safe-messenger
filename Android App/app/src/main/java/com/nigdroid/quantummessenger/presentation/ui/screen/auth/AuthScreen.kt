@@ -510,7 +510,7 @@ private fun SecurityBadge(label: String) {
 // Previews
 // ─────────────────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Auth — Idle")
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Auth — Idle")
 @Composable
 private fun PreviewAuthIdle() {
     QuantumMessengerTheme {
@@ -518,7 +518,7 @@ private fun PreviewAuthIdle() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Auth — ML-KEM")
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Auth — ML-KEM")
 @Composable
 private fun PreviewAuthMLKem() {
     QuantumMessengerTheme {
@@ -526,7 +526,7 @@ private fun PreviewAuthMLKem() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Auth — Registering")
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Auth — Registering")
 @Composable
 private fun PreviewAuthRegistering() {
     QuantumMessengerTheme {
@@ -534,7 +534,7 @@ private fun PreviewAuthRegistering() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Auth — Success")
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Auth — Success")
 @Composable
 private fun PreviewAuthSuccess() {
     QuantumMessengerTheme {
@@ -553,7 +553,7 @@ private fun PreviewAuthSuccess() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Auth — Error")
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Auth — Error")
 @Composable
 private fun PreviewAuthError() {
     QuantumMessengerTheme {

@@ -342,7 +342,7 @@ private fun UnlockButton(onClick: () -> Unit) {
 // Previews
 // ─────────────────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Locked Screen", widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Locked Screen", widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewLockedScreen() {
     QuantumMessengerTheme {
@@ -350,7 +350,7 @@ private fun PreviewLockedScreen() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Locked — With Error", widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Locked — With Error", widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewLockedScreenError() {
     QuantumMessengerTheme {

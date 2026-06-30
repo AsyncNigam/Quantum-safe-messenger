@@ -715,7 +715,7 @@ private fun ConfirmationDialog(
 // Previews
 // ─────────────────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewProfile() {
     QuantumMessengerTheme {

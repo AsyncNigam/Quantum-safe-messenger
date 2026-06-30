@@ -992,7 +992,7 @@ private val sampleInboxItems = listOf(
     InboxItem(userId = "4", displayName = "David Kim",     lastMessage = "Quantum key exchanged ✓",       timestamp = System.currentTimeMillis() - 172_800_000, unreadCount = 0),
 )
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Home — Chats list", widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Home — Chats list", widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewHomeConversations() {
     QuantumMessengerTheme {
@@ -1005,7 +1005,7 @@ private fun PreviewHomeConversations() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Home — Empty", widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Home — Empty", widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewHomeEmpty() {
     QuantumMessengerTheme {
@@ -1018,7 +1018,7 @@ private fun PreviewHomeEmpty() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Home — Loading", widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Home — Loading", widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewHomeLoading() {
     QuantumMessengerTheme {
@@ -1031,7 +1031,7 @@ private fun PreviewHomeLoading() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF08070E, name = "Home — Error", widthDp = 390, heightDp = 844)
+@Preview(showBackground = true, backgroundColor = 0xFF0A0A0C, name = "Home — Error", widthDp = 390, heightDp = 844)
 @Composable
 private fun PreviewHomeError() {
     QuantumMessengerTheme {
