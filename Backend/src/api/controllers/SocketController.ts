@@ -72,10 +72,15 @@ export class SocketController {
       }
     });
 
-    socket.on('message_ack', (data: any) => {
+    socket.on('message_ack', async (data: any) => {
       const messageUuid = data?.messageUuid;
       if (messageUuid) {
         console.log(`[Socket] ACK received | fp=${fingerprint.slice(0, 8)} | uuid=${messageUuid}`);
+        try {
+          await this.messageService.deleteOfflineMessage(fingerprint, messageUuid);
+        } catch (err) {
+          console.warn(`[Socket] Failed to delete acknowledged message:`, (err as Error).message);
+        }
       }
     });
 
@@ -85,7 +90,7 @@ export class SocketController {
   };
 
   private drainOfflineQueue(fingerprint: string, socket: Socket): void {
-    this.messageService.retrieveAndClearOfflineMessages(fingerprint)
+    this.messageService.retrieveOfflineMessages(fingerprint)
       .then((buffers: Buffer[]) => {
         if (buffers.length > 0) {
           console.log(`[Socket] Draining ${buffers.length} offline message(s) → fp=${fingerprint.slice(0, 12)}…`);

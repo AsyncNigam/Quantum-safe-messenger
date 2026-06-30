@@ -4,14 +4,30 @@
 #include <vector>
 #include <oqs/oqs.h>
 
+void throwJavaException(JNIEnv *env, const char *msg) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+        env->ThrowNew(exClass, msg);
+    }
+}
+
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
+    // Initialize liboqs globally when the library is loaded
+    OQS_init();
+    return JNI_VERSION_1_6;
+}
+
 // ─── ML-KEM-768 Key Generation ───────────────────────────────────────────────
 // Returns a 2-element byte[][] — [0] = public key, [1] = private key
 extern "C" JNIEXPORT jobjectArray JNICALL
 Java_com_nigdroid_quantummessenger_crypto_PostQuantumCrypto_jniGenerateKemKeypair(
         JNIEnv* env, jobject) {
 
-    OQS_init();
     OQS_KEM* kem = OQS_KEM_new(OQS_KEM_alg_ml_kem_768);
+    if (kem == nullptr) {
+        throwJavaException(env, "ML-KEM-768 algorithm is not available in liboqs");
+        return nullptr;
+    }
 
     jbyteArray pubArray  = env->NewByteArray((jsize)kem->length_public_key);
     jbyteArray privArray = env->NewByteArray((jsize)kem->length_secret_key);
@@ -48,6 +64,10 @@ Java_com_nigdroid_quantummessenger_crypto_PostQuantumCrypto_jniKemEncapsulate(
         jbyteArray recipientPublicKey) {
 
     OQS_KEM* kem = OQS_KEM_new(OQS_KEM_alg_ml_kem_768);
+    if (kem == nullptr) {
+        throwJavaException(env, "ML-KEM-768 algorithm is not available in liboqs");
+        return nullptr;
+    }
 
     auto* ciphertext   = new uint8_t[kem->length_ciphertext];
     auto* sharedSecret = new uint8_t[kem->length_shared_secret];
@@ -90,6 +110,10 @@ Java_com_nigdroid_quantummessenger_crypto_PostQuantumCrypto_jniKemDecapsulate(
         jbyteArray privateKey) {
 
     OQS_KEM* kem = OQS_KEM_new(OQS_KEM_alg_ml_kem_768);
+    if (kem == nullptr) {
+        throwJavaException(env, "ML-KEM-768 algorithm is not available in liboqs");
+        return nullptr;
+    }
 
     auto* sharedSecret = new uint8_t[kem->length_shared_secret];
 

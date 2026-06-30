@@ -11,16 +11,24 @@ export class MessageService {
   ) {}
 
   /**
-   * Stores an encrypted binary payload in a Redis list (FIFO order) or Supabase fallback.
+   * Stores an encrypted binary payload in a Redis Hash or Supabase fallback.
    */
   async queueOfflineMessage(recipientId: string, payload: Buffer): Promise<void> {
     const key = `offline:messages:${recipientId}`;
     let redisSuccess = false;
+    let messageId = 'unknown';
+    let senderId = 'unknown';
+
+    try {
+      const envelope = JSON.parse(payload.toString());
+      senderId = envelope.from || 'unknown';
+      messageId = envelope.messageId || 'unknown';
+    } catch (_) {}
 
     if (this.redisClient.status === 'ready') {
       try {
         const multi = this.redisClient.multi();
-        multi.rpush(key, payload);
+        multi.hset(key, messageId, payload);
         multi.expire(key, 86400); // 24 hours
         const results = await multi.exec();
         if (results && results.length > 0) {
@@ -33,17 +41,12 @@ export class MessageService {
 
     if (!redisSuccess) {
       console.log(`[MessageService] Queuing offline message in Supabase for ${recipientId.slice(0, 12)}…`);
-      let senderId = 'unknown';
-      try {
-        const envelope = JSON.parse(payload.toString());
-        senderId = envelope.from || 'unknown';
-      } catch (_) {}
-
       const { error } = await this.db
         .from('offline_messages')
         .insert({
           recipient_id: recipientId,
           sender_id: senderId,
+          message_id: messageId,
           payload: payload.toString('base64'),
         });
 
@@ -54,24 +57,18 @@ export class MessageService {
   }
 
   /**
-   * Fetches all messages from both Redis and Supabase fallback, deletes them, and returns them.
+   * Fetches all messages from both Redis and Supabase fallback. Does NOT delete them.
    */
-  async retrieveAndClearOfflineMessages(userId: string): Promise<Buffer[]> {
+  async retrieveOfflineMessages(userId: string): Promise<Buffer[]> {
     const messages: Buffer[] = [];
 
     // 1. Retrieve from Redis if available
     if (this.redisClient.status === 'ready') {
       try {
         const key = `offline:messages:${userId}`;
-        const multi = this.redisClient.multi();
-        multi.lrangeBuffer(key, 0, -1);
-        multi.del(key);
-        const results = await multi.exec();
-        if (results && results.length > 0) {
-          const [err, redisMsgs] = results[0];
-          if (!err && redisMsgs) {
-            messages.push(...(redisMsgs as Buffer[]));
-          }
+        const redisMsgs = await this.redisClient.hvalsBuffer(key);
+        if (redisMsgs && redisMsgs.length > 0) {
+          messages.push(...redisMsgs);
         }
       } catch (err) {
         console.warn(`[MessageService] Redis retrieve failed:`, (err as Error).message);
@@ -95,21 +92,41 @@ export class MessageService {
             messages.push(Buffer.from(row.payload, 'base64'));
           }
         }
-
-        // Delete retrieved messages from Supabase fallback
-        const { error: delError } = await this.db
-          .from('offline_messages')
-          .delete()
-          .eq('recipient_id', userId);
-
-        if (delError) {
-          console.error(`[MessageService] Failed to clear Supabase fallback messages:`, delError.message);
-        }
       }
     } catch (err) {
       console.error(`[MessageService] Supabase retrieve query failed:`, (err as Error).message);
     }
 
     return messages;
+  }
+
+  /**
+   * Deletes a specific message from Redis and Supabase once it is acknowledged by the client.
+   */
+  async deleteOfflineMessage(userId: string, messageId: string): Promise<void> {
+    // 1. Try deleting from Redis
+    if (this.redisClient.status === 'ready') {
+      try {
+        const key = `offline:messages:${userId}`;
+        await this.redisClient.hdel(key, messageId);
+      } catch (err) {
+        console.warn(`[MessageService] Redis delete failed for message ${messageId}:`, (err as Error).message);
+      }
+    }
+
+    // 2. Try deleting from Supabase
+    try {
+      const { error } = await this.db
+        .from('offline_messages')
+        .delete()
+        .eq('recipient_id', userId)
+        .eq('message_id', messageId);
+
+      if (error) {
+        console.error(`[MessageService] Supabase fallback delete failed for message ${messageId}:`, error.message);
+      }
+    } catch (err) {
+      console.error(`[MessageService] Supabase delete query failed:`, (err as Error).message);
+    }
   }
 }
