@@ -91,8 +91,13 @@ class AuthViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
+                val friendlyMessage = if (e is java.io.IOException || e.cause is java.io.IOException) {
+                    "Please check your internet connection and try again."
+                } else {
+                    "Something went wrong. Please try again."
+                }
                 _authState.value = AuthState.Error(
-                    message   = "Unexpected error: ${e.message}",
+                    message   = friendlyMessage,
                     exception = e,
                     step      = ErrorStep.UNKNOWN
                 )

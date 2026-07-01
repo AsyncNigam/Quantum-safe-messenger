@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import com.nigdroid.quantummessenger.network.fcm.FcmTokenManager
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -68,7 +69,7 @@ class AuthRepositoryImpl @Inject constructor(
                 if (!response.isSuccessful || response.body() == null) {
                     return@withContext IdentityGenerationResult.Error(
                         exception = Exception("Registration failed: HTTP ${response.code()}"),
-                        message   = "Backend registration failed (${response.code()})"
+                        message   = "Unable to register. Please check your internet connection and try again."
                     )
                 }
 
@@ -97,9 +98,14 @@ class AuthRepositoryImpl @Inject constructor(
                 IdentityGenerationResult.Success(identity)
 
             } catch (e: Exception) {
+                val friendlyMessage = if (e is IOException || e.cause is IOException) {
+                    "Please check your internet connection and try again."
+                } else {
+                    "An unexpected error occurred: ${e.localizedMessage}"
+                }
                 IdentityGenerationResult.Error(
                     exception = e,
-                    message   = "Network error: ${e.localizedMessage}"
+                    message   = friendlyMessage
                 )
             }
         }

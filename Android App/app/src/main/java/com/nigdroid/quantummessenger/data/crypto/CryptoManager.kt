@@ -165,10 +165,14 @@ class CryptoManager @Inject constructor(
         return iv + encrypted
     }
 
-    private fun decryptWithDbKey(data: ByteArray): ByteArray {
+    private fun decryptWithDbKey(data: ByteArray): ByteArray? {
         val keyStore = KeyStore.getInstance("AndroidKeyStore")
         keyStore.load(null)
-        val key = keyStore.getKey(DB_KEY_ALIAS, null) as SecretKey
+        val key = keyStore.getKey(DB_KEY_ALIAS, null) as? SecretKey
+        if (key == null) {
+            android.util.Log.w(TAG, "DB key alias missing from Keystore — vault was wiped")
+            return null
+        }
 
         val iv = data.sliceArray(0 until GCM_IV_LENGTH)
         val ciphertext = data.sliceArray(GCM_IV_LENGTH until data.size)
@@ -184,7 +188,23 @@ class CryptoManager @Inject constructor(
         val newFormatCiphertext = prefs.getString(DB_PASSPHRASE_KEY_V2, null)
         if (newFormatCiphertext != null) {
             val cipherBytes = Base64.decode(newFormatCiphertext, Base64.NO_WRAP)
-            return@withContext decryptWithDbKey(cipherBytes)
+            val decrypted = try {
+                decryptWithDbKey(cipherBytes)
+            } catch (e: Exception) {
+                android.util.Log.w(TAG, "Failed to decrypt DB passphrase (key wiped?): ${e.message}")
+                null
+            }
+            if (decrypted != null) {
+                return@withContext decrypted
+            }
+            // Keystore key was wiped (account deletion) but SharedPrefs wasn't
+            // flushed in time.  Clear the stale entry and fall through to
+            // generate a fresh passphrase.
+            android.util.Log.w(TAG, "Clearing stale DB passphrase entry after vault wipe")
+            prefs.edit()
+                .remove(DB_PASSPHRASE_KEY_V2)
+                .remove(DB_PASSPHRASE_KEY_V1)
+                .commit()  // commit() is synchronous — guarantees it's flushed
         }
 
         val oldFormatCiphertext = prefs.getString(DB_PASSPHRASE_KEY_V1, null)
@@ -211,7 +231,29 @@ class CryptoManager @Inject constructor(
         val passphrase = ByteArray(32).also { SecureRandom().nextBytes(it) }
         val encrypted = encryptWithDbKey(passphrase)
         val encoded = Base64.encodeToString(encrypted, Base64.NO_WRAP)
-        prefs.edit().putString(DB_PASSPHRASE_KEY_V2, encoded).apply()
+        prefs.edit().putString(DB_PASSPHRASE_KEY_V2, encoded).commit() // commit() to guarantee flush
+
+        passphrase
+    }
+
+    /**
+     * Clears any stale encrypted passphrase and generates a brand-new one.
+     * Called by [DatabaseModule] when the on-disk database can't be opened
+     * with the current passphrase (e.g. after account deletion left a
+     * mismatched file behind).
+     */
+    suspend fun resetDatabasePassphrase(): ByteArray = withContext(Dispatchers.IO) {
+        val prefs = context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE)
+        prefs.edit()
+            .remove(DB_PASSPHRASE_KEY_V1)
+            .remove(DB_PASSPHRASE_KEY_V2)
+            .commit()
+
+        val passphrase = ByteArray(32).also { SecureRandom().nextBytes(it) }
+        ensureDbPassphraseKey()
+        val encrypted = encryptWithDbKey(passphrase)
+        val encoded = Base64.encodeToString(encrypted, Base64.NO_WRAP)
+        prefs.edit().putString(DB_PASSPHRASE_KEY_V2, encoded).commit()
 
         passphrase
     }

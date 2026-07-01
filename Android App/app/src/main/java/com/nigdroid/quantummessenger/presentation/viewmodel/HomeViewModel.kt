@@ -95,7 +95,16 @@ class HomeViewModel @Inject constructor(
             }
             .catch { e ->
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                _uiState.value = HomeUiState.Error(e.message ?: "Unknown error")
+                android.util.Log.e("HomeVM", "Inbox error: ${e.message}", e)
+                // Never expose raw DB/SQLCipher errors to the user
+                val safeMessage = when {
+                    e.message?.contains("not a database", ignoreCase = true) == true ||
+                    e.message?.contains("sqlcipher", ignoreCase = true) == true ||
+                    e.message?.contains("SQLite", ignoreCase = true) == true ->
+                        "Unable to load conversations. Please restart the app."
+                    else -> "Something went wrong. Please try again."
+                }
+                _uiState.value = HomeUiState.Error(safeMessage)
             }
             .collect { state ->
                 _uiState.value = state

@@ -112,7 +112,7 @@ class VaultWipeManager @Inject constructor(
         try {
             TINK_PREF_FILES.forEach { prefFile ->
                 val prefs = context.getSharedPreferences(prefFile, Context.MODE_PRIVATE)
-                prefs.edit().clear().apply()
+                prefs.edit().clear().commit()
             }
         } catch (e: Exception) {
             android.util.Log.e(TAG, "Failed to clear Tink prefs: ${e.message}")

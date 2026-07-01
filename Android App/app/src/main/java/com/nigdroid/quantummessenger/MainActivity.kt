@@ -91,6 +91,7 @@ class MainActivity : AppCompatActivity() {
                 ) {
                     val lockState by viewModel.lockState.collectAsState()
                     val startDestination by viewModel.startDestination.collectAsState()
+                    val isOffline by viewModel.isOffline.collectAsState()
 
                     // Biometric trigger is now handled exclusively by the
                     // ProcessLifecycleObserver.onResume callback above.
@@ -104,7 +105,8 @@ class MainActivity : AppCompatActivity() {
                             val navController = rememberNavController()
                             AppNavigation(
                                 navController    = navController,
-                                startDestination = if (lockState is LockState.WipeComplete) AuthRoute else (startDestination ?: HomeRoute)
+                                startDestination = if (lockState is LockState.WipeComplete) AuthRoute else (startDestination ?: HomeRoute),
+                                isOffline        = isOffline
                             )
                         } else {
                             Box(

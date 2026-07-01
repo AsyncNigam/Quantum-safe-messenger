@@ -17,6 +17,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.IOException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -70,9 +71,16 @@ class ChatViewModel @Inject constructor(
             try {
                 getChatHistoryUseCase(currentUserId, recipientUserId)
                     .catch { e ->
+                        val friendlyMessage = when {
+                            e is IOException || e.cause is IOException ->
+                                "Please check your internet connection and try again."
+                            e.message?.contains("not a database", ignoreCase = true) == true ->
+                                "Unable to load messages. Please restart the app."
+                            else -> "Something went wrong loading messages."
+                        }
                         _uiState.update { currentState ->
                             ChatUiState.Error(
-                                message = "Failed to load chat history: ${e.message}",
+                                message = friendlyMessage,
                                 messages = if (currentState is ChatUiState.Success) currentState.messages else emptyList()
                             )
                         }
@@ -90,8 +98,13 @@ class ChatViewModel @Inject constructor(
                         }
                     }
             } catch (e: Exception) {
+                val friendlyMessage = when {
+                    e is IOException || e.cause is IOException ->
+                        "Please check your internet connection and try again."
+                    else -> "Something went wrong. Please try again."
+                }
                 _uiState.update {
-                    ChatUiState.Error("Unexpected error: ${e.message}")
+                    ChatUiState.Error(friendlyMessage)
                 }
             }
         }
@@ -153,16 +166,22 @@ class ChatViewModel @Inject constructor(
                     }
                 }
 
+                val friendlyMessage = if (e is IOException || e.cause is IOException) {
+                    "Please check your internet connection and try again."
+                } else {
+                    "Unable to send message. Please try again."
+                }
+                
                 _uiState.update { currentState ->
                     when (currentState) {
                         is ChatUiState.Success -> {
                             ChatUiState.Error(
-                                message = "Failed to send message: ${e.message}",
+                                message = friendlyMessage,
                                 messages = currentState.messages
                             )
                         }
                         else -> {
-                            ChatUiState.Error(message = "Failed to send message: ${e.message}")
+                            ChatUiState.Error(message = friendlyMessage)
                         }
                     }
                 }
@@ -217,7 +236,7 @@ class ChatViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { currentState ->
                     ChatUiState.Error(
-                        message = "Failed to clear chat: ${e.message}",
+                        message = "Unable to clear chat. Please try again.",
                         messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
                     )
                 }
@@ -259,9 +278,14 @@ class ChatViewModel @Inject constructor(
                     AddContactUseCase.Result.SelfAdd -> {}
                 }
             } catch (e: Exception) {
+                val friendlyMessage = if (e is IOException || e.cause is IOException) {
+                    "Please check your internet connection and try again."
+                } else {
+                    "Unable to save contact. Please try again."
+                }
                 _uiState.update { currentState ->
                     ChatUiState.Error(
-                        message = "Failed to save contact: ${e.message}",
+                        message = friendlyMessage,
                         messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
                     )
                 }
@@ -298,7 +322,7 @@ class ChatViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { currentState ->
                     ChatUiState.Error(
-                        message = "Failed to rename contact: ${e.message}",
+                        message = "Unable to rename contact. Please try again.",
                         messages = (currentState as? ChatUiState.Success)?.messages ?: emptyList()
                     )
                 }

@@ -5,12 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.nigdroid.quantummessenger.data.crypto.CryptoManager
 import com.nigdroid.quantummessenger.data.local.prefs.SessionManager
 import com.nigdroid.quantummessenger.data.security.VaultWipeManager
+import com.nigdroid.quantummessenger.network.NetworkConnectivityObserver
 import com.nigdroid.quantummessenger.presentation.navigation.AuthRoute
 import com.nigdroid.quantummessenger.presentation.navigation.HomeRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,7 +31,8 @@ sealed class LockState {
 class MainViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val cryptoManager: CryptoManager,
-    private val vaultWipeManager: VaultWipeManager
+    private val vaultWipeManager: VaultWipeManager,
+    networkConnectivityObserver: NetworkConnectivityObserver
 ) : ViewModel() {
 
     private val _startDestination = MutableStateFlow<Any?>(null)
@@ -35,6 +40,11 @@ class MainViewModel @Inject constructor(
 
     private val _lockState = MutableStateFlow<LockState>(LockState.Locked)
     val lockState: StateFlow<LockState> = _lockState.asStateFlow()
+
+    /** `true` when the device has no internet connectivity. */
+    val isOffline: StateFlow<Boolean> = networkConnectivityObserver.observeConnectivity()
+        .map { connected -> !connected }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     init {
         checkRegistrationStatus()

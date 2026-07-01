@@ -106,9 +106,12 @@ class ProfileViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                _accountAction.value = AccountActionState.Error(
-                    e.message ?: "Delete account failed"
-                )
+                val friendlyMessage = if (e is java.io.IOException || e.cause is java.io.IOException) {
+                    "Please check your internet connection and try again."
+                } else {
+                    "An unexpected error occurred. Please try again."
+                }
+                _accountAction.value = AccountActionState.Error(friendlyMessage)
             }
         }
     }

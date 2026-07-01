@@ -7,6 +7,7 @@ import com.nigdroid.quantummessenger.network.api.AuthenticationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import javax.inject.Inject
 
 
@@ -52,7 +53,7 @@ class AddContactUseCase @Inject constructor(
                 return@withContext when (response.code()) {
                     404  -> Result.Error("User not found — they may not have registered yet.")
                     401  -> Result.Error("Authentication failed — please restart the app.")
-                    else -> Result.Error("Server error: $errorBody")
+                    else -> Result.Error("Something went wrong. Please try again later.")
                 }
             }
 
@@ -78,7 +79,12 @@ class AddContactUseCase @Inject constructor(
 
             Result.Success(body.fingerprint)
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Failed to add contact.")
+            val friendlyMessage = if (e is IOException || e.cause is IOException) {
+                "Please check your internet connection and try again."
+            } else {
+                "An unexpected error occurred: ${e.message}"
+            }
+            Result.Error(friendlyMessage)
         }
     }
 }
