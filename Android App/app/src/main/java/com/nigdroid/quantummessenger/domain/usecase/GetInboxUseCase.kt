@@ -47,6 +47,7 @@ class GetInboxUseCase @Inject constructor(
                     lastMessage = decryptedContent,
                     timestamp = lastMsg.timestamp,
                     unreadCount = unreadCount,
+                    isBlocked = contact?.isBlocked ?: false,
                     avatarUrl = null
                 )
             }

@@ -272,7 +272,10 @@ private fun HomeScreenContent(
                                         HomeConversationList(
                                             inboxItems  = uiState.inboxItems,
                                             contacts    = uiState.contacts,
-                                            onChatClick = onChatClick
+                                            onChatClick = onChatClick,
+                                            onBlockContact = onBlockContact,
+                                            onDeleteContact = onDeleteContact,
+                                            onClearChat = onClearChat
                                         )
                                     }
                                 }
@@ -460,7 +463,10 @@ private fun NewChatFab(onClick: () -> Unit) {
 private fun HomeConversationList(
     inboxItems: List<InboxItem>,
     contacts: List<ContactEntity>,
-    onChatClick: (String) -> Unit
+    onChatClick: (String) -> Unit,
+    onBlockContact: (String, Boolean) -> Unit = { _, _ -> },
+    onDeleteContact: (String) -> Unit = {},
+    onClearChat: (String) -> Unit = {}
 ) {
     LazyColumn(
         modifier       = Modifier.fillMaxSize(),
@@ -487,7 +493,13 @@ private fun HomeConversationList(
                     visible = true,
                     enter   = fadeIn() + slideInVertically(initialOffsetY = { 20 })
                 ) {
-                    InboxListItem(item = item, onClick = { onChatClick(item.userId) })
+                    InboxListItem(
+                        item = item,
+                        onClick = { onChatClick(item.userId) },
+                        onBlockClick = { onBlockContact(item.userId, item.isBlocked) },
+                        onDeleteClick = { onDeleteContact(item.userId) },
+                        onClearChatClick = { onClearChat(item.userId) }
+                    )
                 }
             }
         }
@@ -509,7 +521,10 @@ private fun HomeConversationList(
                 ) {
                     ContactListItem(
                         contact = contact,
-                        onClick = { onChatClick(contact.userId) }
+                        onClick = { onChatClick(contact.userId) },
+                        onBlockClick = { onBlockContact(contact.userId, contact.isBlocked) },
+                        onDeleteClick = { onDeleteContact(contact.userId) },
+                        onClearChatClick = { onClearChat(contact.userId) }
                     )
                 }
             }
@@ -633,12 +648,17 @@ private fun ContactListItem(
 // Inbox item card
 // ─────────────────────────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun InboxListItem(
     item: InboxItem,
     onClick: () -> Unit,
-    isDarkTheme: Boolean = true   // kept for backward compat
+    isDarkTheme: Boolean = true,
+    onBlockClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
+    onClearChatClick: () -> Unit = {}
 ) {
+    var showMenu by remember { mutableStateOf(false) }
     val isPressed = remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue   = if (isPressed.value) 0.97f else 1f,
@@ -656,7 +676,10 @@ fun InboxListItem(
                 shape = RoundedCornerShape(20.dp)
             )
             .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { showMenu = true }
+            )
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -746,6 +769,40 @@ fun InboxListItem(
                     }
                 }
             }
+        }
+
+        DropdownMenu(
+            expanded         = showMenu,
+            onDismissRequest = { showMenu = false },
+            containerColor   = QuantumColors.Surface,
+            shape            = RoundedCornerShape(16.dp)
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        if (item.isBlocked) "Unblock" else "Block",
+                        color = if (item.isBlocked) QuantumColors.Primary else QuantumColors.Error
+                    )
+                },
+                onClick     = { showMenu = false; onBlockClick() },
+                leadingIcon = { 
+                    Icon(
+                        if (item.isBlocked) Icons.Default.CheckCircle else Icons.Default.Block,
+                        null, 
+                        tint = if (item.isBlocked) QuantumColors.Primary else QuantumColors.Error
+                    ) 
+                }
+            )
+            DropdownMenuItem(
+                text        = { Text("Delete Contact", color = QuantumColors.Error) },
+                onClick     = { showMenu = false; onDeleteClick() },
+                leadingIcon = { Icon(Icons.Default.Delete, null, tint = QuantumColors.Error) }
+            )
+            DropdownMenuItem(
+                text        = { Text("Clear Chat", color = QuantumColors.Error) },
+                onClick     = { showMenu = false; onClearChatClick() },
+                leadingIcon = { Icon(Icons.Default.Close, null, tint = QuantumColors.Error) }
+            )
         }
     }
 }

@@ -6,5 +6,6 @@ data class InboxItem(
     val lastMessage: String,
     val timestamp: Long,
     val unreadCount: Int,
+    val isBlocked: Boolean = false,
     val avatarUrl: String? = null
 )
