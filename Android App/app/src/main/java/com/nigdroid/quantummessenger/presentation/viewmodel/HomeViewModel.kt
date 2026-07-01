@@ -94,6 +94,7 @@ class HomeViewModel @Inject constructor(
                 )
             }
             .catch { e ->
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 _uiState.value = HomeUiState.Error(e.message ?: "Unknown error")
             }
             .collect { state ->

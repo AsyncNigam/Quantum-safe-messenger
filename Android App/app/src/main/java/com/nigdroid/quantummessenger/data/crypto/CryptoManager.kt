@@ -32,7 +32,14 @@ class CryptoManager @Inject constructor(
         AeadConfig.register()
     }
 
-    fun ensureAuthBoundMasterKey() {
+    suspend fun ensureAuthBoundMasterKey() = withContext(Dispatchers.IO) {
+        ensureAuthBoundMasterKeySync()
+    }
+
+    // Synchronous version for use in lazy AEAD initialiser (which cannot
+    // be a coroutine).  The lazy is itself always invoked on an IO thread
+    // via encrypt()/decrypt().
+    private fun ensureAuthBoundMasterKeySync() {
         val keyStore = KeyStore.getInstance("AndroidKeyStore")
         keyStore.load(null)
 
@@ -56,13 +63,13 @@ class CryptoManager @Inject constructor(
         }
     }
 
-    fun validateKeyIntegrity(): Boolean {
-        return try {
+    suspend fun validateKeyIntegrity(): Boolean = withContext(Dispatchers.IO) {
+        try {
             val keyStore = KeyStore.getInstance("AndroidKeyStore")
             keyStore.load(null)
 
             if (!keyStore.containsAlias(MASTER_KEY_ALIAS)) {
-                return true
+                return@withContext true
             }
 
             val key = keyStore.getKey(MASTER_KEY_ALIAS, null) as SecretKey
@@ -104,7 +111,7 @@ class CryptoManager @Inject constructor(
     }
 
     private fun initAead(): Aead {
-        ensureAuthBoundMasterKey()
+        ensureAuthBoundMasterKeySync()
         val keysetManager = AndroidKeysetManager.Builder()
             .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
             .withKeyTemplate(AeadKeyTemplates.AES256_GCM)

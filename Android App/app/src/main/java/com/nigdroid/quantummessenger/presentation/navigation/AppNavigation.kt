@@ -140,11 +140,26 @@ fun AppNavigation(
                 popEnterTransition = { fadeIn(tween(260)) },
                 popExitTransition  = { fadeOut(tween(200)) }
             ) {
+                val context = androidx.compose.ui.platform.LocalContext.current
                 ProfileScreen(
                     onAccountCleared = {
-                        navController.navigate(AuthRoute) {
-                            popUpTo(0) { inclusive = true }
-                        }
+                        // After account deletion the Hilt singleton DAOs hold
+                        // references to the now-closed/deleted Room database.
+                        // The only reliable way to get a clean slate is to
+                        // restart the process.  This is the standard pattern
+                        // used by Signal, WhatsApp, Telegram, etc.
+                        val intent = context.packageManager
+                            .getLaunchIntentForPackage(context.packageName)
+                        intent?.addFlags(
+                            android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                            android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        )
+                        context.startActivity(intent)
+                        (context as? android.app.Activity)?.finishAffinity()
+                        // Exit code 0 = clean shutdown, not a crash.
+                        // Android will immediately re-launch the app via the
+                        // pending intent above.
+                        kotlin.system.exitProcess(0)
                     }
                 )
             }

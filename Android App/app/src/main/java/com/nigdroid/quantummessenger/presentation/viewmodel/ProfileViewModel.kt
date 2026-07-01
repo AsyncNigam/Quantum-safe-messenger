@@ -97,9 +97,9 @@ class ProfileViewModel @Inject constructor(
             try {
                 val success = authRepository.deleteAccount()
                 if (success) {
+                    // Let the UI layer handle navigation to AuthRoute
+                    // via the onAccountCleared() callback.
                     _accountAction.value = AccountActionState.Success
-                    kotlinx.coroutines.delay(500)
-                    android.os.Process.killProcess(android.os.Process.myPid())
                 } else {
                     _accountAction.value = AccountActionState.Error(
                         "Failed to delete account on server. Please try again."

@@ -58,7 +58,12 @@ class MainActivity : AppCompatActivity() {
             biometricTriggeredThisResume = false
         }
 
-        override fun onStart(owner: LifecycleOwner) {
+        // Use onResume instead of onStart — BiometricPrompt requires the
+        // Activity to be fully resumed before the FragmentManager can
+        // commit the prompt dialog.  Using onStart caused
+        // IllegalStateException on some devices, leading to a Play Store
+        // rejection for "main thread stopped".
+        override fun onResume(owner: LifecycleOwner) {
             if (!biometricTriggeredThisResume && 
                 viewModel.lockState.value == LockState.Locked && 
                 viewModel.startDestination.value == HomeRoute
@@ -87,15 +92,10 @@ class MainActivity : AppCompatActivity() {
                     val lockState by viewModel.lockState.collectAsState()
                     val startDestination by viewModel.startDestination.collectAsState()
 
-                    LaunchedEffect(lockState, startDestination) {
-                        if (lockState == LockState.Locked && 
-                            startDestination == HomeRoute && 
-                            !biometricTriggeredThisResume
-                        ) {
-                            biometricTriggeredThisResume = true
-                            triggerBiometricUnlock()
-                        }
-                    }
+                    // Biometric trigger is now handled exclusively by the
+                    // ProcessLifecycleObserver.onResume callback above.
+                    // A duplicate LaunchedEffect here caused race conditions
+                    // where two BiometricPrompt dialogs could fire simultaneously.
 
                     Box(modifier = Modifier.fillMaxSize()) {
                         val isLocked = lockState != LockState.Unlocked && lockState != LockState.WipeComplete
