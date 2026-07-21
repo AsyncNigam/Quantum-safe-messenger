@@ -13,6 +13,7 @@ No passwords. No accounts. No phone numbers. Just math.
 ![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6?logo=typescript&logoColor=white)
 ![PostQuantum](https://img.shields.io/badge/Post--Quantum-ML--KEM%20%7C%20ML--DSA-blueviolet)
+[![Get it on Google Play](https://img.shields.io/badge/Google_Play-Download-414141?logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=com.nigdroid.quantummessenger)
 
 <br/>
 
@@ -33,6 +34,8 @@ No passwords. No accounts. No phone numbers. Just math.
 > **"Harvest now, decrypt later"** — adversaries are already storing encrypted traffic today, waiting for quantum computers to break RSA and ECC in the near future.
 
 Current messaging apps (Signal, WhatsApp, Telegram) rely on classical cryptography (Curve25519, RSA) that **will be broken** by sufficiently powerful quantum computers. Quantum Safe is built from the ground up with **NIST FIPS 203/204 approved post-quantum algorithms**, ensuring your messages stay private — today, tomorrow, and in the quantum era.
+
+📲 **[Download on Google Play](https://play.google.com/store/apps/details?id=com.nigdroid.quantummessenger)**
 
 ### What Makes This Different
 
@@ -395,6 +398,8 @@ erDiagram
 ---
 
 ## 🚀 Getting Started
+
+> **Just want the app?** Skip the build — [get it on Google Play](https://play.google.com/store/apps/details?id=com.nigdroid.quantummessenger).
 
 ### Prerequisites
 
